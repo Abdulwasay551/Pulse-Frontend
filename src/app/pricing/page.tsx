@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "Simple, per-recruiter pricing for EvoHR's recruitment CRM and ATS.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PricingPage() {
   const [data, settings] = await Promise.all([
     getPage<PricingPageData>("PricingPage"),

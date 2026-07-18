@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     "EvoHR is the all-in-one CRM and applicant tracking system for staffing agencies and recruiters — candidates, clients, and placements in one place.",
 };
 
+// All content comes from the headless CMS, which isn't reachable at build
+// time (e.g. on Vercel). Render every route at request time instead of
+// prerendering, so the build never depends on the backend being up.
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{

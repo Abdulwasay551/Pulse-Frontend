@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "How staffing agencies, executive search, RPO, and in-house teams run on EvoHR.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function UseCasesPage() {
   const [data, settings] = await Promise.all([
     getPage<UseCasesPageData>("UseCasesPage"),

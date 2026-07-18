@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Guides, playbooks, and documentation for running your desk on EvoHR.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ResourcesPage() {
   const [data, settings] = await Promise.all([
     getPage<ResourcesPageData>("ResourcesPage"),

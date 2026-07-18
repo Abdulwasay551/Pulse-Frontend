@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "EvoHR gives every seat on the recruiting team its own view of the same record.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function WhoWeServePage() {
   const [data, settings] = await Promise.all([
     getPage<WhoWeServePageData>("WhoWeServePage"),

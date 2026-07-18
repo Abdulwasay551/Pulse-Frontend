@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Every module in the EvoHR suite, from core CRM to global mobility.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function SolutionsPage() {
   const [data, products, settings] = await Promise.all([
     getPage<SolutionsPageData>("SolutionsPage"),
