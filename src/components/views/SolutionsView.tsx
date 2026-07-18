@@ -1,5 +1,6 @@
 import PageHeader from "@/components/site/PageHeader";
 import CtaBanner from "@/components/site/CtaBanner";
+import ProductIcon from "@/components/site/ProductIcon";
 import { WidgetRenderer } from "@/components/site/widgets";
 import { sv, type Product, type SiteSettingsData, type SolutionsPageData } from "@/lib/cms";
 
@@ -26,6 +27,7 @@ export default function SolutionsView({
               }`}
             >
               <div>
+                <ProductIcon type={product.widget_type} className="mb-4 h-12 w-12" />
                 <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
                   {product.tag}
                 </span>

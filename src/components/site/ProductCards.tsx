@@ -1,3 +1,5 @@
+import ProductIcon from "./ProductIcon";
+import RevealOnView from "./RevealOnView";
 import { WidgetRenderer } from "./widgets";
 import { sv, type Product } from "@/lib/cms";
 
@@ -24,11 +26,13 @@ export default function ProductCards({
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <div
+          {products.map((product, i) => (
+            <RevealOnView
               key={product.id}
+              delayMs={(i % 3) * 90}
               className="flex flex-col rounded-2xl border border-line bg-card p-6 transition-shadow hover:shadow-lg hover:shadow-ink/5"
             >
+              <ProductIcon type={product.widget_type} className="mb-4 h-11 w-11" />
               <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
                 {product.tag}
               </span>
@@ -42,7 +46,7 @@ export default function ProductCards({
                   skills={sv(product.widget_skills)}
                 />
               </div>
-            </div>
+            </RevealOnView>
           ))}
         </div>
       </div>

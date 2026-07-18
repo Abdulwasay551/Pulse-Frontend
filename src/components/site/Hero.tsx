@@ -3,8 +3,21 @@ import { sv, type HomePageData } from "@/lib/cms";
 
 export default function Hero({ data }: { data: HomePageData }) {
   return (
-    <section className="px-6 pt-16 pb-20 md:pt-20 md:pb-28">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-10">
+    <section className="relative overflow-hidden px-6 pt-16 pb-20 md:pt-20 md:pb-28">
+      <div
+        aria-hidden="true"
+        className="animate-drift-a pointer-events-none absolute -top-24 -right-24 h-[420px] w-[420px] rounded-full bg-primary-light/25 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-drift-b pointer-events-none absolute -bottom-32 -left-20 h-[380px] w-[380px] rounded-full bg-primary/15 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:radial-gradient(var(--line)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]"
+      />
+
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-10">
         <div>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-primary">
             <span className="h-1.5 w-1.5 rounded-full bg-primary-light" />

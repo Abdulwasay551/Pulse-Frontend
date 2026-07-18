@@ -1,3 +1,8 @@
+"use client";
+
+import AnimatedNumber from "./AnimatedNumber";
+import { useInView } from "./useInView";
+
 export type Tone = "primary" | "amber" | "neutral" | "maroon";
 
 const toneClasses: Record<Tone, string> = {
@@ -24,12 +29,17 @@ export interface SkillBarData {
 }
 
 export function MiniRows({ rows }: { rows: DemoRowData[] }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+
   return (
-    <div className="flex flex-col">
-      {rows.map((row) => (
+    <div ref={ref} className="flex flex-col">
+      {rows.map((row, i) => (
         <div
           key={row.label}
-          className="flex items-center justify-between gap-2 border-b border-line py-2 text-[12.5px] last:border-0"
+          className={`flex items-center justify-between gap-2 border-b border-line py-2 text-[12.5px] transition-all duration-500 ease-out last:border-0 ${
+            inView ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"
+          }`}
+          style={{ transitionDelay: `${i * 110}ms` }}
         >
           <span className="truncate text-ink">{row.label}</span>
           <span
@@ -44,12 +54,22 @@ export function MiniRows({ rows }: { rows: DemoRowData[] }) {
 }
 
 export function PipelineWidget({ stages }: { stages: StageCountData[] }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
   const shades = ["bg-cream-dim", "bg-amber-soft", "bg-primary-light/20", "bg-primary/15"];
+
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div ref={ref} className="grid grid-cols-4 gap-1.5">
       {stages.map((s, i) => (
-        <div key={s.label} className={`rounded-lg ${shades[i % shades.length]} px-1.5 py-2 text-center`}>
-          <div className="font-display text-base font-bold text-ink">{s.count}</div>
+        <div
+          key={s.label}
+          className={`rounded-lg ${shades[i % shades.length]} px-1.5 py-2 text-center transition-all duration-500 ease-out ${
+            inView ? "scale-100 opacity-100" : "scale-90 opacity-0"
+          }`}
+          style={{ transitionDelay: `${i * 100}ms` }}
+        >
+          <div className="font-display text-base font-bold text-ink">
+            {inView ? <AnimatedNumber value={s.count} durationMs={800} /> : 0}
+          </div>
           <div className="mt-0.5 font-mono text-[8.5px] uppercase tracking-wide text-ink-soft">
             {s.label}
           </div>
@@ -60,16 +80,23 @@ export function PipelineWidget({ stages }: { stages: StageCountData[] }) {
 }
 
 export function ITWidget({ skills }: { skills: SkillBarData[] }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+
   return (
-    <div className="flex flex-col gap-2">
-      {skills.map((s) => (
+    <div ref={ref} className="flex flex-col gap-2">
+      {skills.map((s, i) => (
         <div key={s.label}>
           <div className="mb-1 flex justify-between text-[11px]">
             <span className="text-ink">{s.label}</span>
-            <span className="font-mono text-ink-soft">{s.percent}% match</span>
+            <span className="font-mono text-ink-soft">
+              {inView ? <AnimatedNumber value={s.percent} durationMs={900} suffix="% match" /> : "0% match"}
+            </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-[900ms] ease-out"
+              style={{ width: inView ? `${s.percent}%` : "0%", transitionDelay: `${i * 120}ms` }}
+            />
           </div>
         </div>
       ))}

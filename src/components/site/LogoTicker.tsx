@@ -6,7 +6,7 @@ export default function LogoTicker({ logos }: { logos: string[] }) {
       <p className="mb-6 text-center font-mono text-xs uppercase tracking-wide text-ink-soft">
         Trusted by recruiting teams at
       </p>
-      <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+      <div className="overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
         <div className="flex w-max animate-ticker gap-16">
           {items.map((logo, i) => (
             <span

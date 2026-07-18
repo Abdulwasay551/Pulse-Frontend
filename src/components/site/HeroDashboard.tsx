@@ -1,4 +1,6 @@
 import type { Notification, PlacementPoint } from "@/lib/cms";
+import AnimatedNumber from "./AnimatedNumber";
+import AttendanceBar from "./AttendanceBar";
 
 const toneAvatar: Record<Notification["tone"], string> = {
   primary: "bg-primary-light text-primary-dark",
@@ -55,7 +57,9 @@ export default function HeroDashboard({
           <div className="font-mono text-[10px] uppercase tracking-wider text-cream/50">
             Placements · last 6 months
           </div>
-          <div className="font-display text-2xl font-bold text-cream">{totalPlacements}</div>
+          <div className="font-display text-2xl font-bold text-cream">
+            <AnimatedNumber value={totalPlacements} />
+          </div>
         </div>
         <span className="rounded-full bg-primary-light/15 px-2.5 py-1 font-mono text-[10.5px] font-semibold text-primary-light">
           {growthLabel}
@@ -127,15 +131,10 @@ export default function HeroDashboard({
               Attendance · this week
             </span>
             <span className="font-mono text-[11px] font-semibold text-cream">
-              {attendancePercent}%
+              <AnimatedNumber value={attendancePercent} suffix="%" />
             </span>
           </div>
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-cream/10">
-            <div
-              className="h-full rounded-full bg-primary-light"
-              style={{ width: `${attendancePercent}%` }}
-            />
-          </div>
+          <AttendanceBar percent={attendancePercent} />
           <div className="mt-1.5 text-[11px] text-cream/40">{attendanceSubtext}</div>
         </div>
       </div>
