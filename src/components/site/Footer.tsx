@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "./Logo";
 import { sv, type SiteSettingsData } from "@/lib/cms";
 
 export default function Footer({ settings }: { settings: SiteSettingsData }) {
@@ -10,9 +11,7 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
         <div className="grid grid-cols-2 gap-10 pb-12 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-bold text-cream">
-                E
-              </span>
+              <Logo className="h-7 w-7" />
               EvoHR
             </div>
             <p className="mt-3 max-w-[220px] text-sm text-ink-soft">{settings.footer_tagline}</p>

@@ -222,4 +222,19 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
   return data.items[0];
 }
 
+// Used by the /preview route: fetches a *draft* page by the token Wagtail's
+// admin generates when an editor clicks "Preview" — always fresh, never the
+// 60s-revalidate cache the live pages use, since a stale preview would be
+// actively misleading to whoever is checking their edits.
+export async function getPagePreview<T>(contentType: string, token: string): Promise<T> {
+  const res = await fetch(
+    `${CMS_API_BASE}/page_preview/?content_type=${encodeURIComponent(contentType)}&token=${encodeURIComponent(token)}&fields=*`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Preview fetch failed (${res.status})`);
+  }
+  return res.json();
+}
+
 export { sv };

@@ -1,0 +1,16 @@
+export default function Logo({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect width="32" height="32" rx="9" fill="#146b4c" />
+      <rect x="7" y="18" width="4.5" height="8" rx="1.5" fill="#a7f3d0" />
+      <rect x="13.75" y="13" width="4.5" height="13" rx="1.5" fill="#2dd4a1" />
+      <rect x="20.5" y="7" width="4.5" height="19" rx="1.5" fill="#fbf7ef" />
+    </svg>
+  );
+}
