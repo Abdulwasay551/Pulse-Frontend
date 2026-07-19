@@ -1,4 +1,5 @@
 import RevealOnView from "./RevealOnView";
+import StatValue from "./StatValue";
 import { sv, type StatItem, type StreamItem } from "@/lib/cms";
 
 export default function StatsBanner({
@@ -21,9 +22,10 @@ export default function StatsBanner({
       <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-y-10 sm:grid-cols-4">
         {stats.map((s, i) => (
           <RevealOnView key={s.label} delayMs={i * 100}>
-            <div className="font-display text-4xl font-bold text-cream md:text-5xl">
-              {s.value}
-            </div>
+            <StatValue
+              value={s.value}
+              className="font-mono text-4xl font-bold tabular-nums text-cream md:text-5xl"
+            />
             <div className="mt-2 text-sm text-cream/50">{s.label}</div>
           </RevealOnView>
         ))}

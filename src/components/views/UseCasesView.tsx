@@ -1,5 +1,6 @@
 import PageHeader from "@/components/site/PageHeader";
 import CtaBanner from "@/components/site/CtaBanner";
+import StatValue from "@/components/site/StatValue";
 import { sv, type SiteSettingsData, type UseCasesPageData } from "@/lib/cms";
 
 export default function UseCasesView({
@@ -26,7 +27,10 @@ export default function UseCasesView({
                   {c.tag}
                 </span>
                 <div className="text-right">
-                  <div className="font-display text-2xl font-bold text-ink">{c.stat}</div>
+                  <StatValue
+                    value={c.stat}
+                    className="font-mono text-2xl font-bold tabular-nums text-ink"
+                  />
                   <div className="text-[11px] text-ink-soft">{c.stat_label}</div>
                 </div>
               </div>

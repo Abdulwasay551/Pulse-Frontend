@@ -19,19 +19,37 @@ export default function Hero({ data }: { data: HomePageData }) {
 
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-10">
         <div>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-primary">
+          <div
+            className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-primary"
+            style={{ animationDelay: "0ms" }}
+          >
             <span className="h-1.5 w-1.5 rounded-full bg-primary-light" />
             {data.hero_eyebrow}
           </div>
 
-          <h1 className="font-display text-4xl font-bold leading-tight text-ink md:text-5xl lg:text-[3.4rem]">
-            {data.hero_heading_pre} <span className="text-primary">{data.hero_heading_highlight}</span>
+          <h1
+            className="animate-fade-in-up font-display text-4xl font-bold leading-tight text-ink md:text-5xl lg:text-[3.4rem]"
+            style={{ animationDelay: "90ms" }}
+          >
+            {data.hero_heading_pre}{" "}
+            <span className="relative inline-block text-primary">
+              {data.hero_heading_highlight}
+              <span className="animate-underline-draw absolute -bottom-1 left-0 h-[3px] w-full rounded-full bg-primary-light" />
+            </span>
             {data.hero_heading_post}
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg text-ink-soft">{data.hero_subtitle}</p>
+          <p
+            className="animate-fade-in-up mt-6 max-w-xl text-lg text-ink-soft"
+            style={{ animationDelay: "180ms" }}
+          >
+            {data.hero_subtitle}
+          </p>
 
-          <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+          <div
+            className="animate-fade-in-up mt-9 flex flex-col gap-4 sm:flex-row"
+            style={{ animationDelay: "270ms" }}
+          >
             <a
               href="#demo"
               className="rounded-lg bg-primary px-7 py-3 text-center font-mono text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
@@ -46,21 +64,28 @@ export default function Hero({ data }: { data: HomePageData }) {
             </a>
           </div>
 
-          <p className="mt-5 font-mono text-xs text-ink-soft">{data.hero_note}</p>
+          <p
+            className="animate-fade-in-up mt-5 font-mono text-xs text-ink-soft"
+            style={{ animationDelay: "340ms" }}
+          >
+            {data.hero_note}
+          </p>
         </div>
 
-        <HeroDashboard
-          totalPlacements={data.dashboard_total_placements}
-          growthLabel={data.dashboard_growth_label}
-          placements={sv(data.dashboard_placements)}
-          notifications={sv(data.dashboard_notifications)}
-          payrollLabel={data.dashboard_payroll_label}
-          payrollAmount={data.dashboard_payroll_amount}
-          payrollSubtext={data.dashboard_payroll_subtext}
-          payrollStatus={data.dashboard_payroll_status}
-          attendancePercent={data.dashboard_attendance_percent}
-          attendanceSubtext={data.dashboard_attendance_subtext}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: "150ms" }}>
+          <HeroDashboard
+            totalPlacements={data.dashboard_total_placements}
+            growthLabel={data.dashboard_growth_label}
+            placements={sv(data.dashboard_placements)}
+            notifications={sv(data.dashboard_notifications)}
+            payrollLabel={data.dashboard_payroll_label}
+            payrollAmount={data.dashboard_payroll_amount}
+            payrollSubtext={data.dashboard_payroll_subtext}
+            payrollStatus={data.dashboard_payroll_status}
+            attendancePercent={data.dashboard_attendance_percent}
+            attendanceSubtext={data.dashboard_attendance_subtext}
+          />
+        </div>
       </div>
     </section>
   );

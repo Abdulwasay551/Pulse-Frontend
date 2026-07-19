@@ -57,7 +57,7 @@ export default function HeroDashboard({
           <div className="font-mono text-[10px] uppercase tracking-wider text-cream/50">
             Placements · last 6 months
           </div>
-          <div className="font-display text-2xl font-bold text-cream">
+          <div className="font-mono text-2xl font-bold tabular-nums text-cream">
             <AnimatedNumber value={totalPlacements} />
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function HeroDashboard({
               {payrollStatus}
             </span>
           </div>
-          <div className="mt-1.5 font-display text-lg font-bold text-cream">{payrollAmount}</div>
+          <div className="mt-1.5 font-mono text-lg font-bold tabular-nums text-cream">{payrollAmount}</div>
           <div className="text-[11px] text-cream/40">{payrollSubtext}</div>
         </div>
 

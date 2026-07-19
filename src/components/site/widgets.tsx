@@ -67,7 +67,7 @@ export function PipelineWidget({ stages }: { stages: StageCountData[] }) {
           }`}
           style={{ transitionDelay: `${i * 100}ms` }}
         >
-          <div className="font-display text-base font-bold text-ink">
+          <div className="font-mono text-base font-bold tabular-nums text-ink">
             {inView ? <AnimatedNumber value={s.count} durationMs={800} /> : 0}
           </div>
           <div className="mt-0.5 font-mono text-[8.5px] uppercase tracking-wide text-ink-soft">

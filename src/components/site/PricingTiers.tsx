@@ -57,7 +57,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
               {!tier.is_custom ? (
                 <>
                   <span
-                    className={`font-display text-4xl font-bold ${tier.featured ? "text-cream" : "text-ink"}`}
+                    className={`font-mono text-4xl font-bold tabular-nums ${tier.featured ? "text-cream" : "text-ink"}`}
                   >
                     ${annual ? tier.annual_price : tier.monthly_price}
                   </span>
@@ -68,7 +68,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
                 </>
               ) : (
                 <span
-                  className={`font-display text-4xl font-bold ${tier.featured ? "text-cream" : "text-ink"}`}
+                  className={`font-mono text-4xl font-bold ${tier.featured ? "text-cream" : "text-ink"}`}
                 >
                   Custom
                 </span>
