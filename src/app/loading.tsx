@@ -39,6 +39,19 @@ export default function Loading() {
         </div>
         <CardGridSkeleton />
       </div>
+
+      <section className="bg-ink px-6 py-24">
+        <Bar className="mx-auto h-8 w-3/5 max-w-xl bg-cream/10" />
+        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-y-10 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-2">
+              <Bar className="h-10 w-20 bg-cream/10" />
+              <Bar className="h-3 w-16 bg-cream/10" />
+            </div>
+          ))}
+        </div>
+        <Bar className="mx-auto mt-16 h-12 w-36 rounded-full bg-cream/10" />
+      </section>
     </>
   );
 }

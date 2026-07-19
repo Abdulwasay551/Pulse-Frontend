@@ -28,7 +28,7 @@ export default function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+              className="font-mono text-[13px] font-medium text-ink-soft transition-colors hover:text-ink"
             >
               {link.label}
             </Link>
@@ -38,13 +38,13 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           <a
             href="#login"
-            className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
+            className="rounded-lg border border-line px-4 py-2 font-mono text-[13px] font-semibold text-ink transition-colors hover:bg-cream-dim"
           >
             Log in
           </a>
           <a
             href="#demo"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
+            className="rounded-lg bg-primary px-4 py-2 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
           >
             Book a Demo
           </a>
@@ -67,7 +67,7 @@ export default function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              className="text-sm font-medium text-ink-soft"
+              className="font-mono text-[13px] font-medium text-ink-soft"
               onClick={() => setOpen(false)}
             >
               {link.label}
@@ -76,13 +76,13 @@ export default function Navbar() {
           <div className="mt-2 flex flex-col gap-3">
             <a
               href="#login"
-              className="rounded-lg border border-line px-4 py-2 text-center text-sm font-semibold text-ink"
+              className="rounded-lg border border-line px-4 py-2 text-center font-mono text-[13px] font-semibold text-ink"
             >
               Log in
             </a>
             <a
               href="#demo"
-              className="rounded-lg bg-primary px-4 py-2 text-center text-sm font-semibold text-cream"
+              className="rounded-lg bg-primary px-4 py-2 text-center font-mono text-[13px] font-semibold text-cream"
             >
               Book a Demo
             </a>

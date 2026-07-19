@@ -166,6 +166,9 @@ body {
 
 .animate-notif-cycle {
   animation: notif-cycle 9s ease-in-out infinite;
+  /* Same reasoning as the ticker: freezing this under reduced-motion reads
+     as a broken/stuck hero on devices that default to it (common on mobile),
+     so it keeps cycling regardless. */
 }
 
 .animate-scan-sweep {
@@ -175,16 +178,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-live-pulse,
   .animate-bar-grow,
-  .animate-notif-cycle,
   .animate-scan-sweep {
     animation: none !important;
-  }
-
-  .animate-notif-cycle {
-    opacity: 1;
-  }
-
-  .animate-notif-cycle:not(:first-child) {
-    display: none;
   }
 }

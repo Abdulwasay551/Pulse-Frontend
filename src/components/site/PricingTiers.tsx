@@ -9,7 +9,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
   return (
     <div>
       <div className="mb-12 flex items-center justify-center gap-4">
-        <span className={`text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
+        <span className={`font-mono text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
           Monthly
         </span>
         <button
@@ -21,7 +21,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
             className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-cream transition-transform ${annual ? "translate-x-5" : "translate-x-0"}`}
           />
         </button>
-        <span className={`text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
+        <span className={`font-mono text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
           Annual
         </span>
         <span className="rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-semibold text-primary">
@@ -61,7 +61,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
                   >
                     ${annual ? tier.annual_price : tier.monthly_price}
                   </span>
-                  <span className={tier.featured ? "text-cream/50" : "text-ink-soft"}>
+                  <span className={`font-mono text-sm ${tier.featured ? "text-cream/50" : "text-ink-soft"}`}>
                     {" "}
                     / recruiter / mo
                   </span>
@@ -73,7 +73,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
                   Custom
                 </span>
               )}
-              <div className={`mt-1 text-xs ${tier.featured ? "text-cream/40" : "text-ink-soft"}`}>
+              <div className={`mt-1 font-mono text-xs ${tier.featured ? "text-cream/40" : "text-ink-soft"}`}>
                 {!tier.is_custom ? (annual ? "Billed annually" : "Billed monthly") : "Talk to sales"}
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
 
             <a
               href="#demo"
-              className={`rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
+              className={`rounded-lg px-5 py-3 text-center font-mono text-sm font-semibold transition-colors ${
                 tier.featured
                   ? "bg-primary-light text-primary-dark hover:bg-cream"
                   : "bg-primary text-cream hover:bg-primary-dark"

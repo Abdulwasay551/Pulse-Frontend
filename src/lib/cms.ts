@@ -3,7 +3,7 @@ const CMS_API_BASE = process.env.CMS_API_URL ?? "http://localhost:8000/api/cms/v
 // Revalidate fetched CMS content periodically rather than on every request.
 const REVALIDATE_SECONDS = 60;
 
-type StreamItem<T> = { type: string; value: T; id: string };
+export type StreamItem<T> = { type: string; value: T; id: string };
 
 function sv<T>(items: StreamItem<T>[] | undefined): T[] {
   return (items ?? []).map((item) => item.value);
@@ -72,6 +72,14 @@ export interface HomePageData {
   suite_eyebrow: string;
   suite_title: string;
   suite_subtitle: string;
+  stats_heading: string;
+  stats_items: StreamItem<StatItem>[];
+  stats_cta_label: string;
+}
+
+export interface StatItem {
+  value: string;
+  label: string;
 }
 
 export interface Product {

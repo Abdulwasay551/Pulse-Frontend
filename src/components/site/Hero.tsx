@@ -34,19 +34,19 @@ export default function Hero({ data }: { data: HomePageData }) {
           <div className="mt-9 flex flex-col gap-4 sm:flex-row">
             <a
               href="#demo"
-              className="rounded-lg bg-primary px-7 py-3 text-center text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
+              className="rounded-lg bg-primary px-7 py-3 text-center font-mono text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
             >
               {data.hero_cta_primary_label}
             </a>
             <a
               href="#trial"
-              className="rounded-lg border border-line bg-card px-7 py-3 text-center text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
+              className="rounded-lg border border-line bg-card px-7 py-3 text-center font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
             >
               {data.hero_cta_secondary_label}
             </a>
           </div>
 
-          <p className="mt-5 text-xs text-ink-soft">{data.hero_note}</p>
+          <p className="mt-5 font-mono text-xs text-ink-soft">{data.hero_note}</p>
         </div>
 
         <HeroDashboard
