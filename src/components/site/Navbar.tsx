@@ -36,12 +36,12 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <a
-            href="#login"
+          <Link
+            href="/login"
             className="rounded-lg border border-line px-4 py-2 font-mono text-[13px] font-semibold text-ink transition-colors hover:bg-cream-dim"
           >
             Log in
-          </a>
+          </Link>
           <a
             href="#demo"
             className="rounded-lg bg-primary px-4 py-2 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
@@ -74,12 +74,13 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="mt-2 flex flex-col gap-3">
-            <a
-              href="#login"
+            <Link
+              href="/login"
               className="rounded-lg border border-line px-4 py-2 text-center font-mono text-[13px] font-semibold text-ink"
+              onClick={() => setOpen(false)}
             >
               Log in
-            </a>
+            </Link>
             <a
               href="#demo"
               className="rounded-lg bg-primary px-4 py-2 text-center font-mono text-[13px] font-semibold text-cream"

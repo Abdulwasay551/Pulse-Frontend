@@ -1,0 +1,139 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Briefcase,
+  Banknote,
+  BarChart3,
+  Settings,
+  ChevronsLeft,
+  ChevronsRight,
+  X,
+} from "lucide-react";
+import Logo from "@/components/site/Logo";
+import { demoUser } from "@/lib/dashboard-data";
+
+const navItems = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/candidates", label: "Candidates", icon: Users },
+  { href: "/dashboard/clients", label: "Clients", icon: Building2 },
+  { href: "/dashboard/requisitions", label: "Requisitions", icon: Briefcase },
+  { href: "/dashboard/payroll", label: "Payroll", icon: Banknote },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+];
+
+export default function Sidebar({
+  mobileOpen,
+  onClose,
+}: {
+  mobileOpen: boolean;
+  onClose: () => void;
+}) {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("evohr_sidebar_collapsed");
+    if (stored === "true") requestAnimationFrame(() => setCollapsed(true));
+  }, []);
+
+  function toggle() {
+    setCollapsed((v) => {
+      localStorage.setItem("evohr_sidebar_collapsed", String(!v));
+      return !v;
+    });
+  }
+
+  return (
+    <>
+      {mobileOpen && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-40 bg-ink/50 lg:hidden"
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col border-r border-cream/10 bg-primary-dark transition-transform duration-300 ease-in-out lg:static lg:transition-[width] ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 ${collapsed ? "lg:w-[76px]" : "lg:w-64"}`}
+      >
+        <div className="flex items-center gap-2 px-4 py-5">
+          <Logo className="h-8 w-8 shrink-0" />
+          {!collapsed && (
+            <span className="font-display text-lg font-bold whitespace-nowrap text-cream">
+              EvoHR
+            </span>
+          )}
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="ml-auto rounded-lg p-1.5 text-cream/60 hover:bg-cream/5 hover:text-cream lg:hidden"
+          >
+            <X className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-1 px-3">
+          {navItems.map((item) => {
+            const active =
+              item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                title={collapsed ? item.label : undefined}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-mono text-[13px] transition-colors ${
+                  active
+                    ? "bg-primary-light/15 text-primary-light"
+                    : "text-cream/60 hover:bg-cream/5 hover:text-cream"
+                }`}
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+      <div className="border-t border-cream/10 p-3">
+        <div className={`flex items-center gap-2.5 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""}`}>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light/20 font-mono text-xs font-bold text-primary-light">
+            {demoUser.initials}
+          </span>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-semibold text-cream">{demoUser.name}</div>
+              <div className="truncate font-mono text-[11px] text-cream/45">{demoUser.role}</div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={toggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={`mt-1 hidden w-full items-center gap-3 rounded-lg px-3 py-2 font-mono text-[13px] text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream lg:flex ${
+            collapsed ? "justify-center" : ""
+          }`}
+        >
+          {collapsed ? (
+            <ChevronsRight className="h-[16px] w-[16px] shrink-0" />
+          ) : (
+            <>
+              <ChevronsLeft className="h-[16px] w-[16px] shrink-0" />
+              <span>Collapse</span>
+            </>
+          )}
+        </button>
+      </div>
+      </aside>
+    </>
+  );
+}
