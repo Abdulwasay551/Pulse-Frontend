@@ -1,3 +1,4 @@
+import Link from "next/link";
 import RevealOnView from "./RevealOnView";
 import StatValue from "./StatValue";
 import { sv, type StatItem, type StreamItem } from "@/lib/cms";
@@ -32,12 +33,12 @@ export default function StatsBanner({
       </div>
 
       <RevealOnView delayMs={300} className="mt-16">
-        <a
-          href="#demo"
+        <Link
+          href="/login"
           className="inline-block rounded-full bg-cream px-8 py-3.5 font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
         >
           {ctaLabel}
-        </a>
+        </Link>
       </RevealOnView>
     </section>
   );

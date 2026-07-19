@@ -1,3 +1,4 @@
+import Link from "next/link";
 import HeroDashboard from "./HeroDashboard";
 import { sv, type HomePageData } from "@/lib/cms";
 
@@ -50,18 +51,18 @@ export default function Hero({ data }: { data: HomePageData }) {
             className="animate-fade-in-up mt-9 flex flex-col gap-4 sm:flex-row"
             style={{ animationDelay: "270ms" }}
           >
-            <a
-              href="#demo"
+            <Link
+              href="/login"
               className="rounded-lg bg-primary px-7 py-3 text-center font-mono text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
             >
               {data.hero_cta_primary_label}
-            </a>
-            <a
-              href="#trial"
+            </Link>
+            <Link
+              href="/login"
               className="rounded-lg border border-line bg-card px-7 py-3 text-center font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
             >
               {data.hero_cta_secondary_label}
-            </a>
+            </Link>
           </div>
 
           <p

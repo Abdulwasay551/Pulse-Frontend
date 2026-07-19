@@ -43,12 +43,12 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
             © {new Date().getFullYear()} {settings.copyright_holder}
           </span>
           <div className="flex gap-5">
-            <a href="#" className="hover:text-ink">
+            <Link href="/privacy" className="hover:text-ink">
               Privacy
-            </a>
-            <a href="#" className="hover:text-ink">
+            </Link>
+            <Link href="/terms" className="hover:text-ink">
               Terms
-            </a>
+            </Link>
             <Link href="/pricing" className="hover:text-ink">
               Pricing
             </Link>

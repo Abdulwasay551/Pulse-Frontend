@@ -42,12 +42,12 @@ export default function Navbar() {
           >
             Log in
           </Link>
-          <a
-            href="#demo"
+          <Link
+            href="/login"
             className="rounded-lg bg-primary px-4 py-2 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
           >
             Book a Demo
-          </a>
+          </Link>
         </div>
 
         <button
@@ -81,12 +81,13 @@ export default function Navbar() {
             >
               Log in
             </Link>
-            <a
-              href="#demo"
+            <Link
+              href="/login"
               className="rounded-lg bg-primary px-4 py-2 text-center font-mono text-[13px] font-semibold text-cream"
+              onClick={() => setOpen(false)}
             >
               Book a Demo
-            </a>
+            </Link>
           </div>
         </div>
       )}

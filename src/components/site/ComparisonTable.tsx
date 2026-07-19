@@ -8,7 +8,8 @@ function Cell({ value }: { value: ComparisonValue }) {
 
 export default function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-card">
+    <div>
+      <div className="overflow-x-auto rounded-2xl border border-line bg-card">
       <table className="w-full min-w-[560px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-line">
@@ -37,6 +38,18 @@ export default function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           ))}
         </tbody>
       </table>
+      </div>
+      <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 font-mono text-xs text-ink-soft">
+        <span className="flex items-center gap-1.5">
+          <span className="text-primary">✓</span> Included
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-amber">±</span> Limited / add-on availability
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-ink-soft/40">—</span> Not available
+        </span>
+      </div>
     </div>
   );
 }

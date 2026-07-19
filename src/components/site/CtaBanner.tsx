@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CtaBanner({
   title = "Put your desk on the record.",
   subtitle = "Start a free 30-day trial. No credit card, no setup calls required.",
@@ -20,18 +22,18 @@ export default function CtaBanner({
         </h2>
         <p className="relative mx-auto mt-3 max-w-md text-cream/60">{subtitle}</p>
         <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <a
-            href="#demo"
+          <Link
+            href="/login"
             className="rounded-lg bg-primary-light px-7 py-3 font-mono text-sm font-semibold text-primary-dark transition-colors hover:bg-cream"
           >
             Book a Demo
-          </a>
-          <a
+          </Link>
+          <Link
             href="/pricing"
             className="rounded-lg border border-cream/25 px-7 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-cream/10"
           >
             See pricing
-          </a>
+          </Link>
         </div>
       </div>
     </section>

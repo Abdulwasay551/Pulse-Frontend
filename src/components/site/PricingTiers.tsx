@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { PricingTier } from "@/lib/cms";
 
 export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
@@ -90,8 +91,8 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
               ))}
             </ul>
 
-            <a
-              href="#demo"
+            <Link
+              href="/login"
               className={`rounded-lg px-5 py-3 text-center font-mono text-sm font-semibold transition-colors ${
                 tier.featured
                   ? "bg-primary-light text-primary-dark hover:bg-cream"
@@ -99,7 +100,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
               }`}
             >
               {tier.cta_label}
-            </a>
+            </Link>
           </div>
         ))}
       </div>
