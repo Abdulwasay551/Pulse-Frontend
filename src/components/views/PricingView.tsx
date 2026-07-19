@@ -1,5 +1,6 @@
 import PageHeader from "@/components/site/PageHeader";
 import PricingTiers from "@/components/site/PricingTiers";
+import PricingCalculator from "@/components/site/PricingCalculator";
 import ComparisonTable from "@/components/site/ComparisonTable";
 import FaqAccordion from "@/components/site/FaqAccordion";
 import CtaBanner from "@/components/site/CtaBanner";
@@ -19,6 +20,12 @@ export default function PricingView({
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-6xl">
           <PricingTiers tiers={sv(data.tiers)} />
+        </div>
+      </section>
+
+      <section className="px-6 pb-24">
+        <div className="mx-auto max-w-4xl">
+          <PricingCalculator tiers={sv(data.tiers)} />
         </div>
       </section>
 

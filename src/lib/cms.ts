@@ -75,11 +75,21 @@ export interface HomePageData {
   stats_heading: string;
   stats_items: StreamItem<StatItem>[];
   stats_cta_label: string;
+  testimonials_eyebrow: string;
+  testimonials_title: string;
+  testimonials: StreamItem<Testimonial>[];
 }
 
 export interface StatItem {
   value: string;
   label: string;
+}
+
+export interface Testimonial {
+  quote: string;
+  name: string;
+  title: string;
+  initials: string;
 }
 
 export interface Product {

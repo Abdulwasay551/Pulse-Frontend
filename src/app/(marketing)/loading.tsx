@@ -40,6 +40,14 @@ export default function Loading() {
         <CardGridSkeleton />
       </div>
 
+      <div className="pt-8">
+        <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-3 px-6">
+          <Bar className="h-4 w-32 rounded-full" />
+          <Bar className="h-8 w-4/5" />
+        </div>
+        <CardGridSkeleton count={3} />
+      </div>
+
       <section className="bg-ink px-6 py-24">
         <Bar className="mx-auto h-8 w-3/5 max-w-xl bg-cream/10" />
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-y-10 sm:grid-cols-4">
