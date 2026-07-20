@@ -15,14 +15,16 @@ const iconByType: Record<WidgetType, LucideIcon> = {
 export default function ProductIcon({
   type,
   className = "h-9 w-9",
+  toneClassName = "bg-primary/10 text-primary",
 }: {
   type: WidgetType;
   className?: string;
+  toneClassName?: string;
 }) {
   const Icon = iconByType[type] ?? LayoutGrid;
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-xl ${toneClassName} ${className}`}
     >
       <Icon className="h-[52%] w-[52%]" strokeWidth={2} />
     </div>

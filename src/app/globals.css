@@ -31,7 +31,7 @@
   --color-line: var(--line);
   --color-card: var(--card);
   --font-sans: var(--font-inter);
-  --font-display: var(--font-space-grotesk);
+  --font-display: var(--font-inter);
   --font-mono: var(--font-ibm-plex-mono);
 }
 
