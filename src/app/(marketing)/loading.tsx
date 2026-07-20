@@ -23,6 +23,15 @@ export default function Loading() {
         </div>
       </section>
 
+      <div className="pt-24">
+        <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-3 px-6">
+          <Bar className="h-4 w-32 rounded-full" />
+          <Bar className="h-8 w-4/5" />
+          <Bar className="h-4 w-2/3" />
+        </div>
+        <CardGridSkeleton count={5} />
+      </div>
+
       <section className="border-y border-line bg-card py-10">
         <div className="mx-auto flex max-w-6xl justify-center gap-16 px-6">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -30,15 +39,6 @@ export default function Loading() {
           ))}
         </div>
       </section>
-
-      <div className="pt-24">
-        <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-3 px-6">
-          <Bar className="h-4 w-32 rounded-full" />
-          <Bar className="h-8 w-4/5" />
-          <Bar className="h-4 w-2/3" />
-        </div>
-        <CardGridSkeleton />
-      </div>
 
       <div className="pt-8">
         <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-3 px-6">

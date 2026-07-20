@@ -15,13 +15,13 @@ export default function HomeView({
   return (
     <>
       <Hero data={data} />
-      <LogoTicker logos={sv(data.trust_logos)} />
       <ProductCards
         eyebrow={data.suite_eyebrow}
         title={data.suite_title}
         subtitle={data.suite_subtitle}
         products={products}
       />
+      <LogoTicker logos={sv(data.trust_logos)} />
       <Testimonials
         eyebrow={data.testimonials_eyebrow}
         title={data.testimonials_title}

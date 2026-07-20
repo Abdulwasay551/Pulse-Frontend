@@ -14,7 +14,7 @@ export default function CtaBanner({
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 20% 20%, rgba(45,212,161,0.16), transparent 45%)",
+              "radial-gradient(circle at 20% 20%, rgba(77,111,224,0.18), transparent 45%)",
           }}
         />
         <h2 className="relative font-display text-3xl font-bold text-cream md:text-4xl">
