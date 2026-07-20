@@ -27,7 +27,7 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
                   <li key={link}>
                     <Link
                       href={col.url}
-                      className="font-mono text-[13px] text-ink-soft transition-colors hover:text-ink"
+                      className="font-sans text-sm text-ink-soft transition-colors hover:text-ink"
                     >
                       {link}
                     </Link>
@@ -38,7 +38,7 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
           ))}
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-line pt-6 font-mono text-xs text-ink-soft sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-line pt-6 font-sans text-sm text-ink-soft sm:flex-row">
           <span>
             © {new Date().getFullYear()} {settings.copyright_holder}
           </span>

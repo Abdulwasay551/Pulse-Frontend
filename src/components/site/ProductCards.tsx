@@ -5,24 +5,23 @@ import RevealOnView from "./RevealOnView";
 import { WidgetRenderer } from "./widgets";
 import { sv, type Product } from "@/lib/cms";
 
-// Staggered heights on desktop give the row its bento rhythm — bottom-aligned
-// so the tops stair-step instead of everything sitting on one flat grid line.
-const LG_HEIGHTS = ["lg:h-[440px]", "lg:h-[360px]", "lg:h-[410px]", "lg:h-[340px]", "lg:h-[470px]"];
+// Symmetric arc on desktop — tallest at the bookends, shortest in the middle —
+// bottom-aligned so it stair-steps like a bento layout instead of a flat grid.
+const LG_HEIGHTS = ["lg:h-[440px]", "lg:h-[380px]", "lg:h-[300px]", "lg:h-[380px]", "lg:h-[440px]"];
 
 // Alternating card treatments (dark / light / beige / light / accent) so the
-// row reads with the same color rhythm as a bookended bento layout, instead
-// of five identical white cards in a row.
+// row reads with a color rhythm, instead of five identical white cards.
 const CARD_VARIANTS = [
   {
-    card: "bg-primary-dark border-primary-dark",
+    card: "bg-primary-dark",
     tag: "text-primary-light",
     title: "text-cream",
     desc: "text-cream/60",
     cta: "text-primary-light hover:text-cream",
-    iconTone: "bg-cream/10 text-cream",
+    iconTone: "bg-cream/15 text-cream",
   },
   {
-    card: "bg-card border-line",
+    card: "bg-card border border-line",
     tag: "text-primary",
     title: "text-ink",
     desc: "text-ink-soft",
@@ -30,7 +29,7 @@ const CARD_VARIANTS = [
     iconTone: "bg-primary/10 text-primary",
   },
   {
-    card: "bg-cream-dim border-line",
+    card: "bg-cream-dim border border-line",
     tag: "text-primary",
     title: "text-ink",
     desc: "text-ink-soft",
@@ -38,7 +37,7 @@ const CARD_VARIANTS = [
     iconTone: "bg-card text-primary",
   },
   {
-    card: "bg-card border-line",
+    card: "bg-card border border-line",
     tag: "text-primary",
     title: "text-ink",
     desc: "text-ink-soft",
@@ -46,14 +45,21 @@ const CARD_VARIANTS = [
     iconTone: "bg-primary/10 text-primary",
   },
   {
-    card: "bg-primary-light border-primary-light",
+    card: "bg-primary-light",
     tag: "text-primary-dark",
     title: "text-cream",
     desc: "text-cream/80",
     cta: "text-cream hover:text-primary-dark",
-    iconTone: "bg-cream/20 text-cream",
+    iconTone: "bg-cream/25 text-cream",
   },
 ];
+
+// The reference layout mirrors around the middle card: left-side cards carry
+// their icon "tab" on their right shoulder, right-side cards on their left
+// shoulder, and the middle card has no tab at all (plain, shorter, icon sits
+// inline instead).
+type TabSide = "left" | "right" | "none";
+const TAB_SIDE: TabSide[] = ["right", "right", "none", "left", "left"];
 
 export default function ProductCards({
   eyebrow,
@@ -76,14 +82,16 @@ export default function ProductCards({
         <p className="mt-3 text-ink-soft">{subtitle}</p>
       </RevealOnView>
 
-      <div className="flex flex-col gap-5 px-6 lg:flex-row lg:items-end lg:px-10 xl:px-16">
+      <div className="flex flex-col gap-6 px-6 lg:flex-row lg:items-end lg:gap-5 lg:px-10 xl:px-16">
         {products.map((product, i) => {
           const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
+          const tabSide = TAB_SIDE[i % TAB_SIDE.length];
+
           return (
             <RevealOnView
               key={product.id}
               delayMs={(i % 5) * 90}
-              className={`group relative flex-1 lg:min-w-0 ${LG_HEIGHTS[i % LG_HEIGHTS.length]}`}
+              className={`group relative flex-1 pt-5 lg:min-w-0 ${LG_HEIGHTS[i % LG_HEIGHTS.length]}`}
             >
               {/* Hover tooltip: a floating "live preview" of the module's mini-dashboard widget */}
               <div className="pointer-events-none absolute inset-x-2 bottom-full z-20 mb-3 hidden -translate-y-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 lg:block">
@@ -101,17 +109,28 @@ export default function ProductCards({
                 <div className="mx-4 h-3 w-3 -translate-y-1.5 rotate-45 border-r border-b border-line bg-card" />
               </div>
 
-              <div
-                className={`flex h-full flex-col overflow-hidden border p-7 transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card}`}
-                style={{
-                  clipPath: "polygon(28px 0, 100% 0, 100% 100%, 0 100%, 0 28px, 28px 28px)",
-                }}
-              >
+              {tabSide !== "none" && (
                 <ProductIcon
                   type={product.widget_type}
                   toneClassName={variant.iconTone}
-                  className="mb-4 h-11 w-11 transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110"
+                  className={`absolute top-0 z-10 h-14 w-14 rounded-2xl shadow-md shadow-ink/10 transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${
+                    tabSide === "right" ? "right-5" : "left-5"
+                  }`}
                 />
+              )}
+
+              <div
+                className={`flex h-full flex-col overflow-hidden rounded-3xl p-7 transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${
+                  tabSide !== "none" ? "pt-10" : ""
+                }`}
+              >
+                {tabSide === "none" && (
+                  <ProductIcon
+                    type={product.widget_type}
+                    toneClassName={variant.iconTone}
+                    className="mb-4 h-11 w-11 transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110"
+                  />
+                )}
                 <span
                   className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}
                 >
