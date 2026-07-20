@@ -15,7 +15,7 @@ export default function AppLayout({
 }>) {
   return (
     <html lang="en" className={`${fontVariables} h-full antialiased`}>
-      <body className="min-h-full font-mono">{children}</body>
+      <body className="min-h-full font-sans">{children}</body>
     </html>
   );
 }

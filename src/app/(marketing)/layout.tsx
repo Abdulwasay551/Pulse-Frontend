@@ -25,7 +25,7 @@ export default async function MarketingLayout({
 
   return (
     <html lang="en" className={`${fontVariables} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-mono">
+      <body className="min-h-full flex flex-col font-sans">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer settings={settings} />
