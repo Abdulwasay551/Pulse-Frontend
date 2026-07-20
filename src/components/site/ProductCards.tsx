@@ -91,7 +91,7 @@ export default function ProductCards({
         <p className="mt-3 text-ink-soft">{subtitle}</p>
       </RevealOnView>
 
-      <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:overflow-visible lg:px-10 lg:pb-0 xl:px-16">
+      <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-0 lg:overflow-visible lg:px-10 lg:pb-0 xl:px-16">
         {products.map((product, i) => {
           const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
           const tabSide = TAB_SIDE[i % TAB_SIDE.length];
