@@ -68,7 +68,7 @@ export interface HomePageData {
   dashboard_payroll_status: string;
   dashboard_attendance_percent: number;
   dashboard_attendance_subtext: string;
-  trust_logos: StreamItem<string>[];
+  trust_logos: StreamItem<TrustLogo>[];
   suite_eyebrow: string;
   suite_title: string;
   suite_subtitle: string;
@@ -90,6 +90,12 @@ export interface Testimonial {
   name: string;
   title: string;
   initials: string;
+}
+
+export interface TrustLogo {
+  name: string;
+  logo_url: string;
+  logo_upload: string;
 }
 
 export interface Product {
