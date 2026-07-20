@@ -6,25 +6,22 @@ import { WidgetRenderer } from "./widgets";
 import { sv, type Product } from "@/lib/cms";
 
 // Every card is the same height; the bento stagger comes from shifting the
-// card BODY down via translate-y — bookends stay put, the middle card's body
-// sinks lowest, like a shallow smile. The badge is a sibling that does NOT
-// get this transform, so every badge lands at the exact same line across
-// the whole row regardless of how far its card sinks below it.
+// card body down via translate-y — bookends stay put, the middle card sinks
+// lowest, like a shallow smile.
 const LG_TRANSLATE_Y = ["lg:translate-y-0", "lg:translate-y-10", "lg:translate-y-20", "lg:translate-y-10", "lg:translate-y-0"];
 
-// Alternating card treatments (dark / light / beige / light / accent) so the
-// row reads with a color rhythm. Each card's corner badge uses a CONTRASTING
-// color (not a tint of the card itself) so it reads as a distinct tag sitting
-// in a cut corner, not a same-color ghost.
+// Five distinct backgrounds so no two cards (especially the pair flanking
+// the middle one) share the same color, plus a contrasting badge chip for
+// each — never a tint of the card's own color, always a clear pop.
 const CARD_VARIANTS = [
   {
     card: "bg-primary-dark",
-    badge: "bg-cream",
+    badge: "bg-primary-light",
     tag: "text-primary-light",
     title: "text-cream",
     desc: "text-cream/60",
     cta: "text-primary-light hover:text-cream",
-    icon: "text-primary-dark",
+    icon: "text-cream",
   },
   {
     card: "bg-card border border-line",
@@ -37,16 +34,7 @@ const CARD_VARIANTS = [
   },
   {
     card: "bg-cream-dim border border-line",
-    badge: "bg-primary",
-    tag: "text-primary",
-    title: "text-ink",
-    desc: "text-ink-soft",
-    cta: "text-primary hover:text-primary-dark",
-    icon: "text-cream",
-  },
-  {
-    card: "bg-card border border-line",
-    badge: "bg-primary",
+    badge: "bg-primary-light",
     tag: "text-primary",
     title: "text-ink",
     desc: "text-ink-soft",
@@ -62,7 +50,21 @@ const CARD_VARIANTS = [
     cta: "text-cream hover:text-primary-dark",
     icon: "text-primary-dark",
   },
+  {
+    card: "bg-primary-dark",
+    badge: "bg-cream",
+    tag: "text-primary-light",
+    title: "text-cream",
+    desc: "text-cream/60",
+    cta: "text-primary-light hover:text-cream",
+    icon: "text-primary-dark",
+  },
 ];
+
+// The two bookend cards get a bigger, more dramatic rounded corner on their
+// outer edge (like a pronounced cut), while the corner facing a neighbor
+// stays at the normal radius since the cards sit flush against each other.
+const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]"];
 
 export default function ProductCards({
   eyebrow,
@@ -112,19 +114,18 @@ export default function ProductCards({
               </div>
 
               <div
-                className={`absolute -top-4 -left-4 z-10 flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                className={`flex h-full flex-col rounded-3xl p-7 transition-all duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
               >
-                <ProductIcon
-                  type={product.widget_type}
-                  toneClassName={`bg-transparent ${variant.icon}`}
-                  className="h-7 w-7"
-                />
-              </div>
-
-              <div
-                className={`flex h-full flex-col rounded-3xl p-7 transition-all duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]}`}
-              >
-                <span className={`mb-3 mt-6 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                <div
+                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                >
+                  <ProductIcon
+                    type={product.widget_type}
+                    toneClassName={`bg-transparent ${variant.icon}`}
+                    className="h-6 w-6"
+                  />
+                </div>
+                <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
                   {product.tag}
                 </span>
                 <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
