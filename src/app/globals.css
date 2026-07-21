@@ -191,6 +191,29 @@ body {
   }
 }
 
+/* Plain CSS (not Framer Motion) for the 3D flip rotation specifically —
+   Framer's computed matrix3d for rotateY was producing an incorrect
+   backface-visibility result (front face bleeding through mirrored) in
+   testing; a bare CSS transform does not have that problem. */
+@keyframes card-flip-reveal {
+  from {
+    transform: rotateY(-155deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+.animate-card-flip-reveal {
+  animation: card-flip-reveal 1.8s cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-flip-reveal {
+    animation: none;
+  }
+}
+
 
 .animate-live-pulse {
   animation: live-pulse 1.6s ease-in-out infinite;

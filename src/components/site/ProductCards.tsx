@@ -76,8 +76,9 @@ const CARD_VARIANTS = [
 const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]"];
 
 // How long a card has to stay hovered before it triggers the expanded
-// business-card-toss view.
+// business-card-toss view, and how long the 3D flip-and-travel itself takes.
 const HOVER_DELAY_MS = 1000;
+const FLIP_DURATION_S = 1.8;
 
 export default function ProductCards({
   eyebrow,
@@ -134,15 +135,14 @@ export default function ProductCards({
               <RevealOnView
                 key={product.id}
                 delayMs={(i % 5) * 90}
+                onMouseEnter={() => handleCardEnter(i)}
                 className="group relative w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
               >
                 <AnimatePresence>
                   {activeIndex === null && (
                     <motion.div
-                      layoutId={`product-card-${product.id}`}
-                      onMouseEnter={() => handleCardEnter(i)}
-                      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
-                      transition={{ layout: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+                      initial={false}
+                      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.25 } }}
                       className={`flex h-full flex-col rounded-3xl p-7 transition-shadow duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
                     >
                       <div
@@ -179,15 +179,15 @@ export default function ProductCards({
           {activeProduct && activeVariant && (
             <div
               className="absolute inset-0 hidden items-center gap-8 px-10 lg:flex xl:px-16"
-              style={{ perspective: 1400 }}
+              style={{ perspective: 1600 }}
             >
-              {/* Big detail panel — full breakdown of the hovered module, fades in once the card has landed */}
+              {/* Big detail panel — full breakdown of the hovered module, fades in only once the card has finished flipping into place */}
               <motion.div
                 key="detail-panel"
                 initial={{ opacity: 0, x: -48, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -48, scale: 0.97, transition: { duration: 0.2 } }}
-                transition={{ duration: 0.45, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, x: -48, scale: 0.97, transition: { duration: 0.25 } }}
+                transition={{ duration: 0.5, delay: FLIP_DURATION_S - 0.15, ease: [0.22, 1, 0.36, 1] }}
                 className="min-w-0 flex-1 rounded-3xl border border-line bg-card p-10"
               >
                 <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
@@ -216,36 +216,60 @@ export default function ProductCards({
                 </Link>
               </motion.div>
 
-              {/* The hovered card, tossed out to the right like a business card — same layoutId as
-                  its grid version, so Framer Motion carries its exact size across automatically
-                  instead of snapping to a new width. */}
+              {/* The hovered card, flipping through 3D space to the right like a tossed business
+                  card. Translation lives on the outer element; rotation lives on its own inner
+                  "flipper" so the 3D compositing isn't fighting a combined transform. It starts
+                  edge-on showing a blank back (no data), and only reveals the real content once
+                  it finishes rotating to face forward at rest. */}
               <motion.div
-                layoutId={`product-card-${activeProduct.id}`}
-                initial={{ rotate: -24 }}
-                animate={{ rotate: 6 }}
-                exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                transition={{ layout: { type: "spring", stiffness: 140, damping: 16 }, rotate: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
-                className={`w-72 shrink-0 rounded-3xl p-7 shadow-2xl shadow-ink/20 ${activeVariant.card}`}
+                key="tossed-card"
+                initial={{ opacity: 0, x: -160 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.35 } }}
+                transition={{ duration: FLIP_DURATION_S, ease: [0.45, 0, 0.2, 1] }}
+                className="h-[420px] w-72 shrink-0"
+                style={{ perspective: 1600 }}
               >
-                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${activeVariant.badge}`}>
-                  <ProductIcon
-                    type={activeProduct.widget_type}
-                    toneClassName={`bg-transparent ${activeVariant.icon}`}
-                    className="h-6 w-6"
+                <div
+                  className="animate-card-flip-reveal relative h-full w-full"
+                  style={{ transformStyle: "preserve-3d", WebkitTransformStyle: "preserve-3d" }}
+                >
+                  {/* Back face — solid color, no content, only visible mid-flip */}
+                  <div
+                    className={`absolute inset-0 rounded-3xl shadow-2xl shadow-ink/20 ${activeVariant.card}`}
+                    style={{
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                      transform: "rotateY(180deg)",
+                    }}
                   />
-                </div>
-                <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
-                  {activeProduct.tag}
-                </span>
-                <h3 className={`font-display text-lg font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>
-                <p className={`mt-2 text-sm ${activeVariant.desc}`}>{activeProduct.short_description}</p>
-                <div className={`mt-6 rounded-xl p-3.5 ${activeVariant.widgetBg}`}>
-                  <WidgetRenderer
-                    widgetType={activeProduct.widget_type}
-                    rows={sv(activeProduct.widget_rows)}
-                    stages={sv(activeProduct.widget_stages)}
-                    skills={sv(activeProduct.widget_skills)}
-                  />
+
+                  {/* Front face — the real content, hidden until the flip brings it forward */}
+                  <div
+                    className={`absolute inset-0 flex flex-col rounded-3xl p-7 shadow-2xl shadow-ink/20 ${activeVariant.card}`}
+                    style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+                  >
+                    <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${activeVariant.badge}`}>
+                      <ProductIcon
+                        type={activeProduct.widget_type}
+                        toneClassName={`bg-transparent ${activeVariant.icon}`}
+                        className="h-6 w-6"
+                      />
+                    </div>
+                    <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
+                      {activeProduct.tag}
+                    </span>
+                    <h3 className={`font-display text-lg font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>
+                    <p className={`mt-2 text-sm ${activeVariant.desc}`}>{activeProduct.short_description}</p>
+                    <div className={`mt-6 rounded-xl p-3.5 ${activeVariant.widgetBg}`}>
+                      <WidgetRenderer
+                        widgetType={activeProduct.widget_type}
+                        rows={sv(activeProduct.widget_rows)}
+                        stages={sv(activeProduct.widget_stages)}
+                        skills={sv(activeProduct.widget_skills)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </div>
