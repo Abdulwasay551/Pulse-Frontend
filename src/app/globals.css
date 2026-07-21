@@ -191,6 +191,7 @@ body {
   }
 }
 
+
 .animate-live-pulse {
   animation: live-pulse 1.6s ease-in-out infinite;
 }

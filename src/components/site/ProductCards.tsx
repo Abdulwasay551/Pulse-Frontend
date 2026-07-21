@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import ProductIcon from "./ProductIcon";
 import RevealOnView from "./RevealOnView";
@@ -22,6 +26,7 @@ const CARD_VARIANTS = [
     desc: "text-cream/60",
     cta: "text-primary-light hover:text-cream",
     icon: "text-cream",
+    widgetBg: "bg-cream",
   },
   {
     card: "bg-card border border-line",
@@ -31,6 +36,7 @@ const CARD_VARIANTS = [
     desc: "text-ink-soft",
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
+    widgetBg: "bg-cream-dim",
   },
   {
     card: "bg-cream-dim border border-line",
@@ -40,6 +46,7 @@ const CARD_VARIANTS = [
     desc: "text-ink-soft",
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
+    widgetBg: "bg-card",
   },
   {
     card: "bg-primary-light",
@@ -49,6 +56,7 @@ const CARD_VARIANTS = [
     desc: "text-cream/80",
     cta: "text-cream hover:text-primary-dark",
     icon: "text-primary-dark",
+    widgetBg: "bg-cream",
   },
   {
     card: "bg-primary-dark",
@@ -58,6 +66,7 @@ const CARD_VARIANTS = [
     desc: "text-cream/60",
     cta: "text-primary-light hover:text-cream",
     icon: "text-primary-dark",
+    widgetBg: "bg-cream",
   },
 ];
 
@@ -65,6 +74,10 @@ const CARD_VARIANTS = [
 // outer edge (like a pronounced cut), while the corner facing a neighbor
 // stays at the normal radius since the cards sit flush against each other.
 const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]"];
+
+// How long a card has to stay hovered before it triggers the expanded
+// business-card-toss view.
+const HOVER_DELAY_MS = 1000;
 
 export default function ProductCards({
   eyebrow,
@@ -77,6 +90,31 @@ export default function ProductCards({
   subtitle: string;
   products: Product[];
 }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  function handleCardEnter(i: number) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setActiveIndex(i), HOVER_DELAY_MS);
+  }
+
+  function handleAreaLeave() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setActiveIndex(null);
+  }
+
+  const activeProduct = activeIndex !== null ? products[activeIndex] : null;
+  const activeVariant = activeIndex !== null ? CARD_VARIANTS[activeIndex % CARD_VARIANTS.length] : null;
+
   return (
     <section id="solutions" className="py-24">
       <RevealOnView className="mx-auto mb-14 max-w-2xl px-6 text-center">
@@ -87,61 +125,132 @@ export default function ProductCards({
         <p className="mt-3 text-ink-soft">{subtitle}</p>
       </RevealOnView>
 
-      <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-0 lg:overflow-visible lg:px-10 lg:pb-24 xl:px-16">
-        {products.map((product, i) => {
-          const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
+      <div className="relative lg:min-h-[500px]" onMouseLeave={handleAreaLeave}>
+        <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-0 lg:overflow-visible lg:px-10 lg:pb-24 xl:px-16">
+          {products.map((product, i) => {
+            const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
 
-          return (
-            <RevealOnView
-              key={product.id}
-              delayMs={(i % 5) * 90}
-              className="group relative w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
-            >
-              {/* Hover tooltip: a floating "live preview" of the module's mini-dashboard widget */}
-              <div className="pointer-events-none absolute inset-x-2 bottom-full z-20 mb-3 hidden -translate-y-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 lg:block">
-                <div className="rounded-xl border border-line bg-card p-4 shadow-xl shadow-ink/10">
-                  <div className="mb-2.5 font-mono text-[10px] uppercase tracking-wide text-primary">
-                    Live preview
-                  </div>
-                  <WidgetRenderer
-                    widgetType={product.widget_type}
-                    rows={sv(product.widget_rows)}
-                    stages={sv(product.widget_stages)}
-                    skills={sv(product.widget_skills)}
-                  />
-                </div>
-                <div className="mx-4 h-3 w-3 -translate-y-1.5 rotate-45 border-r border-b border-line bg-card" />
-              </div>
-
-              <div
-                className={`flex h-full flex-col rounded-3xl p-7 transition-all duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+            return (
+              <RevealOnView
+                key={product.id}
+                delayMs={(i % 5) * 90}
+                className="group relative w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
               >
-                <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                <AnimatePresence>
+                  {activeIndex === null && (
+                    <motion.div
+                      layoutId={`product-card-${product.id}`}
+                      onMouseEnter={() => handleCardEnter(i)}
+                      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
+                      transition={{ layout: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+                      className={`flex h-full flex-col rounded-3xl p-7 transition-shadow duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                    >
+                      <div
+                        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                      >
+                        <ProductIcon
+                          type={product.widget_type}
+                          toneClassName={`bg-transparent ${variant.icon}`}
+                          className="h-6 w-6"
+                        />
+                      </div>
+                      <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                        {product.tag}
+                      </span>
+                      <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
+                      <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
+
+                      <Link
+                        href="/solutions"
+                        className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                      >
+                        Explore {product.name}
+                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </RevealOnView>
+            );
+          })}
+        </div>
+
+        <AnimatePresence>
+          {activeProduct && activeVariant && (
+            <div
+              className="absolute inset-0 hidden items-center gap-8 px-10 lg:flex xl:px-16"
+              style={{ perspective: 1400 }}
+            >
+              {/* Big detail panel — full breakdown of the hovered module, fades in once the card has landed */}
+              <motion.div
+                key="detail-panel"
+                initial={{ opacity: 0, x: -48, scale: 0.97 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -48, scale: 0.97, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.45, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="min-w-0 flex-1 rounded-3xl border border-line bg-card p-10"
+              >
+                <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
+                  {activeProduct.tag}
+                </span>
+                <h3 className="font-display text-3xl font-bold text-ink">{activeProduct.name}</h3>
+                <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-ink-soft">
+                  {activeProduct.long_description || activeProduct.short_description}
+                </p>
+                {sv(activeProduct.bullets).length > 0 && (
+                  <ul className="mt-6 flex flex-col gap-2.5">
+                    {sv(activeProduct.bullets).map((bullet) => (
+                      <li key={bullet} className="flex items-start gap-2.5 text-sm text-ink">
+                        <span className="mt-0.5 text-primary">✓</span>
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Link
+                  href="/solutions"
+                  className="mt-8 flex w-fit items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 font-mono text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
                 >
+                  Explore {activeProduct.name}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </motion.div>
+
+              {/* The hovered card, tossed out to the right like a business card — same layoutId as
+                  its grid version, so Framer Motion carries its exact size across automatically
+                  instead of snapping to a new width. */}
+              <motion.div
+                layoutId={`product-card-${activeProduct.id}`}
+                initial={{ rotate: -24 }}
+                animate={{ rotate: 6 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                transition={{ layout: { type: "spring", stiffness: 140, damping: 16 }, rotate: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+                className={`w-72 shrink-0 rounded-3xl p-7 shadow-2xl shadow-ink/20 ${activeVariant.card}`}
+              >
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${activeVariant.badge}`}>
                   <ProductIcon
-                    type={product.widget_type}
-                    toneClassName={`bg-transparent ${variant.icon}`}
+                    type={activeProduct.widget_type}
+                    toneClassName={`bg-transparent ${activeVariant.icon}`}
                     className="h-6 w-6"
                   />
                 </div>
-                <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
-                  {product.tag}
+                <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
+                  {activeProduct.tag}
                 </span>
-                <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
-                <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
-
-                <Link
-                  href="/solutions"
-                  className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
-                >
-                  Explore {product.name}
-                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </Link>
-              </div>
-            </RevealOnView>
-          );
-        })}
+                <h3 className={`font-display text-lg font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>
+                <p className={`mt-2 text-sm ${activeVariant.desc}`}>{activeProduct.short_description}</p>
+                <div className={`mt-6 rounded-xl p-3.5 ${activeVariant.widgetBg}`}>
+                  <WidgetRenderer
+                    widgetType={activeProduct.widget_type}
+                    rows={sv(activeProduct.widget_rows)}
+                    stages={sv(activeProduct.widget_stages)}
+                    skills={sv(activeProduct.widget_skills)}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
