@@ -195,9 +195,12 @@ body {
    Framer's computed matrix3d for rotateY was producing an incorrect
    backface-visibility result (front face bleeding through mirrored) in
    testing; a bare CSS transform does not have that problem. */
+/* -515deg = one full extra spin (-360) beyond the -155 reveal angle, so the
+   card visibly barrels around once before settling face-forward instead of
+   just tilting into place. */
 @keyframes card-flip-reveal {
   from {
-    transform: rotateY(-155deg);
+    transform: rotateY(-515deg);
   }
   to {
     transform: rotateY(0deg);
@@ -208,14 +211,14 @@ body {
    third, then accelerates through the reveal, like the card is deliberately
    picked up before it's tossed rather than snapping into motion. */
 .animate-card-flip-reveal {
-  animation: card-flip-reveal 1.8s cubic-bezier(0.55, 0, 0.85, 0.36) both;
+  animation: card-flip-reveal 3.2s cubic-bezier(0.55, 0, 0.85, 0.36) both;
 }
 
 /* Mirror image of the above, for cards toward the right of the row: they
    travel and rotate the opposite way (toward the left side of the screen). */
 @keyframes card-flip-reveal-reverse {
   from {
-    transform: rotateY(155deg);
+    transform: rotateY(515deg);
   }
   to {
     transform: rotateY(0deg);
@@ -223,7 +226,7 @@ body {
 }
 
 .animate-card-flip-reveal-reverse {
-  animation: card-flip-reveal-reverse 1.8s cubic-bezier(0.55, 0, 0.85, 0.36) both;
+  animation: card-flip-reveal-reverse 3.2s cubic-bezier(0.55, 0, 0.85, 0.36) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

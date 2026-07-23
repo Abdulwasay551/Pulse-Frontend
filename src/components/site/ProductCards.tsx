@@ -78,12 +78,12 @@ const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]
 // How long a card has to stay hovered before it triggers the expanded
 // business-card-toss view, and how long the 3D flip-and-travel itself takes.
 const HOVER_DELAY_MS = 1000;
-const FLIP_DURATION_S = 1.8;
+const FLIP_DURATION_S = 3.2;
 
-// Position/size travel uses a gentle settle; the rotateY (in globals.css)
-// starts slow and accelerates into the turn, like the card is being
-// deliberately picked up before it's tossed.
-const TRAVEL_EASE = [0.22, 1, 0.36, 1] as const;
+// Shared with the rotateY keyframes in globals.css so the card visibly
+// turns *while* it travels instead of arriving first and rotating after —
+// both start slow and accelerate together, like one continuous toss.
+const TRAVEL_EASE = [0.55, 0, 0.85, 0.36] as const;
 
 export default function ProductCards({
   eyebrow,
@@ -161,11 +161,13 @@ export default function ProductCards({
                     layoutId={`solution-card-${product.id}`}
                     initial={false}
                     animate={{ opacity: someOtherActive ? 0 : 1 }}
+                    whileHover={{ y: -10 }}
                     transition={{
                       layout: { duration: FLIP_DURATION_S, ease: TRAVEL_EASE },
                       opacity: { duration: 0.3 },
+                      y: { duration: 0.3, ease: "easeOut" },
                     }}
-                    className={`flex h-full flex-col rounded-3xl p-7 transition-shadow duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${someOtherActive ? "pointer-events-none" : "pointer-events-auto"} ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                    className={`flex h-full flex-col rounded-3xl p-7 shadow-md shadow-ink/5 transition-shadow duration-300 ease-out group-hover:shadow-xl group-hover:shadow-ink/15 ${someOtherActive ? "pointer-events-none" : "pointer-events-auto"} ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
                   >
                     <div
                       className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
