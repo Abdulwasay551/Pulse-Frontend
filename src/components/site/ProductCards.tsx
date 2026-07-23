@@ -77,7 +77,7 @@ const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]
 
 // How long a card has to stay hovered before it triggers the expanded
 // business-card-toss view, and how long the 3D flip-and-travel itself takes.
-const HOVER_DELAY_MS = 1000;
+const HOVER_DELAY_MS = 250;
 const FLIP_DURATION_S = 3.2;
 
 // Shared with the rotateY keyframes in globals.css so the card visibly
