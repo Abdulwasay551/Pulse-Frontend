@@ -104,6 +104,60 @@ export function ITWidget({ skills }: { skills: SkillBarData[] }) {
   );
 }
 
+export interface TrendGraphData {
+  statLabel: string;
+  statValue: number;
+  statPrefix?: string;
+  statSuffix?: string;
+  deltaValue: number;
+  bars: number[];
+}
+
+export function TrendGraph({ data }: { data: TrendGraphData }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  const lastIndex = data.bars.length - 1;
+
+  return (
+    <div ref={ref} className="rounded-2xl bg-ink/[0.03] p-5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-wide text-ink-soft">
+            {data.statLabel}
+          </div>
+          <div className="mt-1 font-display text-2xl font-bold text-ink tabular-nums">
+            {inView ? (
+              <AnimatedNumber
+                value={data.statValue}
+                prefix={data.statPrefix}
+                suffix={data.statSuffix}
+                durationMs={1100}
+              />
+            ) : (
+              `${data.statPrefix ?? ""}0${data.statSuffix ?? ""}`
+            )}
+          </div>
+        </div>
+        <span className="mb-1 shrink-0 rounded-full bg-primary/10 px-2 py-1 font-mono text-[11px] font-semibold whitespace-nowrap text-primary">
+          {inView ? <AnimatedNumber value={data.deltaValue} prefix="+" suffix="%" durationMs={900} /> : "+0%"}
+        </span>
+      </div>
+      <div className="mt-5 flex h-24 items-end gap-2">
+        {data.bars.map((h, i) => (
+          <div
+            key={i}
+            className={`flex-1 rounded-t-md transition-[height] ease-out ${i === lastIndex ? "bg-primary" : "bg-primary/20"}`}
+            style={{
+              height: inView ? `${h}%` : "0%",
+              transitionDuration: "700ms",
+              transitionDelay: `${i * 90}ms`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export type WidgetType =
   | "none"
   | "pipeline"

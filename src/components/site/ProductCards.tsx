@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import ProductIcon from "./ProductIcon";
 import RevealOnView from "./RevealOnView";
-import { WidgetRenderer } from "./widgets";
+import { TrendGraph, WidgetRenderer, type TrendGraphData } from "./widgets";
 import { sv, type Product } from "@/lib/cms";
 
 // Every card is the same height; the bento stagger comes from shifting the
@@ -17,6 +17,9 @@ const LG_TRANSLATE_Y = ["lg:translate-y-0", "lg:translate-y-10", "lg:translate-y
 // Five distinct backgrounds so no two cards (especially the pair flanking
 // the middle one) share the same color, plus a contrasting badge chip for
 // each — never a tint of the card's own color, always a clear pop.
+// `panelGradient` is a soft radial wash (low-opacity, over the same `--card`
+// base every panel uses) so the opened detail menu reads as belonging to
+// that specific product instead of one flat neutral sheet for all five.
 const CARD_VARIANTS = [
   {
     card: "bg-primary-dark",
@@ -27,6 +30,8 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-cream",
     widgetBg: "bg-cream",
+    panelGradient:
+      "radial-gradient(circle at 0% 0%, rgba(74,46,130,0.14), transparent 55%), radial-gradient(circle at 100% 100%, rgba(77,111,224,0.12), transparent 50%)",
   },
   {
     card: "bg-card border border-line",
@@ -37,6 +42,8 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-cream-dim",
+    panelGradient:
+      "radial-gradient(circle at 100% 0%, rgba(74,46,130,0.10), transparent 50%), radial-gradient(circle at 0% 100%, rgba(185,134,31,0.10), transparent 50%)",
   },
   {
     card: "bg-cream-dim border border-line",
@@ -47,6 +54,8 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-card",
+    panelGradient:
+      "radial-gradient(circle at 0% 100%, rgba(77,111,224,0.14), transparent 55%), radial-gradient(circle at 100% 0%, rgba(74,46,130,0.10), transparent 50%)",
   },
   {
     card: "bg-primary-light",
@@ -57,6 +66,8 @@ const CARD_VARIANTS = [
     cta: "text-cream hover:text-primary-dark",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
+    panelGradient:
+      "radial-gradient(circle at 100% 100%, rgba(77,111,224,0.16), transparent 55%), radial-gradient(circle at 0% 0%, rgba(185,134,31,0.10), transparent 50%)",
   },
   {
     card: "bg-primary-dark",
@@ -67,6 +78,47 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
+    panelGradient:
+      "radial-gradient(circle at 0% 100%, rgba(185,134,31,0.12), transparent 50%), radial-gradient(circle at 100% 0%, rgba(74,46,130,0.14), transparent 55%)",
+  },
+];
+
+// Sample trend data for the small animated graph in the opened detail menu —
+// illustrative, not wired to real numbers, one flavor per product so it feels
+// specific to that solution rather than a generic chart.
+const GRAPH_SAMPLES: TrendGraphData[] = [
+  {
+    statLabel: "Payroll processed",
+    statValue: 186,
+    statPrefix: "$",
+    statSuffix: "K",
+    deltaValue: 12,
+    bars: [40, 52, 48, 61, 70, 82, 100],
+  },
+  {
+    statLabel: "Placements this quarter",
+    statValue: 24,
+    deltaValue: 18,
+    bars: [30, 45, 40, 58, 66, 78, 100],
+  },
+  {
+    statLabel: "Benefits enrollment",
+    statValue: 93,
+    statSuffix: "%",
+    deltaValue: 6,
+    bars: [55, 60, 64, 70, 76, 85, 100],
+  },
+  {
+    statLabel: "Requisitions filled",
+    statValue: 41,
+    deltaValue: 9,
+    bars: [35, 42, 38, 50, 62, 74, 100],
+  },
+  {
+    statLabel: "Active relocations",
+    statValue: 12,
+    deltaValue: 3,
+    bars: [45, 50, 47, 55, 60, 68, 100],
   },
 ];
 
@@ -150,6 +202,7 @@ export default function ProductCards({
 
   const activeProduct = isDesktop && activeIndex !== null ? products[activeIndex] : null;
   const activeVariant = isDesktop && activeIndex !== null ? CARD_VARIANTS[activeIndex % CARD_VARIANTS.length] : null;
+  const activeGraph = isDesktop && activeIndex !== null ? GRAPH_SAMPLES[activeIndex % GRAPH_SAMPLES.length] : null;
   // Cards toward the right of the row (and the middle card) toss themselves
   // the opposite way: the flipping card travels toward the left side of the
   // screen instead of the right, and the detail panel swaps to the right so
@@ -288,44 +341,53 @@ export default function ProductCards({
         </div>
 
         <AnimatePresence>
-          {activeProduct && activeVariant && (
+          {activeProduct && activeVariant && activeGraph && (
             <div
               className="absolute inset-0 hidden items-center gap-8 px-10 lg:flex xl:px-16"
               style={{ perspective: 1600 }}
             >
-              {/* Big detail panel — full breakdown of the hovered module, fades in only once the card has finished flipping into place */}
+              {/* Big detail panel — full breakdown of the hovered module, fades in only
+                  once the card has finished flipping into place. Borderless, with a
+                  soft per-product radial wash (see CARD_VARIANTS.panelGradient) instead
+                  of one flat neutral sheet for every product. */}
               <motion.div
                 key="detail-panel"
                 initial={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97, transition: { duration: 0.25 } }}
                 transition={{ duration: 0.5, delay: FLIP_DURATION_S - 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className={`min-w-0 flex-1 rounded-3xl border border-line bg-card p-10 ${isRightOrigin ? "order-2" : "order-1"}`}
+                className={`min-w-0 flex-1 rounded-3xl p-10 ${isRightOrigin ? "order-2" : "order-1"}`}
+                style={{ backgroundImage: activeVariant.panelGradient, backgroundColor: "var(--card)" }}
               >
                 <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
                   {activeProduct.tag}
                 </span>
                 <h3 className="font-display text-3xl font-bold text-ink">{activeProduct.name}</h3>
-                <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-ink-soft">
-                  {activeProduct.long_description || activeProduct.short_description}
-                </p>
-                {sv(activeProduct.bullets).length > 0 && (
-                  <ul className="mt-6 flex flex-col gap-2.5">
-                    {sv(activeProduct.bullets).map((bullet) => (
-                      <li key={bullet} className="flex items-start gap-2.5 text-sm text-ink">
-                        <span className="mt-0.5 text-primary">✓</span>
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <Link
-                  href="/solutions"
-                  className="mt-8 flex w-fit items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 font-mono text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
-                >
-                  Explore {activeProduct.name}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
+                <div className="mt-4 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+                  <div className="min-w-0">
+                    <p className="text-[15px] leading-relaxed text-ink-soft">
+                      {activeProduct.long_description || activeProduct.short_description}
+                    </p>
+                    {sv(activeProduct.bullets).length > 0 && (
+                      <ul className="mt-6 flex flex-col gap-2.5">
+                        {sv(activeProduct.bullets).map((bullet) => (
+                          <li key={bullet} className="flex items-start gap-2.5 text-sm text-ink">
+                            <span className="mt-0.5 text-primary">✓</span>
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link
+                      href="/solutions"
+                      className="mt-8 flex w-fit items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 font-mono text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
+                    >
+                      Explore {activeProduct.name}
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                  <TrendGraph data={activeGraph} />
+                </div>
               </motion.div>
 
               {/* The hovered card itself — same layoutId as its grid counterpart above,
