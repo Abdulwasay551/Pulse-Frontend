@@ -14,12 +14,29 @@ import { sv, type Product } from "@/lib/cms";
 // lowest, like a shallow smile.
 const LG_TRANSLATE_Y = ["lg:translate-y-0", "lg:translate-y-10", "lg:translate-y-20", "lg:translate-y-10", "lg:translate-y-0"];
 
+// Two strong radial color blobs (one per corner) plus a faint dot-grid
+// texture underneath — the panel background this generates should read as a
+// deliberate pattern, not just a tinted sheet. `dot` sets the grain color;
+// left it as a fixed dark tone since it sits under two colored blobs and
+// only needs to add texture, not more color competing with them.
+function panelPattern(cornerA: string, cornerB: string) {
+  return {
+    backgroundImage: [
+      `radial-gradient(circle at 6% 4%, ${cornerA}, transparent 48%)`,
+      `radial-gradient(circle at 100% 100%, ${cornerB}, transparent 46%)`,
+      "radial-gradient(rgba(33,26,46,0.09) 1.5px, transparent 1.5px)",
+    ].join(", "),
+    backgroundSize: "auto, auto, 18px 18px",
+  } as const;
+}
+
 // Five distinct backgrounds so no two cards (especially the pair flanking
 // the middle one) share the same color, plus a contrasting badge chip for
 // each — never a tint of the card's own color, always a clear pop.
-// `panelGradient` is a soft radial wash (low-opacity, over the same `--card`
-// base every panel uses) so the opened detail menu reads as belonging to
-// that specific product instead of one flat neutral sheet for all five.
+// `panelPattern` is the opened detail menu's background — two corner glows
+// in that product's own hues over a dotted grid, over the shared `--card`
+// base, so each menu reads as a deliberate, distinct surface rather than one
+// flat neutral sheet for all five.
 const CARD_VARIANTS = [
   {
     card: "bg-primary-dark",
@@ -30,8 +47,7 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-cream",
     widgetBg: "bg-cream",
-    panelGradient:
-      "radial-gradient(circle at 0% 0%, rgba(74,46,130,0.14), transparent 55%), radial-gradient(circle at 100% 100%, rgba(77,111,224,0.12), transparent 50%)",
+    panelPattern: panelPattern("rgba(74,46,130,0.30)", "rgba(77,111,224,0.24)"),
   },
   {
     card: "bg-card border border-line",
@@ -42,8 +58,7 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-cream-dim",
-    panelGradient:
-      "radial-gradient(circle at 100% 0%, rgba(74,46,130,0.10), transparent 50%), radial-gradient(circle at 0% 100%, rgba(185,134,31,0.10), transparent 50%)",
+    panelPattern: panelPattern("rgba(74,46,130,0.24)", "rgba(185,134,31,0.24)"),
   },
   {
     card: "bg-cream-dim border border-line",
@@ -54,8 +69,7 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-card",
-    panelGradient:
-      "radial-gradient(circle at 0% 100%, rgba(77,111,224,0.14), transparent 55%), radial-gradient(circle at 100% 0%, rgba(74,46,130,0.10), transparent 50%)",
+    panelPattern: panelPattern("rgba(77,111,224,0.28)", "rgba(74,46,130,0.22)"),
   },
   {
     card: "bg-primary-light",
@@ -66,8 +80,7 @@ const CARD_VARIANTS = [
     cta: "text-cream hover:text-primary-dark",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
-    panelGradient:
-      "radial-gradient(circle at 100% 100%, rgba(77,111,224,0.16), transparent 55%), radial-gradient(circle at 0% 0%, rgba(185,134,31,0.10), transparent 50%)",
+    panelPattern: panelPattern("rgba(77,111,224,0.32)", "rgba(185,134,31,0.22)"),
   },
   {
     card: "bg-primary-dark",
@@ -78,8 +91,7 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
-    panelGradient:
-      "radial-gradient(circle at 0% 100%, rgba(185,134,31,0.12), transparent 50%), radial-gradient(circle at 100% 0%, rgba(74,46,130,0.14), transparent 55%)",
+    panelPattern: panelPattern("rgba(185,134,31,0.26)", "rgba(74,46,130,0.30)"),
   },
 ];
 
@@ -357,7 +369,7 @@ export default function ProductCards({
                 exit={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97, transition: { duration: 0.25 } }}
                 transition={{ duration: 0.5, delay: FLIP_DURATION_S - 0.15, ease: [0.22, 1, 0.36, 1] }}
                 className={`min-w-0 flex-1 rounded-3xl p-10 ${isRightOrigin ? "order-2" : "order-1"}`}
-                style={{ backgroundImage: activeVariant.panelGradient, backgroundColor: "var(--card)" }}
+                style={{ ...activeVariant.panelPattern, backgroundColor: "var(--card)" }}
               >
                 <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
                   {activeProduct.tag}
