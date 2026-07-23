@@ -211,7 +211,7 @@ body {
    third, then accelerates through the reveal, like the card is deliberately
    picked up before it's tossed rather than snapping into motion. */
 .animate-card-flip-reveal {
-  animation: card-flip-reveal 3.2s cubic-bezier(0.55, 0, 0.85, 0.36) both;
+  animation: card-flip-reveal 1.4s cubic-bezier(0.55, 0, 0.85, 0.36) both;
 }
 
 /* Mirror image of the above, for cards toward the right of the row: they
@@ -226,7 +226,7 @@ body {
 }
 
 .animate-card-flip-reveal-reverse {
-  animation: card-flip-reveal-reverse 3.2s cubic-bezier(0.55, 0, 0.85, 0.36) both;
+  animation: card-flip-reveal-reverse 1.4s cubic-bezier(0.55, 0, 0.85, 0.36) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

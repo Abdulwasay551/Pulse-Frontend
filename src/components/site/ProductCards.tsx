@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
@@ -78,12 +78,34 @@ const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]
 // How long a card has to stay hovered before it triggers the expanded
 // business-card-toss view, and how long the 3D flip-and-travel itself takes.
 const HOVER_DELAY_MS = 250;
-const FLIP_DURATION_S = 3.2;
+const FLIP_DURATION_S = 1.4;
 
 // Shared with the rotateY keyframes in globals.css so the card visibly
 // turns *while* it travels instead of arriving first and rotating after —
 // both start slow and accelerate together, like one continuous toss.
 const TRAVEL_EASE = [0.55, 0, 0.85, 0.36] as const;
+
+// The hover-and-toss interaction only makes sense once there's room for the
+// two-pane overlay (matches the "lg" breakpoint the overlay itself uses).
+// Below that, cards stay put and tap-flip in place instead — otherwise a
+// touch tap fires the same hover state and the card vanishes into an
+// overlay that's `hidden` at that width, with nothing left in its place.
+const DESKTOP_QUERY = "(min-width: 1024px)";
+const MOBILE_FLIP_DURATION_MS = 700;
+
+function subscribeToDesktopQuery(onChange: () => void) {
+  const mq = window.matchMedia(DESKTOP_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+function getIsDesktopSnapshot() {
+  return window.matchMedia(DESKTOP_QUERY).matches;
+}
+
+function getIsDesktopServerSnapshot() {
+  return false;
+}
 
 export default function ProductCards({
   eyebrow,
@@ -97,6 +119,8 @@ export default function ProductCards({
   products: Product[];
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [flippedIndex, setFlippedIndex] = useState<number | null>(null);
+  const isDesktop = useSyncExternalStore(subscribeToDesktopQuery, getIsDesktopSnapshot, getIsDesktopServerSnapshot);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -106,6 +130,7 @@ export default function ProductCards({
   }, []);
 
   function handleCardEnter(i: number) {
+    if (!isDesktop) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setActiveIndex(i), HOVER_DELAY_MS);
   }
@@ -118,8 +143,13 @@ export default function ProductCards({
     setActiveIndex(null);
   }
 
-  const activeProduct = activeIndex !== null ? products[activeIndex] : null;
-  const activeVariant = activeIndex !== null ? CARD_VARIANTS[activeIndex % CARD_VARIANTS.length] : null;
+  function handleCardTap(i: number) {
+    if (isDesktop) return;
+    setFlippedIndex((current) => (current === i ? null : i));
+  }
+
+  const activeProduct = isDesktop && activeIndex !== null ? products[activeIndex] : null;
+  const activeVariant = isDesktop && activeIndex !== null ? CARD_VARIANTS[activeIndex % CARD_VARIANTS.length] : null;
   // Cards toward the right of the row (and the middle card) toss themselves
   // the opposite way: the flipping card travels toward the left side of the
   // screen instead of the right, and the detail panel swaps to the right so
@@ -140,57 +170,116 @@ export default function ProductCards({
         <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-2 lg:overflow-visible lg:px-10 lg:pb-24 xl:px-16">
           {products.map((product, i) => {
             const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
-            const isActive = activeIndex === i;
-            const someOtherActive = activeIndex !== null && !isActive;
+            // Only the desktop hover-toss removes the card from the grid (it
+            // reappears in the overlay via the shared layoutId). Below the
+            // "lg" breakpoint the overlay is hidden, so the card always stays
+            // put here — tapping it flips it in place instead.
+            const isTossing = isDesktop && activeIndex === i;
+            const someOtherActive = isDesktop && activeIndex !== null && !isTossing;
+            const isFlipped = !isDesktop && flippedIndex === i;
 
             return (
               <RevealOnView
                 key={product.id}
                 delayMs={(i % 5) * 90}
                 onMouseEnter={() => handleCardEnter(i)}
-                className="group relative w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
+                className="group relative h-[460px] w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
               >
-                {/* Rendered here whenever this card isn't the active one. When it IS
-                    active, this slot renders nothing — the very same layoutId is
-                    picked up by the overlay below, so Motion glides this exact card
-                    (not a copy) from its grid position out to the target spot instead
-                    of faking it with a fade-out + separately faded-in lookalike. */}
-                {!isActive && (
+                {/* Rendered here whenever this card isn't mid-toss. On desktop, when
+                    it IS tossing, this slot renders nothing — the very same layoutId
+                    is picked up by the overlay below, so Motion glides this exact
+                    card (not a copy) from its grid position out to the target spot
+                    instead of faking it with a fade-out + separately faded-in
+                    lookalike. On mobile/tablet the card never leaves this slot; a
+                    tap flips it in place to reveal the same detail on its back. */}
+                {!isTossing && (
                   <motion.div
                     layout
                     layoutId={`solution-card-${product.id}`}
                     initial={false}
                     animate={{ opacity: someOtherActive ? 0 : 1 }}
-                    whileHover={{ y: -10 }}
+                    whileHover={isDesktop ? { y: -10 } : undefined}
+                    onClick={() => handleCardTap(i)}
                     transition={{
                       layout: { duration: FLIP_DURATION_S, ease: TRAVEL_EASE },
                       opacity: { duration: 0.3 },
                       y: { duration: 0.3, ease: "easeOut" },
                     }}
-                    className={`flex h-full flex-col rounded-3xl p-7 shadow-md shadow-ink/5 transition-shadow duration-300 ease-out group-hover:shadow-xl group-hover:shadow-ink/15 ${someOtherActive ? "pointer-events-none" : "pointer-events-auto"} ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                    className={`h-full ${someOtherActive ? "pointer-events-none" : "pointer-events-auto"} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]}`}
+                    style={{ perspective: 1200 }}
                   >
                     <div
-                      className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                      className="relative h-full w-full transition-transform ease-[cubic-bezier(0.65,0,0.35,1)] [transform-style:preserve-3d]"
+                      style={{
+                        transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                        transitionDuration: `${MOBILE_FLIP_DURATION_MS}ms`,
+                      }}
                     >
-                      <ProductIcon
-                        type={product.widget_type}
-                        toneClassName={`bg-transparent ${variant.icon}`}
-                        className="h-6 w-6"
-                      />
-                    </div>
-                    <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
-                      {product.tag}
-                    </span>
-                    <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
-                    <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
+                      {/* Front face — same content/shape as always. */}
+                      <div
+                        className={`absolute inset-0 flex h-full flex-col rounded-3xl p-7 shadow-md shadow-ink/5 transition-shadow duration-300 ease-out [backface-visibility:hidden] group-hover:shadow-xl group-hover:shadow-ink/15 ${variant.card} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                      >
+                        <div
+                          className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
+                        >
+                          <ProductIcon
+                            type={product.widget_type}
+                            toneClassName={`bg-transparent ${variant.icon}`}
+                            className="h-6 w-6"
+                          />
+                        </div>
+                        <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                          {product.tag}
+                        </span>
+                        <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
+                        <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
 
-                    <Link
-                      href="/solutions"
-                      className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
-                    >
-                      Explore {product.name}
-                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </Link>
+                        <Link
+                          href="/solutions"
+                          onClick={(e) => e.stopPropagation()}
+                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                        >
+                          Explore {product.name}
+                          <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </Link>
+                        <span className="pt-3 font-mono text-[11px] text-ink-soft/70 lg:hidden">
+                          Tap for details
+                        </span>
+                      </div>
+
+                      {/* Back face — mobile/tablet only content: the same detail a
+                          desktop hover would toss into an overlay, shown in place
+                          since there's no room to fly a card across a phone screen. */}
+                      <div
+                        className={`absolute inset-0 flex h-full flex-col overflow-y-auto rounded-3xl p-7 shadow-md shadow-ink/5 [backface-visibility:hidden] [transform:rotateY(180deg)] ${variant.card} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                      >
+                        <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                          {product.tag}
+                        </span>
+                        <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
+                        <p className={`mt-2 text-sm ${variant.desc}`}>
+                          {product.long_description || product.short_description}
+                        </p>
+                        {sv(product.bullets).length > 0 && (
+                          <ul className="mt-4 flex flex-col gap-2">
+                            {sv(product.bullets).map((bullet) => (
+                              <li key={bullet} className={`flex items-start gap-2 text-xs ${variant.desc}`}>
+                                <span className={`mt-0.5 ${variant.tag}`}>✓</span>
+                                {bullet}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <Link
+                          href="/solutions"
+                          onClick={(e) => e.stopPropagation()}
+                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                        >
+                          Explore {product.name}
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </RevealOnView>
