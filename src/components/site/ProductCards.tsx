@@ -14,32 +14,37 @@ import { sv, type Product } from "@/lib/cms";
 // lowest, like a shallow smile.
 const LG_TRANSLATE_Y = ["lg:translate-y-0", "lg:translate-y-10", "lg:translate-y-20", "lg:translate-y-10", "lg:translate-y-0"];
 
-// Two strong radial color blobs (one per corner) plus a faint dot-grid
-// texture underneath — the panel background this generates should read as a
-// deliberate pattern, not just a tinted sheet. `dot` sets the grain color;
-// left it as a fixed dark tone since it sits under two colored blobs and
-// only needs to add texture, not more color competing with them.
-function panelPattern(cornerA: string, cornerB: string) {
+// Two radial color blobs (one per corner) plus a dotted-grid texture — the
+// panel background this generates should read as a deliberate pattern, not
+// a tinted sheet. The dot grain is light on dark bases (so it shows up
+// against a dark fill) and dark on light bases, matching whichever base
+// color that panel inherits from its own card.
+function panelPattern(cornerA: string, cornerB: string, dot: string) {
   return {
     backgroundImage: [
       `radial-gradient(circle at 6% 4%, ${cornerA}, transparent 48%)`,
       `radial-gradient(circle at 100% 100%, ${cornerB}, transparent 46%)`,
-      "radial-gradient(rgba(33,26,46,0.09) 1.5px, transparent 1.5px)",
+      `radial-gradient(${dot} 1.5px, transparent 1.5px)`,
     ].join(", "),
     backgroundSize: "auto, auto, 18px 18px",
   } as const;
 }
 
+const DARK_DOT = "rgba(255,255,255,0.09)";
+const LIGHT_DOT = "rgba(33,26,46,0.09)";
+
 // Five distinct backgrounds so no two cards (especially the pair flanking
 // the middle one) share the same color, plus a contrasting badge chip for
 // each — never a tint of the card's own color, always a clear pop.
-// `panelPattern` is the opened detail menu's background — two corner glows
-// in that product's own hues over a dotted grid, over the shared `--card`
-// base, so each menu reads as a deliberate, distinct surface rather than one
-// flat neutral sheet for all five.
+// The opened detail menu now inherits `panelBase` (the same base color as
+// the card itself, minus the grid card's border) with `panelPattern`
+// layered on top, and reuses `tag`/`title`/`desc` for its own text so it's
+// automatically light-on-dark or dark-on-light exactly like the card is.
 const CARD_VARIANTS = [
   {
     card: "bg-primary-dark",
+    panelBase: "bg-primary-dark",
+    isDarkPanel: true,
     badge: "bg-primary-light",
     tag: "text-primary-light",
     title: "text-cream",
@@ -47,10 +52,12 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-cream",
     widgetBg: "bg-cream",
-    panelPattern: panelPattern("rgba(74,46,130,0.30)", "rgba(77,111,224,0.24)"),
+    panelPattern: panelPattern("rgba(77,111,224,0.38)", "rgba(246,236,217,0.14)", DARK_DOT),
   },
   {
     card: "bg-card border border-line",
+    panelBase: "bg-card",
+    isDarkPanel: false,
     badge: "bg-primary",
     tag: "text-primary",
     title: "text-ink",
@@ -58,10 +65,12 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-cream-dim",
-    panelPattern: panelPattern("rgba(74,46,130,0.24)", "rgba(185,134,31,0.24)"),
+    panelPattern: panelPattern("rgba(74,46,130,0.24)", "rgba(185,134,31,0.24)", LIGHT_DOT),
   },
   {
     card: "bg-cream-dim border border-line",
+    panelBase: "bg-cream-dim",
+    isDarkPanel: false,
     badge: "bg-primary-light",
     tag: "text-primary",
     title: "text-ink",
@@ -69,10 +78,12 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-card",
-    panelPattern: panelPattern("rgba(77,111,224,0.28)", "rgba(74,46,130,0.22)"),
+    panelPattern: panelPattern("rgba(77,111,224,0.28)", "rgba(74,46,130,0.22)", LIGHT_DOT),
   },
   {
     card: "bg-primary-light",
+    panelBase: "bg-primary-light",
+    isDarkPanel: true,
     badge: "bg-cream",
     tag: "text-primary-dark",
     title: "text-cream",
@@ -80,10 +91,12 @@ const CARD_VARIANTS = [
     cta: "text-cream hover:text-primary-dark",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
-    panelPattern: panelPattern("rgba(77,111,224,0.32)", "rgba(185,134,31,0.22)"),
+    panelPattern: panelPattern("rgba(246,236,217,0.22)", "rgba(185,134,31,0.26)", DARK_DOT),
   },
   {
     card: "bg-primary-dark",
+    panelBase: "bg-primary-dark",
+    isDarkPanel: true,
     badge: "bg-cream",
     tag: "text-primary-light",
     title: "text-cream",
@@ -91,7 +104,7 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
-    panelPattern: panelPattern("rgba(185,134,31,0.26)", "rgba(74,46,130,0.30)"),
+    panelPattern: panelPattern("rgba(185,134,31,0.30)", "rgba(77,111,224,0.32)", DARK_DOT),
   },
 ];
 
@@ -368,23 +381,23 @@ export default function ProductCards({
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97, transition: { duration: 0.25 } }}
                 transition={{ duration: 0.5, delay: FLIP_DURATION_S - 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className={`min-w-0 flex-1 rounded-3xl p-10 ${isRightOrigin ? "order-2" : "order-1"}`}
-                style={{ ...activeVariant.panelPattern, backgroundColor: "var(--card)" }}
+                className={`min-w-0 flex-1 rounded-3xl p-10 ${activeVariant.panelBase} ${isRightOrigin ? "order-2" : "order-1"}`}
+                style={activeVariant.panelPattern}
               >
-                <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
+                <span className={`mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
                   {activeProduct.tag}
                 </span>
-                <h3 className="font-display text-3xl font-bold text-ink">{activeProduct.name}</h3>
+                <h3 className={`font-display text-3xl font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>
                 <div className="mt-4 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
                   <div className="min-w-0">
-                    <p className="text-[15px] leading-relaxed text-ink-soft">
+                    <p className={`text-[15px] leading-relaxed ${activeVariant.desc}`}>
                       {activeProduct.long_description || activeProduct.short_description}
                     </p>
                     {sv(activeProduct.bullets).length > 0 && (
                       <ul className="mt-6 flex flex-col gap-2.5">
                         {sv(activeProduct.bullets).map((bullet) => (
-                          <li key={bullet} className="flex items-start gap-2.5 text-sm text-ink">
-                            <span className="mt-0.5 text-primary">✓</span>
+                          <li key={bullet} className={`flex items-start gap-2.5 text-sm ${activeVariant.title}`}>
+                            <span className={`mt-0.5 ${activeVariant.tag}`}>✓</span>
                             {bullet}
                           </li>
                         ))}
@@ -398,7 +411,7 @@ export default function ProductCards({
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
-                  <TrendGraph data={activeGraph} />
+                  <TrendGraph data={activeGraph} dark={activeVariant.isDarkPanel} />
                 </div>
               </motion.div>
 

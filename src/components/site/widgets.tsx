@@ -113,18 +113,25 @@ export interface TrendGraphData {
   bars: number[];
 }
 
-export function TrendGraph({ data }: { data: TrendGraphData }) {
+export function TrendGraph({ data, dark = false }: { data: TrendGraphData; dark?: boolean }) {
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
   const lastIndex = data.bars.length - 1;
 
+  const chipBg = dark ? "bg-cream/10" : "bg-ink/[0.03]";
+  const labelColor = dark ? "text-cream/60" : "text-ink-soft";
+  const statColor = dark ? "text-cream" : "text-ink";
+  const deltaClasses = dark ? "bg-cream/15 text-cream" : "bg-primary/10 text-primary";
+  const barActive = dark ? "bg-cream" : "bg-primary";
+  const barMuted = dark ? "bg-cream/25" : "bg-primary/20";
+
   return (
-    <div ref={ref} className="rounded-2xl bg-ink/[0.03] p-5">
+    <div ref={ref} className={`rounded-2xl p-5 ${chipBg}`}>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <div className="font-mono text-[10px] font-semibold uppercase tracking-wide text-ink-soft">
+          <div className={`font-mono text-[10px] font-semibold uppercase tracking-wide ${labelColor}`}>
             {data.statLabel}
           </div>
-          <div className="mt-1 font-display text-2xl font-bold text-ink tabular-nums">
+          <div className={`mt-1 font-display text-2xl font-bold tabular-nums ${statColor}`}>
             {inView ? (
               <AnimatedNumber
                 value={data.statValue}
@@ -137,7 +144,7 @@ export function TrendGraph({ data }: { data: TrendGraphData }) {
             )}
           </div>
         </div>
-        <span className="mb-1 shrink-0 rounded-full bg-primary/10 px-2 py-1 font-mono text-[11px] font-semibold whitespace-nowrap text-primary">
+        <span className={`mb-1 shrink-0 rounded-full px-2 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${deltaClasses}`}>
           {inView ? <AnimatedNumber value={data.deltaValue} prefix="+" suffix="%" durationMs={900} /> : "+0%"}
         </span>
       </div>
@@ -145,7 +152,7 @@ export function TrendGraph({ data }: { data: TrendGraphData }) {
         {data.bars.map((h, i) => (
           <div
             key={i}
-            className={`flex-1 rounded-t-md transition-[height] ease-out ${i === lastIndex ? "bg-primary" : "bg-primary/20"}`}
+            className={`flex-1 rounded-t-md transition-[height] ease-out ${i === lastIndex ? barActive : barMuted}`}
             style={{
               height: inView ? `${h}%` : "0%",
               transitionDuration: "700ms",
