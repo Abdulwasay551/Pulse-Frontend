@@ -80,6 +80,11 @@ const CORNER_OVERRIDE = ["lg:rounded-l-[40px]", "", "", "", "lg:rounded-r-[40px]
 const HOVER_DELAY_MS = 1000;
 const FLIP_DURATION_S = 1.8;
 
+// Position/size travel uses a gentle settle; the rotateY (in globals.css)
+// starts slow and accelerates into the turn, like the card is being
+// deliberately picked up before it's tossed.
+const TRAVEL_EASE = [0.22, 1, 0.36, 1] as const;
+
 export default function ProductCards({
   eyebrow,
   title,
@@ -115,6 +120,11 @@ export default function ProductCards({
 
   const activeProduct = activeIndex !== null ? products[activeIndex] : null;
   const activeVariant = activeIndex !== null ? CARD_VARIANTS[activeIndex % CARD_VARIANTS.length] : null;
+  // Cards toward the right of the row (and the middle card) toss themselves
+  // the opposite way: the flipping card travels toward the left side of the
+  // screen instead of the right, and the detail panel swaps to the right so
+  // it always opens on the side the card vacated.
+  const isRightOrigin = activeIndex !== null && activeIndex >= 3;
 
   return (
     <section id="solutions" className="py-24">
@@ -127,9 +137,11 @@ export default function ProductCards({
       </RevealOnView>
 
       <div className="relative lg:min-h-[500px]" onMouseLeave={handleAreaLeave}>
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-0 lg:overflow-visible lg:px-10 lg:pb-24 xl:px-16">
+        <div className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 lg:snap-none lg:items-start lg:gap-2 lg:overflow-visible lg:px-10 lg:pb-24 xl:px-16">
           {products.map((product, i) => {
             const variant = CARD_VARIANTS[i % CARD_VARIANTS.length];
+            const isActive = activeIndex === i;
+            const someOtherActive = activeIndex !== null && !isActive;
 
             return (
               <RevealOnView
@@ -138,38 +150,47 @@ export default function ProductCards({
                 onMouseEnter={() => handleCardEnter(i)}
                 className="group relative w-[82%] shrink-0 snap-center sm:w-[45%] lg:h-[380px] lg:w-auto lg:flex-1 lg:shrink lg:snap-align-none"
               >
-                <AnimatePresence>
-                  {activeIndex === null && (
-                    <motion.div
-                      initial={false}
-                      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.25 } }}
-                      className={`flex h-full flex-col rounded-3xl p-7 transition-shadow duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                {/* Rendered here whenever this card isn't the active one. When it IS
+                    active, this slot renders nothing — the very same layoutId is
+                    picked up by the overlay below, so Motion glides this exact card
+                    (not a copy) from its grid position out to the target spot instead
+                    of faking it with a fade-out + separately faded-in lookalike. */}
+                {!isActive && (
+                  <motion.div
+                    layout
+                    layoutId={`solution-card-${product.id}`}
+                    initial={false}
+                    animate={{ opacity: someOtherActive ? 0 : 1 }}
+                    transition={{
+                      layout: { duration: FLIP_DURATION_S, ease: TRAVEL_EASE },
+                      opacity: { duration: 0.3 },
+                    }}
+                    className={`flex h-full flex-col rounded-3xl p-7 transition-shadow duration-300 ease-out group-hover:shadow-lg group-hover:shadow-ink/10 ${someOtherActive ? "pointer-events-none" : "pointer-events-auto"} ${variant.card} ${LG_TRANSLATE_Y[i % LG_TRANSLATE_Y.length]} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
+                  >
+                    <div
+                      className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
                     >
-                      <div
-                        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 ${variant.badge}`}
-                      >
-                        <ProductIcon
-                          type={product.widget_type}
-                          toneClassName={`bg-transparent ${variant.icon}`}
-                          className="h-6 w-6"
-                        />
-                      </div>
-                      <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
-                        {product.tag}
-                      </span>
-                      <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
-                      <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
+                      <ProductIcon
+                        type={product.widget_type}
+                        toneClassName={`bg-transparent ${variant.icon}`}
+                        className="h-6 w-6"
+                      />
+                    </div>
+                    <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                      {product.tag}
+                    </span>
+                    <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
+                    <p className={`mt-2 text-sm ${variant.desc}`}>{product.short_description}</p>
 
-                      <Link
-                        href="/solutions"
-                        className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
-                      >
-                        Explore {product.name}
-                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    <Link
+                      href="/solutions"
+                      className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                    >
+                      Explore {product.name}
+                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
+                  </motion.div>
+                )}
               </RevealOnView>
             );
           })}
@@ -184,11 +205,11 @@ export default function ProductCards({
               {/* Big detail panel — full breakdown of the hovered module, fades in only once the card has finished flipping into place */}
               <motion.div
                 key="detail-panel"
-                initial={{ opacity: 0, x: -48, scale: 0.97 }}
+                initial={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -48, scale: 0.97, transition: { duration: 0.25 } }}
+                exit={{ opacity: 0, x: isRightOrigin ? 48 : -48, scale: 0.97, transition: { duration: 0.25 } }}
                 transition={{ duration: 0.5, delay: FLIP_DURATION_S - 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="min-w-0 flex-1 rounded-3xl border border-line bg-card p-10"
+                className={`min-w-0 flex-1 rounded-3xl border border-line bg-card p-10 ${isRightOrigin ? "order-2" : "order-1"}`}
               >
                 <span className="mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide text-primary">
                   {activeProduct.tag}
@@ -216,22 +237,28 @@ export default function ProductCards({
                 </Link>
               </motion.div>
 
-              {/* The hovered card, flipping through 3D space to the right like a tossed business
-                  card. Translation lives on the outer element; rotation lives on its own inner
-                  "flipper" so the 3D compositing isn't fighting a combined transform. It starts
-                  edge-on showing a blank back (no data), and only reveals the real content once
-                  it finishes rotating to face forward at rest. */}
+              {/* The hovered card itself — same layoutId as its grid counterpart above,
+                  so Motion continuously glides this exact card from its original grid
+                  slot into place here rather than cutting to a stand-in. Position/size
+                  travel lives on this outer element; the 3D turn lives on its own inner
+                  "flipper" so the two transforms don't fight each other. The flipper
+                  starts edge-on showing a blank back (no data), spinning slowly at
+                  first and accelerating into the turn, and only reveals the real
+                  content once it finishes rotating to face forward at rest. */}
               <motion.div
-                key="tossed-card"
-                initial={{ opacity: 0, x: -160 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.35 } }}
-                transition={{ duration: FLIP_DURATION_S, ease: [0.45, 0, 0.2, 1] }}
-                className="h-[420px] w-72 shrink-0"
+                key={activeProduct.id}
+                layout
+                layoutId={`solution-card-${activeProduct.id}`}
+                transition={{ layout: { duration: FLIP_DURATION_S, ease: TRAVEL_EASE } }}
+                className={`h-[420px] w-72 shrink-0 ${isRightOrigin ? "order-1" : "order-2"}`}
                 style={{ perspective: 1600 }}
               >
+                {/* Plain CSS (not Framer Motion) for the 3D flip rotation specifically —
+                    Framer's computed matrix3d for rotateY produces an incorrect
+                    backface-visibility result (front face bleeding through mirrored);
+                    a bare CSS transform doesn't have that problem. */}
                 <div
-                  className="animate-card-flip-reveal relative h-full w-full"
+                  className={`relative h-full w-full ${isRightOrigin ? "animate-card-flip-reveal-reverse" : "animate-card-flip-reveal"}`}
                   style={{ transformStyle: "preserve-3d", WebkitTransformStyle: "preserve-3d" }}
                 >
                   {/* Back face — solid color, no content, only visible mid-flip */}

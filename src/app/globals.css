@@ -204,12 +204,31 @@ body {
   }
 }
 
+/* Slow-start, fast-finish: the turn is barely perceptible for the first
+   third, then accelerates through the reveal, like the card is deliberately
+   picked up before it's tossed rather than snapping into motion. */
 .animate-card-flip-reveal {
-  animation: card-flip-reveal 1.8s cubic-bezier(0.45, 0, 0.2, 1) both;
+  animation: card-flip-reveal 1.8s cubic-bezier(0.55, 0, 0.85, 0.36) both;
+}
+
+/* Mirror image of the above, for cards toward the right of the row: they
+   travel and rotate the opposite way (toward the left side of the screen). */
+@keyframes card-flip-reveal-reverse {
+  from {
+    transform: rotateY(155deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+.animate-card-flip-reveal-reverse {
+  animation: card-flip-reveal-reverse 1.8s cubic-bezier(0.55, 0, 0.85, 0.36) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-card-flip-reveal {
+  .animate-card-flip-reveal,
+  .animate-card-flip-reveal-reverse {
     animation: none;
   }
 }
