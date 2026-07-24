@@ -14,7 +14,7 @@ Next.js marketing site for **EvoHR** — a recruitment CRM & ATS for staffing ag
 Two route groups, each with its own root layout:
 
 - **`(marketing)`** — `/`, `/pricing`, `/solutions`, `/use-cases`, `/who-we-serve`, `/resources`, `/book-a-demo`, `/privacy`, `/terms`. Mostly async Server Components fetching content from the CMS API via `src/lib/cms.ts`; `/book-a-demo` is a client component form posting to the backend's `/api/demo-requests/`.
-- **`(app)`** — `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/dashboard/*`. Real auth (JWT via `src/lib/auth-context.tsx`) gates everything under `/dashboard` (`AuthGuard`); the dashboard's candidate/client/payroll/etc. pages currently still render static sample data (`src/lib/dashboard-data.ts`) — only auth, profile, and change-password are wired to the real backend so far.
+- **`(app)`** — `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/dashboard/*`. Real auth (JWT via `src/lib/auth-context.tsx`) gates everything under `/dashboard` (`AuthGuard`). Every dashboard page — overview, candidates, clients, requisitions, payroll, analytics, settings — is wired to the real backend; nothing renders static sample data anymore. Log in as `demo` (see the backend README) to see a desk pre-populated with sample data, or sign up for a fresh, empty one.
 
 ## Getting started
 
@@ -40,9 +40,12 @@ See `.env.example`:
 - `src/components/site/` — shared marketing components (`Navbar`, `Hero`, `HeroDashboard`, `Footer`, `PricingTiers`, `widgets.tsx`, `BackToHomeLink`, ...)
 - `src/components/dashboard/` — dashboard chrome (`AuthGuard`, `Topbar`, `Sidebar`, `DashboardShell`)
 - `src/lib/cms.ts` — typed server-side fetch helpers for the Wagtail headless API
-- `src/lib/auth-api.ts` — typed client-side fetch helpers for the auth/demo-request API (`credentials: "include"` for the refresh cookie)
+- `src/lib/auth-api.ts` — typed client-side fetch helpers for the auth/demo-request API (`credentials: "include"` for the refresh cookie); exports the shared `apiFetch` helper `crm-api.ts` also uses
 - `src/lib/auth-context.tsx` — `AuthProvider`/`useAuth()`: holds the in-memory access token + current user, does a silent refresh on mount, exposes `login`/`register`/`logout`/`withAuth` (auto-retries once on a 401 by refreshing)
-- `src/lib/dashboard-data.ts` — static sample CRM data for the dashboard walkthrough (not yet backed by real models)
+- `src/lib/crm-api.ts` — typed client-side fetch helpers for the dashboard's CRM API (clients/requisitions/candidates/payroll CRUD + the dashboard-summary aggregate), every call taking an access token from `withAuth`
+- `src/components/dashboard/Modal.tsx` — the shared create/edit-form overlay used by all four CRUD dashboard pages
+
+Every dashboard CRUD page follows the same shape: `useEffect` + `withAuth` to load on mount, a `Modal`-based form shared between create and edit, and a plain `window.confirm` before delete.
 
 ## Scripts
 

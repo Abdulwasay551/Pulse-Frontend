@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import Logo from "@/components/site/Logo";
-import { demoUser } from "@/lib/dashboard-data";
+import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -36,7 +36,16 @@ export default function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
 
   useEffect(() => {
     const stored = localStorage.getItem("evohr_sidebar_collapsed");
@@ -107,12 +116,12 @@ export default function Sidebar({
       <div className="border-t border-cream/10 p-3">
         <div className={`flex items-center gap-2.5 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""}`}>
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light/20 font-mono text-xs font-bold text-primary-light">
-            {demoUser.initials}
+            {initials}
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold text-cream">{demoUser.name}</div>
-              <div className="truncate font-mono text-[11px] text-cream/45">{demoUser.role}</div>
+              <div className="truncate text-[13px] font-semibold text-cream">{displayName}</div>
+              <div className="truncate font-mono text-[11px] text-cream/45">{user?.username}</div>
             </div>
           )}
         </div>

@@ -1,7 +1,14 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import DonutChart from "@/components/dashboard/DonutChart";
-import { placementsTrend, sourceBreakdown } from "@/lib/dashboard-data";
+import { useAuth } from "@/lib/auth-context";
+import { getDashboardSummary, type DashboardSummary } from "@/lib/crm-api";
 
+// Time-to-fill isn't tracked yet (it needs requisition status-change history,
+// which the CRUD API doesn't record) — kept as an illustrative placeholder
+// alongside the now-real placements/sources charts above it.
 const timeToFill = [
   { label: "Engineering", days: 24 },
   { label: "Sales", days: 14 },
@@ -11,7 +18,14 @@ const timeToFill = [
 ];
 
 export default function AnalyticsPage() {
+  const { withAuth } = useAuth();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const maxDays = Math.max(...timeToFill.map((t) => t.days));
+
+  useEffect(() => {
+    withAuth((token) => getDashboardSummary(token)).then(setSummary);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -20,17 +34,27 @@ export default function AnalyticsPage() {
         <p className="mt-1 text-sm text-ink-soft">How your desk is performing, at a glance.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
-          <h2 className="mb-5 font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
-          <PlacementsChart data={placementsTrend} />
+      {!summary ? (
+        <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
+          Loading…
         </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+            <h2 className="mb-5 font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
+            <PlacementsChart data={summary.placements_trend} />
+          </div>
 
-        <div className="rounded-2xl border border-line bg-card p-6">
-          <h2 className="mb-5 font-display text-lg font-bold text-ink">Candidate sources</h2>
-          <DonutChart data={sourceBreakdown} />
+          <div className="rounded-2xl border border-line bg-card p-6">
+            <h2 className="mb-5 font-display text-lg font-bold text-ink">Candidate sources</h2>
+            {summary.source_breakdown.length > 0 ? (
+              <DonutChart data={summary.source_breakdown} />
+            ) : (
+              <p className="text-sm text-ink-soft">Add candidates to see a source breakdown here.</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-4 rounded-2xl border border-line bg-card p-6">
         <h2 className="mb-5 font-display text-lg font-bold text-ink">

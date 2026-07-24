@@ -55,8 +55,9 @@ async function parseErrorBody(res: Response): Promise<{ message: string; fieldEr
 }
 
 // Client-side only (uses cookies for the refresh token) — unlike lib/cms.ts,
-// which is a server-side read helper for the marketing site.
-async function apiFetch<T>(path: string, options: RequestInit = {}, accessToken?: string | null): Promise<T> {
+// which is a server-side read helper for the marketing site. Exported so
+// crm-api.ts can reuse the same request/error-parsing plumbing.
+export async function apiFetch<T>(path: string, options: RequestInit = {}, accessToken?: string | null): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
