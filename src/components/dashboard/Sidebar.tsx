@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
+  LayoutGrid,
   Users,
-  Building2,
-  Briefcase,
+  IdCard,
+  TrendingUp,
   Banknote,
-  BarChart3,
+  Laptop,
   Settings,
   ChevronsLeft,
   ChevronsRight,
@@ -18,13 +18,26 @@ import {
 import Logo from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth-context";
 
+// `extraPaths` highlights a module's nav item while viewing one of its
+// sub-pages (e.g. Candidates lives under EVO-Recruit's module dashboard,
+// not in this list directly, but should still light up "EVO-Recruit").
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/candidates", label: "Candidates", icon: Users },
-  { href: "/dashboard/clients", label: "Clients", icon: Building2 },
-  { href: "/dashboard/requisitions", label: "Requisitions", icon: Briefcase },
-  { href: "/dashboard/payroll", label: "Payroll", icon: Banknote },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard", label: "Home", icon: LayoutGrid, exact: true },
+  {
+    href: "/dashboard/recruit",
+    label: "EVO-Recruit",
+    icon: Users,
+    extraPaths: ["/dashboard/candidates", "/dashboard/clients", "/dashboard/requisitions", "/dashboard/analytics"],
+  },
+  { href: "/dashboard/people", label: "EVO-People", icon: IdCard },
+  { href: "/dashboard/talent", label: "EVO-Talent", icon: TrendingUp },
+  {
+    href: "/dashboard/payroll-benefits",
+    label: "EVO-Payroll & Benefits",
+    icon: Banknote,
+    extraPaths: ["/dashboard/payroll"],
+  },
+  { href: "/dashboard/it-assets", label: "EVO-IT & Assets", icon: Laptop },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -91,8 +104,9 @@ export default function Sidebar({
 
         <nav className="flex-1 space-y-1 px-3">
           {navItems.map((item) => {
-            const active =
-              item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+            const active = item.exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href) || (item.extraPaths ?? []).some((p) => pathname.startsWith(p));
             const Icon = item.icon;
             return (
               <Link

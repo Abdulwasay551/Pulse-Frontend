@@ -1,125 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Play } from "lucide-react";
-import StatCard from "@/components/dashboard/StatCard";
-import PlacementsChart from "@/components/dashboard/PlacementsChart";
-import { PipelineWidget } from "@/components/site/widgets";
+import { ArrowRight, Banknote, IdCard, Laptop, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { getDashboardSummary, type DashboardSummary } from "@/lib/crm-api";
 
-const toneDot: Record<string, string> = {
-  primary: "bg-primary",
-  amber: "bg-amber",
-  maroon: "bg-maroon",
-  neutral: "bg-ink-soft",
-};
+const modules = [
+  {
+    href: "/dashboard/recruit",
+    icon: Users,
+    title: "EVO-Recruit",
+    description:
+      "Applicant tracking, offer letters, job requisitions, onboarding, offboarding, and rehire — your full hiring lifecycle.",
+  },
+  {
+    href: "/dashboard/people",
+    icon: IdCard,
+    title: "EVO-People Management",
+    description: "Employee records, org chart, self-service, engagement, and attendance — HR core.",
+  },
+  {
+    href: "/dashboard/talent",
+    icon: TrendingUp,
+    title: "EVO-Talent Management",
+    description: "Goals & appraisals, learning paths, competency mapping, and succession planning.",
+  },
+  {
+    href: "/dashboard/payroll-benefits",
+    icon: Banknote,
+    title: "EVO-Payroll & Benefits",
+    description: "Payroll processing, multi-country compliance, benefits enrollment, and claims.",
+  },
+  {
+    href: "/dashboard/it-assets",
+    icon: Laptop,
+    title: "EVO-IT & Asset Management",
+    description: "Device provisioning, asset inventory, warranty tracking, and IT support tickets.",
+  },
+];
 
-export default function OverviewPage() {
-  const { user, withAuth } = useAuth();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-
-  useEffect(() => {
-    withAuth((token) => getDashboardSummary(token)).then(setSummary);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+export default function DashboardHubPage() {
+  const { user } = useAuth();
   const firstName = (user ? [user.first_name].filter(Boolean).join(" ") || user.username : "") || "there";
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Welcome back, {firstName}</h1>
-          <p className="mt-1 text-sm text-ink-soft">Here&apos;s what&apos;s moving on your desk today.</p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/dashboard/requisitions"
-            className="flex items-center gap-2 rounded-lg border border-line bg-card px-4 py-2.5 font-mono text-[13px] font-semibold text-ink transition-colors hover:bg-cream-dim"
-          >
-            <Plus className="h-4 w-4" /> New requisition
-          </Link>
-          <Link
-            href="/dashboard/payroll"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-          >
-            <Play className="h-4 w-4" /> Run payroll
-          </Link>
-        </div>
+      <div className="mb-10 rounded-3xl border border-line bg-card p-10 text-center">
+        <span className="mb-3 inline-block font-mono text-xs font-semibold uppercase tracking-wide text-primary">
+          The EvoHR Suite
+        </span>
+        <h1 className="font-display text-3xl font-bold text-ink md:text-4xl">Welcome back, {firstName}</h1>
+        <p className="mx-auto mt-3 max-w-lg text-ink-soft">
+          Pick a module to get to work — every part of your business, in one place.
+        </p>
       </div>
 
-      {!summary ? (
-        <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
-          Loading…
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {summary.overview_stats.map((s) => (
-              <StatCard key={s.label} label={s.label} value={s.value} change={s.change} href={s.href} />
-            ))}
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
-                <Link
-                  href="/dashboard/analytics"
-                  className="font-mono text-xs font-semibold text-primary hover:text-primary-dark"
-                >
-                  View analytics →
-                </Link>
-              </div>
-              <PlacementsChart data={summary.placements_trend} />
-            </div>
-
-            <div className="rounded-2xl border border-line bg-card p-6">
-              <h2 className="mb-5 font-display text-lg font-bold text-ink">Pipeline</h2>
-              <PipelineWidget stages={summary.pipeline_stages} />
-              {summary.source_breakdown.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
-                    Candidate sources
-                  </h3>
-                  <div className="flex flex-col gap-2.5">
-                    {summary.source_breakdown.map((s) => (
-                      <div key={s.label}>
-                        <div className="mb-1 flex justify-between text-xs">
-                          <span className="text-ink">{s.label}</span>
-                          <span className="font-mono text-ink-soft">{s.percent}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
-                          <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-line bg-card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-ink">Recent activity</h2>
-            {summary.recent_activity.length === 0 ? (
-              <p className="text-sm text-ink-soft">Nothing yet — activity shows up here as you work your desk.</p>
-            ) : (
-              <div className="flex flex-col">
-                {summary.recent_activity.map((a) => (
-                  <div key={a.id} className="flex items-start gap-3 border-b border-line py-3 last:border-0">
-                    <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${toneDot[a.tone]}`} />
-                    <p className="flex-1 text-sm text-ink">{a.message}</p>
-                    <span className="shrink-0 font-mono text-xs text-ink-soft">{a.time}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {modules.map((m) => (
+          <Link
+            key={m.href}
+            href={m.href}
+            className="group rounded-2xl border border-line bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+          >
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <m.icon className="h-6 w-6" />
+            </span>
+            <h2 className="font-display text-lg font-bold text-ink">{m.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{m.description}</p>
+            <span className="mt-4 flex items-center gap-1.5 font-mono text-xs font-semibold text-primary">
+              Open module
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
