@@ -23,7 +23,7 @@ export default function CtaBanner({
         <p className="relative mx-auto mt-3 max-w-md text-cream/60">{subtitle}</p>
         <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            href="/login"
+            href="/book-a-demo"
             className="rounded-lg bg-primary-light px-7 py-3 font-mono text-sm font-semibold text-primary-dark transition-colors hover:bg-cream"
           >
             Book a Demo

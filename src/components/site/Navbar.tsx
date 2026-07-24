@@ -43,7 +43,7 @@ export default function Navbar() {
             Log in
           </Link>
           <Link
-            href="/login"
+            href="/book-a-demo"
             className="rounded-lg bg-primary px-4 py-2 font-sans text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
           >
             Book a Demo
@@ -82,7 +82,7 @@ export default function Navbar() {
               Log in
             </Link>
             <Link
-              href="/login"
+              href="/book-a-demo"
               className="rounded-lg bg-primary px-4 py-2 text-center font-sans text-sm font-semibold text-cream"
               onClick={() => setOpen(false)}
             >

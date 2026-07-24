@@ -52,13 +52,13 @@ export default function Hero({ data }: { data: HomePageData }) {
             style={{ animationDelay: "270ms" }}
           >
             <Link
-              href="/login"
+              href="/book-a-demo"
               className="rounded-lg bg-primary px-7 py-3 text-center font-mono text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
             >
               {data.hero_cta_primary_label}
             </Link>
             <Link
-              href="/login"
+              href="/signup"
               className="rounded-lg border border-line bg-card px-7 py-3 text-center font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
             >
               {data.hero_cta_secondary_label}

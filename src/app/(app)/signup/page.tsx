@@ -8,11 +8,13 @@ import BackToHomeLink from "@/components/site/BackToHomeLink";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/auth-api";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
-  const [identifier, setIdentifier] = useState("");
+  const { register } = useAuth();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +23,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await login(identifier, password);
+      await register({ username, email, password, password2 });
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
@@ -31,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-6 py-12">
       <BackToHomeLink />
       <div
         aria-hidden="true"
@@ -46,8 +48,8 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center gap-3">
           <Logo className="h-10 w-10" />
           <div className="text-center">
-            <h1 className="font-display text-2xl font-bold text-ink">Welcome back</h1>
-            <p className="mt-1 text-sm text-ink-soft">Log in to your EvoHR desk</p>
+            <h1 className="font-display text-2xl font-bold text-ink">Create your account</h1>
+            <p className="mt-1 text-sm text-ink-soft">Start running your desk on EvoHR</p>
           </div>
         </div>
 
@@ -63,18 +65,31 @@ export default function LoginPage() {
 
           <div className="mb-4">
             <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Username or email
+              Username
             </label>
             <input
               type="text"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="you@agency.com"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="jordanblake"
               autoComplete="username"
               className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="mb-2">
+          <div className="mb-4">
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@agency.com"
+              autoComplete="email"
+              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="mb-4">
             <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
               Password
             </label>
@@ -83,14 +98,22 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="mb-6 flex justify-end">
-            <Link href="/forgot-password" className="font-mono text-xs text-primary hover:text-primary-dark">
-              Forgot password?
-            </Link>
+          <div className="mb-6">
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Confirm password
+            </label>
+            <input
+              type="password"
+              value={password2}
+              onChange={(e) => setPassword2(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-primary focus:outline-none"
+            />
           </div>
 
           <button
@@ -98,14 +121,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
           >
-            {loading ? "Logging in…" : "Log in"}
+            {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
         <p className="mt-5 text-center font-mono text-[11px] text-ink-soft">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary hover:text-primary-dark">
-            Sign up
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary hover:text-primary-dark">
+            Log in
           </Link>
         </p>
       </div>

@@ -34,7 +34,7 @@ export default function StatsBanner({
 
       <RevealOnView delayMs={300} className="mt-16">
         <Link
-          href="/login"
+          href="/book-a-demo"
           className="inline-block rounded-full bg-cream px-8 py-3.5 font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
         >
           {ctaLabel}

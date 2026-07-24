@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Menu, Settings, Search } from "lucide-react";
-import { demoUser } from "@/lib/dashboard-data";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+  const router = useRouter();
+  const { user, logout: signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -19,9 +22,17 @@ export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void })
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function logout() {
-    localStorage.removeItem("evohr_demo_session");
-    window.location.href = "/login";
+  const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
+
+  async function logout() {
+    await signOut();
+    router.push("/login");
   }
 
   return (
@@ -58,10 +69,10 @@ export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void })
             className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-cream-dim"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-cream">
-              {demoUser.initials}
+              {initials}
             </span>
             <span className="hidden font-mono text-[13px] font-medium text-ink sm:inline">
-              {demoUser.name}
+              {displayName}
             </span>
             <ChevronDown
               className={`hidden h-3.5 w-3.5 text-ink-soft transition-transform sm:block ${menuOpen ? "rotate-180" : ""}`}
@@ -71,8 +82,8 @@ export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void })
           {menuOpen && (
             <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-card shadow-lg">
               <div className="border-b border-line px-3.5 py-3">
-                <div className="truncate text-[13px] font-semibold text-ink">{demoUser.name}</div>
-                <div className="truncate font-mono text-[11px] text-ink-soft">{demoUser.email}</div>
+                <div className="truncate text-[13px] font-semibold text-ink">{displayName}</div>
+                <div className="truncate font-mono text-[11px] text-ink-soft">{user?.email}</div>
               </div>
               <Link
                 href="/dashboard/settings"

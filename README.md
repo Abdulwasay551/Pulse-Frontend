@@ -11,29 +11,38 @@ Next.js marketing site for **EvoHR** — a recruitment CRM & ATS for staffing ag
 
 ## Pages
 
-`/`, `/pricing`, `/solutions`, `/use-cases`, `/who-we-serve`, `/resources` — mirroring the top nav. Each is an async Server Component that fetches its content from the CMS API via `src/lib/cms.ts`.
+Two route groups, each with its own root layout:
+
+- **`(marketing)`** — `/`, `/pricing`, `/solutions`, `/use-cases`, `/who-we-serve`, `/resources`, `/book-a-demo`, `/privacy`, `/terms`. Mostly async Server Components fetching content from the CMS API via `src/lib/cms.ts`; `/book-a-demo` is a client component form posting to the backend's `/api/demo-requests/`.
+- **`(app)`** — `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/dashboard/*`. Real auth (JWT via `src/lib/auth-context.tsx`) gates everything under `/dashboard` (`AuthGuard`); the dashboard's candidate/client/payroll/etc. pages currently still render static sample data (`src/lib/dashboard-data.ts`) — only auth, profile, and change-password are wired to the real backend so far.
 
 ## Getting started
 
 ```bash
 pnpm install
-cp .env.example .env.local   # point CMS_API_URL at your running backend
+cp .env.example .env.local   # point CMS_API_URL / NEXT_PUBLIC_API_URL at your running backend
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The [EvoHR backend](https://github.com/Abdulwasay551/EvoHr-Backend) must be running for pages to render (they fetch content server-side at request/build time).
+Open [http://localhost:3000](http://localhost:3000). The [EvoHR backend](https://github.com/Abdulwasay551/EvoHr-Backend) must be running for pages to render (marketing content is fetched server-side at request time) and for login/signup/the demo form to work. For local auth to succeed cross-origin, the backend's `DJANGO_CORS_ALLOWED_ORIGINS` must include `http://localhost:3000`.
 
 ## Environment variables
 
 See `.env.example`:
 
-- `CMS_API_URL` — base URL of the backend's headless API (defaults to `http://localhost:8000/api/cms/v2`)
+- `CMS_API_URL` — base URL of the backend's headless CMS API, used **server-side only** (defaults to `http://localhost:8000/api/cms/v2`)
+- `NEXT_PUBLIC_API_URL` — base URL of the backend's auth/app API, used **client-side** (`"use client"` components calling `src/lib/auth-api.ts`) — needs the `NEXT_PUBLIC_` prefix so Next.js inlines it into the browser bundle (defaults to `http://localhost:8000/api`)
 
 ## Project structure
 
-- `src/app/` — routes (one folder per public page)
-- `src/components/site/` — shared marketing components (`Navbar`, `Hero`, `HeroDashboard`, `Footer`, `PricingTiers`, `widgets.tsx`, ...)
-- `src/lib/cms.ts` — typed fetch helpers for the Wagtail headless API
+- `src/app/(marketing)/` — public marketing routes
+- `src/app/(app)/` — auth routes + the dashboard shell
+- `src/components/site/` — shared marketing components (`Navbar`, `Hero`, `HeroDashboard`, `Footer`, `PricingTiers`, `widgets.tsx`, `BackToHomeLink`, ...)
+- `src/components/dashboard/` — dashboard chrome (`AuthGuard`, `Topbar`, `Sidebar`, `DashboardShell`)
+- `src/lib/cms.ts` — typed server-side fetch helpers for the Wagtail headless API
+- `src/lib/auth-api.ts` — typed client-side fetch helpers for the auth/demo-request API (`credentials: "include"` for the refresh cookie)
+- `src/lib/auth-context.tsx` — `AuthProvider`/`useAuth()`: holds the in-memory access token + current user, does a silent refresh on mount, exposes `login`/`register`/`logout`/`withAuth` (auto-retries once on a 401 by refreshing)
+- `src/lib/dashboard-data.ts` — static sample CRM data for the dashboard walkthrough (not yet backed by real models)
 
 ## Scripts
 

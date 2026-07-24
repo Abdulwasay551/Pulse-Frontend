@@ -92,7 +92,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
             </ul>
 
             <Link
-              href="/login"
+              href="/signup"
               className={`rounded-lg px-5 py-3 text-center font-mono text-sm font-semibold transition-colors ${
                 tier.featured
                   ? "bg-primary-light text-primary-dark hover:bg-cream"
