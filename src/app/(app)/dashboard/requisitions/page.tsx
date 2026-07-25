@@ -11,7 +11,7 @@ import {
   type Requisition,
   type RequisitionPriority,
   type RequisitionStatus,
-} from "@/lib/crm-api";
+} from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
 const statusTone: Record<RequisitionStatus, string> = {

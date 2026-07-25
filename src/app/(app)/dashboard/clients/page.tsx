@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { clientsApi, type Client, type ClientStatus } from "@/lib/crm-api";
+import { clientsApi, type Client, type ClientStatus } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
 const statusTone: Record<ClientStatus, string> = {

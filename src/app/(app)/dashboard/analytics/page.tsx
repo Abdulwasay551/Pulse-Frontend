@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import DonutChart from "@/components/dashboard/DonutChart";
 import { useAuth } from "@/lib/auth-context";
-import { getDashboardSummary, type DashboardSummary } from "@/lib/crm-api";
+import { getDashboardSummary, type DashboardSummary } from "@/lib/recruit-api";
 
 // Time-to-fill isn't tracked yet (it needs requisition status-change history,
 // which the CRUD API doesn't record) — kept as an illustrative placeholder

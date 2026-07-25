@@ -23,7 +23,7 @@ import FeatureSection from "@/components/dashboard/FeatureSection";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { PipelineWidget } from "@/components/site/widgets";
 import { useAuth } from "@/lib/auth-context";
-import { getDashboardSummary, type DashboardSummary } from "@/lib/crm-api";
+import { getDashboardSummary, type DashboardSummary } from "@/lib/recruit-api";
 
 const toneDot: Record<string, string> = {
   primary: "bg-primary",

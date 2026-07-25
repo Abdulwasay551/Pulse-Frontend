@@ -2,15 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Menu, Settings, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { findActiveModule } from "@/lib/dashboard-modules";
 
-export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+export default function Topbar({
+  onOpenSidebar,
+  showMenuButton = true,
+}: {
+  onOpenSidebar: () => void;
+  showMenuButton?: boolean;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout: signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const activeModule = findActiveModule(pathname);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -37,22 +46,28 @@ export default function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void })
 
   return (
     <header className="flex items-center justify-between gap-3 border-b border-line bg-card px-4 py-3.5 sm:px-6">
-      <button
-        onClick={onOpenSidebar}
-        aria-label="Open menu"
-        className="rounded-lg p-2 text-ink-soft transition-colors hover:bg-cream-dim hover:text-ink lg:hidden"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+      {showMenuButton && (
+        <button
+          onClick={onOpenSidebar}
+          aria-label="Open menu"
+          className="rounded-lg p-2 text-ink-soft transition-colors hover:bg-cream-dim hover:text-ink lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      )}
 
-      <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex">
-        <Search className="h-4 w-4 shrink-0 text-ink-soft" />
-        <input
-          type="text"
-          placeholder="Search candidates, clients, requisitions…"
-          className="w-full bg-transparent font-mono text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
-        />
-      </div>
+      {activeModule ? (
+        <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex">
+          <Search className="h-4 w-4 shrink-0 text-ink-soft" />
+          <input
+            type="text"
+            placeholder={activeModule.searchPlaceholder}
+            className="w-full bg-transparent font-mono text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
+          />
+        </div>
+      ) : (
+        <div className="flex-1" />
+      )}
 
       <div className="flex items-center gap-2 sm:gap-4">
         <button

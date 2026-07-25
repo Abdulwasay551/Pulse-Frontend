@@ -13,7 +13,7 @@ import {
   type CandidateSource,
   type Client,
   type Requisition,
-} from "@/lib/crm-api";
+} from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
 const stageTone: Record<CandidateStage, string> = {

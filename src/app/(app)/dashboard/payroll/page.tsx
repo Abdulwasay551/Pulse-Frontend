@@ -5,7 +5,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import Modal from "@/components/dashboard/Modal";
 import { useAuth } from "@/lib/auth-context";
-import { payrollApi, type PayrollRun, type PayrollStatus } from "@/lib/crm-api";
+import { payrollApi, type PayrollRun, type PayrollStatus } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
 
 const statusTone: Record<PayrollStatus, string> = {

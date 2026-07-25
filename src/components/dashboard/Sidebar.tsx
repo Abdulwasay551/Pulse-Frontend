@@ -3,43 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  LayoutGrid,
-  Users,
-  IdCard,
-  TrendingUp,
-  Banknote,
-  Laptop,
-  Settings,
-  ChevronsLeft,
-  ChevronsRight,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, X } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth-context";
-
-// `extraPaths` highlights a module's nav item while viewing one of its
-// sub-pages (e.g. Candidates lives under EVO-Recruit's module dashboard,
-// not in this list directly, but should still light up "EVO-Recruit").
-const navItems = [
-  { href: "/dashboard", label: "Home", icon: LayoutGrid, exact: true },
-  {
-    href: "/dashboard/recruit",
-    label: "EVO-Recruit",
-    icon: Users,
-    extraPaths: ["/dashboard/candidates", "/dashboard/clients", "/dashboard/requisitions", "/dashboard/analytics"],
-  },
-  { href: "/dashboard/people", label: "EVO-People", icon: IdCard },
-  { href: "/dashboard/talent", label: "EVO-Talent", icon: TrendingUp },
-  {
-    href: "/dashboard/payroll-benefits",
-    label: "EVO-Payroll & Benefits",
-    icon: Banknote,
-    extraPaths: ["/dashboard/payroll"],
-  },
-  { href: "/dashboard/it-assets", label: "EVO-IT & Assets", icon: Laptop },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+import { findActiveModule } from "@/lib/dashboard-modules";
 
 export default function Sidebar({
   mobileOpen,
@@ -72,6 +39,10 @@ export default function Sidebar({
     });
   }
 
+  const activeModule = findActiveModule(pathname);
+  // No module context (the hub page, Settings) — no sidebar at all.
+  if (!activeModule) return null;
+
   return (
     <>
       {mobileOpen && (
@@ -102,11 +73,27 @@ export default function Sidebar({
           </button>
         </div>
 
+        <div className="px-3 pb-2">
+          <Link
+            href="/dashboard"
+            onClick={onClose}
+            title={collapsed ? "All modules" : undefined}
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 font-mono text-[12px] text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+            {!collapsed && <span>All modules</span>}
+          </Link>
+        </div>
+
+        {!collapsed && (
+          <div className="px-4 pb-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-cream/40">
+            {activeModule.label}
+          </div>
+        )}
+
         <nav className="flex-1 space-y-1 px-3">
-          {navItems.map((item) => {
-            const active = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href) || (item.extraPaths ?? []).some((p) => pathname.startsWith(p));
+          {activeModule.items.map((item) => {
+            const active = pathname === item.href;
             const Icon = item.icon;
             return (
               <Link
