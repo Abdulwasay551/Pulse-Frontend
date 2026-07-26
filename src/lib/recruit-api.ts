@@ -109,6 +109,7 @@ export interface CandidateWrite {
   source?: CandidateSource;
   applied_at?: string;
   resume_text?: string;
+  resume_file?: string | null;
 }
 
 export const clientsApi = resourceApi<Client, ClientWrite>("/recruit/clients/");

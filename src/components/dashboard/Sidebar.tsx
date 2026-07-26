@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronDown, ChevronsLeft, ChevronsRight, LayoutGrid, X } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth-context";
-import { featureHref, findActiveModule, type ModuleDef } from "@/lib/dashboard-modules";
+import { featureHref, findActiveModule, hrefPathname, type ModuleDef } from "@/lib/dashboard-modules";
 
 function sectionContainsPathname(moduleDef: ModuleDef, pathname: string) {
-  return moduleDef.sections.find((s) => s.features.some((f) => f.href === pathname))?.label ?? null;
+  return moduleDef.sections.find((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))?.label ?? null;
 }
 
 export default function Sidebar({
@@ -20,6 +20,13 @@ export default function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Some feature hrefs carry a query string (the onboarding/offboarding
+  // category cross-sections) — usePathname() never includes it, so build
+  // the full current URL here for exact active-link matching. Module/
+  // section containment checks still use the bare pathname (via
+  // hrefPathname) since those only care which page, not which category.
+  const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const activeModule = findActiveModule(pathname);
@@ -29,7 +36,8 @@ export default function Sidebar({
   // open by default) below, rather than synced here via an effect.
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   // Hovering a sub-module previews its sub-sub-modules without pinning it
-  // open — clicking still pins/unpins independently of hover.
+  // open — clicking still pins/unpins independently of hover. Shared by
+  // both the expanded (inline list) and collapsed (flyout) rail.
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
   const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
@@ -107,7 +115,7 @@ export default function Sidebar({
           </div>
         )}
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-3">
+        <nav className={`flex-1 space-y-1 px-3 pb-3 ${collapsed ? "overflow-visible" : "overflow-y-auto"}`}>
           <SidebarLink
             href={activeModule.overviewHref}
             label="Overview"
@@ -141,33 +149,73 @@ export default function Sidebar({
                   href={href}
                   label={section.label}
                   icon={section.icon}
-                  active={pathname === href}
+                  active={href === currentUrl}
                   collapsed={collapsed}
                   onClick={onClose}
                 />
               );
             }
 
-            if (collapsed) {
-              return section.features.map((feature) => {
-                const href = featureHref(activeModule, section, feature);
-                return (
-                  <SidebarLink
-                    key={href + feature.label}
-                    href={href}
-                    label={feature.label}
-                    icon={feature.icon}
-                    active={pathname === href}
-                    collapsed={collapsed}
-                    onClick={onClose}
-                  />
-                );
-              });
-            }
-
             const pinned = expanded[section.label] ?? section.label === activeSectionLabel;
             const isOpen = pinned || hoveredSection === section.label;
             const SectionIcon = section.icon;
+
+            if (collapsed) {
+              return (
+                <div
+                  key={section.label}
+                  className="relative"
+                  onMouseEnter={() => setHoveredSection(section.label)}
+                  onMouseLeave={() => setHoveredSection((prev) => (prev === section.label ? null : prev))}
+                >
+                  <button
+                    onClick={() => toggleSection(section.label)}
+                    title={section.label}
+                    aria-label={section.label}
+                    className={`flex w-full items-center justify-center rounded-lg py-2.5 transition-colors ${
+                      isOpen ? "bg-cream/10 text-cream" : "text-cream/60 hover:bg-cream/5 hover:text-cream"
+                    }`}
+                  >
+                    <SectionIcon className="h-[18px] w-[18px] shrink-0" />
+                  </button>
+                  {isOpen && (
+                    <div className="absolute top-0 left-full z-[60] ml-2 w-60 rounded-xl border border-cream/10 bg-primary-dark p-2 shadow-xl">
+                      <div className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40">
+                        {section.label}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        {section.features.map((feature) => {
+                          const href = featureHref(activeModule, section, feature);
+                          const active = href === currentUrl;
+                          const Icon = feature.icon;
+                          return (
+                            <Link
+                              key={href + feature.label}
+                              href={href}
+                              onClick={onClose}
+                              className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] transition-colors ${
+                                active
+                                  ? "bg-primary-light/15 text-primary-light"
+                                  : "text-cream/70 hover:bg-cream/10 hover:text-cream"
+                              }`}
+                            >
+                              <Icon className="h-[15px] w-[15px] shrink-0" />
+                              <span className="truncate">{feature.label}</span>
+                              {!feature.href && (
+                                <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
+                                  Soon
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <div
                 key={section.label}
@@ -188,7 +236,7 @@ export default function Sidebar({
                   <div className="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5 border-l border-cream/10 pl-3">
                     {section.features.map((feature) => {
                       const href = featureHref(activeModule, section, feature);
-                      const active = pathname === href;
+                      const active = href === currentUrl;
                       const Icon = feature.icon;
                       return (
                         <Link

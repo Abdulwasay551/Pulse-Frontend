@@ -68,6 +68,8 @@ export default function RecruitPage() {
                 </div>
                 <PlacementsChart data={summary.placements_trend} />
               </div>
+
+              <ModuleFeatureSections moduleDef={moduleDef} />
             </div>
 
             {/* A persistent right rail — "at a glance" widgets stay visible
@@ -119,8 +121,6 @@ export default function RecruitPage() {
           </div>
         </>
       )}
-
-      <ModuleFeatureSections moduleDef={moduleDef} />
     </div>
   );
 }

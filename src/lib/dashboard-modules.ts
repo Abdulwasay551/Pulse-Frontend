@@ -120,7 +120,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Resume Pool", description: "Every resume on file, searchable.", icon: FileText, href: "/dashboard/resume-pool" },
           { label: "Digital Offer Letters", description: "Draft, send, and track offers to signature.", icon: FileSignature, href: "/dashboard/offer-letters" },
           { label: "Background Check Integration", description: "Screening status before an offer is final.", icon: ShieldCheck, href: "/dashboard/background-checks" },
-          { label: "AI Resume Screening", description: "Resume-to-requirements fit scoring.", icon: Sparkles, href: "/dashboard/resume-pool" },
+          { label: "AI Resume Screening", description: "Resume-to-requirements fit scoring.", icon: Sparkles, href: "/dashboard/ai-resume-screening" },
           { label: "Candidate Portal", description: "Self-service status tracking for applicants.", icon: ScanSearch },
         ],
       },
@@ -298,13 +298,22 @@ export function featureHref(moduleDef: ModuleDef, section: ModuleFeatureSection,
   return feature.href ?? comingSoonHref(moduleDef.label, section.label, feature);
 }
 
+/** Next's usePathname() never includes the query string, but some feature
+ * hrefs do (e.g. the onboarding/offboarding category cross-sections,
+ * "/dashboard/onboarding?category=Orientation") — strip it before comparing
+ * against a bare pathname, or every one of those routes would fail to match
+ * its module/section and the sidebar would simply disappear. */
+export function hrefPathname(href: string): string {
+  return href.split("?")[0];
+}
+
 export function findActiveModule(pathname: string): ModuleDef | null {
   return (
     dashboardModules.find(
       (m) =>
         m.overviewHref === pathname ||
         m.extraLinks.some((l) => l.href === pathname) ||
-        m.sections.some((s) => s.features.some((f) => f.href === pathname))
+        m.sections.some((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))
     ) ?? null
   );
 }

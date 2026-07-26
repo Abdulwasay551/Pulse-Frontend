@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileText, Sparkles, Upload } from "lucide-react";
+import Link from "next/link";
+import { FileText, Sparkles, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { candidatesApi, screenCandidate, uploadResume, type Candidate } from "@/lib/recruit-api";
+import { candidatesApi, uploadResume, type Candidate } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
 const inputClass =
@@ -26,7 +27,6 @@ export default function ResumePoolPage() {
   const [resumeText, setResumeText] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [screening, setScreening] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -79,19 +79,22 @@ export default function ResumePoolPage() {
     }
   }
 
-  async function handleScreen() {
+  async function handleRemove() {
     if (!active) return;
-    setScreening(true);
+    if (!confirm(`Remove ${active.name}'s resume (file and text)?`)) return;
+    setSaving(true);
     setError(null);
     try {
-      const updated = await withAuth((token) => screenCandidate(token, active.id));
+      const updated = await withAuth((token) =>
+        candidatesApi.update(token, active.id, { resume_file: null, resume_text: "" })
+      );
       setActive(updated);
-      setResumeText(updated.resume_text);
+      setResumeText("");
       setCandidates((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Screening failed. Please try again.");
+      setError(err instanceof ApiError ? err.message : "Couldn't remove the resume.");
     } finally {
-      setScreening(false);
+      setSaving(false);
     }
   }
 
@@ -100,8 +103,7 @@ export default function ResumePoolPage() {
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-ink">Resume Pool</h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Every candidate&apos;s resume in one place — upload files, paste text, and run AI fit scoring against their
-          linked requisition.
+          Every candidate&apos;s resume in one place — upload, replace, or remove a file, and paste/edit resume text.
         </p>
       </div>
 
@@ -159,7 +161,7 @@ export default function ResumePoolPage() {
                     onClick={() => openCandidate(c)}
                     className="text-xs font-semibold text-primary hover:text-primary-dark"
                   >
-                    Open →
+                    Manage →
                   </button>
                 </td>
               </tr>
@@ -181,25 +183,31 @@ export default function ResumePoolPage() {
           )}
 
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-ink-soft">{active.role}</p>
-              <p className="text-xs text-ink-soft">
-                Requisition: {active.requisition_title ?? "None linked — screening needs a requisition."}
-              </p>
+            <p className="text-sm text-ink-soft">{active.role}</p>
+            <div className="flex items-center gap-2">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
+                <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload file"}
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUpload(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <button
+                onClick={handleRemove}
+                disabled={saving || (!active.resume_file && !active.resume_text)}
+                aria-label="Remove resume"
+                title="Remove resume (file and text)"
+                className="rounded-lg border border-line bg-cream p-2.5 text-ink-soft transition-colors hover:border-maroon/30 hover:bg-maroon-soft hover:text-maroon disabled:opacity-40"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
-              <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload resume file"}
-              <input
-                type="file"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleUpload(file);
-                  e.target.value = "";
-                }}
-              />
-            </label>
           </div>
 
           {active.resume_file && (
@@ -213,7 +221,7 @@ export default function ResumePoolPage() {
             </a>
           )}
 
-          <div className="mb-4">
+          <div className="mb-5">
             <label className={labelClass}>Resume text (used for AI screening)</label>
             <textarea
               rows={8}
@@ -231,28 +239,28 @@ export default function ResumePoolPage() {
             </button>
           </div>
 
-          <div className="rounded-xl border border-line bg-cream p-4">
-            <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-xl border border-line bg-cream p-4">
+            <div>
               <h3 className="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
                 <Sparkles className="h-4 w-4 text-primary" /> AI resume screening
               </h3>
+              <p className="mt-1 text-xs text-ink-soft">
+                {active.ai_score !== null ? active.ai_score_notes || "Scored." : "Not scored yet."}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
               <span
                 className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${scoreTone(active.ai_score)}`}
               >
-                {active.ai_score !== null ? `${active.ai_score}% match` : "Not scored yet"}
+                {active.ai_score !== null ? `${active.ai_score}% match` : "Not scored"}
               </span>
+              <Link
+                href="/dashboard/ai-resume-screening"
+                className="text-xs font-semibold whitespace-nowrap text-primary hover:text-primary-dark"
+              >
+                Run screening →
+              </Link>
             </div>
-            {active.ai_score_notes && <p className="mb-3 text-xs whitespace-pre-line text-ink-soft">{active.ai_score_notes}</p>}
-            <button
-              onClick={handleScreen}
-              disabled={screening || !active.requisition}
-              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-            >
-              {screening ? "Screening…" : "Run AI screening"}
-            </button>
-            {!active.requisition && (
-              <p className="mt-2 text-center text-xs text-ink-soft">Link this candidate to a requisition first.</p>
-            )}
           </div>
         </Modal>
       )}

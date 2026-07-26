@@ -132,31 +132,33 @@ export default function ClientsPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {clients.map((c) => (
             <div key={c.id} className="group relative rounded-2xl border border-line bg-card p-5">
-              <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  onClick={() => openEdit(c)}
-                  aria-label={`Edit ${c.name}`}
-                  className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(c)}
-                  aria-label={`Delete ${c.name}`}
-                  className="rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Building2 className="h-5 w-5" />
                 </span>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${statusTone[c.status]}`}
-                >
-                  {c.status}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${statusTone[c.status]}`}
+                  >
+                    {c.status}
+                  </span>
+                  <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => openEdit(c)}
+                      aria-label={`Edit ${c.name}`}
+                      className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c)}
+                      aria-label={`Delete ${c.name}`}
+                      className="rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
               <h3 className="font-display text-base font-bold text-ink">{c.name}</h3>
               <p className="text-xs text-ink-soft">{c.industry || "—"}</p>
