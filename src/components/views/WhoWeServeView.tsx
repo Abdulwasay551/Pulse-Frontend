@@ -26,7 +26,7 @@ export default function WhoWeServeView({
               }`}
             >
               <div>
-                <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
+                <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary">
                   {role.tag}
                 </span>
                 <h2 className="font-display text-xl font-bold text-ink md:text-2xl">

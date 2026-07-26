@@ -10,7 +10,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
   return (
     <div>
       <div className="mb-12 flex items-center justify-center gap-4">
-        <span className={`font-mono text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
+        <span className={`text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
           Monthly
         </span>
         <button
@@ -22,10 +22,10 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
             className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-cream transition-transform ${annual ? "translate-x-5" : "translate-x-0"}`}
           />
         </button>
-        <span className={`font-mono text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
+        <span className={`text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
           Annual
         </span>
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-semibold text-primary">
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
           Save 20%
         </span>
       </div>
@@ -41,7 +41,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
             }`}
           >
             {tier.featured && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-light px-3 py-1 font-mono text-[10.5px] font-bold tracking-wide text-primary-dark">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-light px-3 py-1 text-[10.5px] font-bold tracking-wide text-primary-dark">
                 MOST POPULAR
               </span>
             )}
@@ -58,23 +58,23 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
               {!tier.is_custom ? (
                 <>
                   <span
-                    className={`font-mono text-4xl font-bold tabular-nums ${tier.featured ? "text-cream" : "text-ink"}`}
+                    className={`text-4xl font-bold tabular-nums ${tier.featured ? "text-cream" : "text-ink"}`}
                   >
                     ${annual ? tier.annual_price : tier.monthly_price}
                   </span>
-                  <span className={`font-mono text-sm ${tier.featured ? "text-cream/50" : "text-ink-soft"}`}>
+                  <span className={`text-sm ${tier.featured ? "text-cream/50" : "text-ink-soft"}`}>
                     {" "}
                     / recruiter / mo
                   </span>
                 </>
               ) : (
                 <span
-                  className={`font-mono text-4xl font-bold ${tier.featured ? "text-cream" : "text-ink"}`}
+                  className={`text-4xl font-bold ${tier.featured ? "text-cream" : "text-ink"}`}
                 >
                   Custom
                 </span>
               )}
-              <div className={`mt-1 font-mono text-xs ${tier.featured ? "text-cream/40" : "text-ink-soft"}`}>
+              <div className={`mt-1 text-xs ${tier.featured ? "text-cream/40" : "text-ink-soft"}`}>
                 {!tier.is_custom ? (annual ? "Billed annually" : "Billed monthly") : "Talk to sales"}
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function PricingTiers({ tiers }: { tiers: PricingTier[] }) {
 
             <Link
               href="/signup"
-              className={`rounded-lg px-5 py-3 text-center font-mono text-sm font-semibold transition-colors ${
+              className={`rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
                 tier.featured
                   ? "bg-primary-light text-primary-dark hover:bg-cream"
                   : "bg-primary text-cream hover:bg-primary-dark"

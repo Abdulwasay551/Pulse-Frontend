@@ -15,7 +15,7 @@ export default function ModuleHeader({
     <div className="mb-6">
       <Link
         href="/dashboard"
-        className="mb-4 inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         All modules

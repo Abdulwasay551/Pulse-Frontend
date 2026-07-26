@@ -10,7 +10,7 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
   return (
     <div className="rounded-2xl border border-line bg-card p-7 md:p-9">
       <div className="mx-auto max-w-xl text-center">
-        <div className="mb-2 font-mono text-xs uppercase tracking-wide text-primary">
+        <div className="mb-2 text-xs uppercase tracking-wide text-primary">
           Cost calculator
         </div>
         <h3 className="font-display text-2xl font-bold text-ink">
@@ -20,10 +20,10 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
 
       <div className="mx-auto mt-8 max-w-xl">
         <div className="mb-2 flex items-baseline justify-between">
-          <label htmlFor="recruiter-count" className="font-mono text-sm text-ink-soft">
+          <label htmlFor="recruiter-count" className="text-sm text-ink-soft">
             Number of recruiters
           </label>
-          <span className="font-mono text-2xl font-bold tabular-nums text-ink">{recruiters}</span>
+          <span className="text-2xl font-bold tabular-nums text-ink">{recruiters}</span>
         </div>
         <input
           id="recruiter-count"
@@ -36,7 +36,7 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
         />
 
         <div className="mt-6 flex items-center justify-center gap-3">
-          <span className={`font-mono text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
+          <span className={`text-sm font-semibold ${!annual ? "text-ink" : "text-ink-soft"}`}>
             Monthly
           </span>
           <button
@@ -48,7 +48,7 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
               className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-cream transition-transform ${annual ? "translate-x-5" : "translate-x-0"}`}
             />
           </button>
-          <span className={`font-mono text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
+          <span className={`text-sm font-semibold ${annual ? "text-ink" : "text-ink-soft"}`}>
             Annual
           </span>
         </div>
@@ -66,17 +66,17 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
                 tier.featured ? "border-primary bg-primary/5" : "border-line"
               }`}
             >
-              <div className="font-mono text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 {tier.name}
               </div>
               {tier.is_custom || total === null ? (
                 <div className="mt-2 font-display text-xl font-bold text-ink">Custom</div>
               ) : (
                 <>
-                  <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-ink">
+                  <div className="mt-2 text-2xl font-bold tabular-nums text-ink">
                     ${total.toLocaleString()}
                   </div>
-                  <div className="font-mono text-[11px] text-ink-soft">
+                  <div className="text-[11px] text-ink-soft">
                     {annual ? "per month, billed annually" : "per month"}
                   </div>
                 </>

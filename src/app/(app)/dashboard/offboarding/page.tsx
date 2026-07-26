@@ -34,7 +34,7 @@ const taskStatusTone: Record<TaskStatus, string> = {
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 export default function OffboardingPage() {
   const { withAuth } = useAuth();
@@ -138,7 +138,7 @@ export default function OffboardingPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           <Plus className="h-4 w-4" /> Start offboarding
         </button>
@@ -169,7 +169,7 @@ export default function OffboardingPage() {
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
               <div className="mb-3 flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-mono text-xs font-bold text-primary">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
                   {o.candidate_detail.initials}
                 </span>
                 <div className="min-w-0">
@@ -179,12 +179,12 @@ export default function OffboardingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold whitespace-nowrap ${statusTone[o.status]}`}
+                  className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${statusTone[o.status]}`}
                 >
                   {o.status}
                 </span>
                 {o.rehire_eligible && (
-                  <span className="rounded-full bg-primary/15 px-2.5 py-1 font-mono text-[10.5px] font-semibold whitespace-nowrap text-primary">
+                  <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap text-primary">
                     Rehire eligible
                   </span>
                 )}
@@ -192,7 +192,7 @@ export default function OffboardingPage() {
               <div className="mt-4">
                 <div className="mb-1 flex justify-between text-xs">
                   <span className="text-ink-soft">Progress</span>
-                  <span className="font-mono text-ink">{o.progress}%</span>
+                  <span className="text-ink">{o.progress}%</span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
                   <div className="h-full rounded-full bg-primary" style={{ width: `${o.progress}%` }} />
@@ -200,7 +200,7 @@ export default function OffboardingPage() {
               </div>
               <div className="mt-3 flex items-center justify-between text-xs">
                 <span className="text-ink-soft">Last working day</span>
-                <span className="font-mono text-ink">{o.last_working_day}</span>
+                <span className="text-ink">{o.last_working_day}</span>
               </div>
             </div>
           ))}
@@ -262,7 +262,7 @@ export default function OffboardingPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Starting…" : "Start offboarding"}
             </button>
@@ -332,14 +332,14 @@ function OffboardingDetail({
     <div className="mx-auto max-w-6xl">
       <button
         onClick={onBack}
-        className="mb-4 flex items-center gap-1.5 font-mono text-xs font-semibold text-ink-soft hover:text-ink"
+        className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> All offboarding
       </button>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-card p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-mono text-sm font-bold text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
             {offboarding.candidate_detail.initials}
           </span>
           <div>
@@ -350,7 +350,7 @@ function OffboardingDetail({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 font-mono text-xs text-ink-soft">
+          <label className="flex items-center gap-2 text-xs text-ink-soft">
             <input
               type="checkbox"
               checked={offboarding.rehire_eligible}
@@ -362,7 +362,7 @@ function OffboardingDetail({
           <div className="w-32">
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-ink-soft">Progress</span>
-              <span className="font-mono text-ink">{offboarding.progress}%</span>
+              <span className="text-ink">{offboarding.progress}%</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
               <div className="h-full rounded-full bg-primary" style={{ width: `${offboarding.progress}%` }} />
@@ -408,12 +408,12 @@ function OffboardingDetail({
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm text-ink">{t.title}</p>
-                        {t.due_date && <p className="font-mono text-[11px] text-ink-soft">Due {t.due_date}</p>}
+                        {t.due_date && <p className="text-[11px] text-ink-soft">Due {t.due_date}</p>}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
                         <button
                           onClick={() => cycleTaskStatus(t.id, t.status)}
-                          className={`rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[t.status]}`}
+                          className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[t.status]}`}
                         >
                           {t.status}
                         </button>
@@ -467,7 +467,7 @@ function OffboardingDetail({
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Adding…" : "Add task"}
             </button>

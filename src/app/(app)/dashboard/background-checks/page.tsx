@@ -26,7 +26,7 @@ const statusOptions: BackgroundCheckStatus[] = ["Pending", "In Progress", "Clear
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 interface FormState {
   candidate: string;
@@ -127,7 +127,7 @@ export default function BackgroundChecksPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           <Plus className="h-4 w-4" /> New check
         </button>
@@ -136,7 +136,7 @@ export default function BackgroundChecksPage() {
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-line font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
               <th className="px-5 py-3 font-medium">Check type</th>
               <th className="px-5 py-3 font-medium">Status</th>
@@ -150,7 +150,7 @@ export default function BackgroundChecksPage() {
               <tr key={b.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-mono text-[11px] font-bold text-primary">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
                       {b.candidate_detail.initials}
                     </span>
                     <span className="font-semibold text-ink">{b.candidate_detail.name}</span>
@@ -159,15 +159,15 @@ export default function BackgroundChecksPage() {
                 <td className="px-5 py-3.5 text-ink-soft">{b.check_type}</td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${statusTone[b.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[b.status]}`}
                   >
                     {b.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 font-mono text-xs text-ink-soft">
+                <td className="px-5 py-3.5 text-xs text-ink-soft">
                   {b.initiated_at ? new Date(b.initiated_at).toLocaleDateString() : "—"}
                 </td>
-                <td className="px-5 py-3.5 font-mono text-xs text-ink-soft">
+                <td className="px-5 py-3.5 text-xs text-ink-soft">
                   {b.completed_at ? new Date(b.completed_at).toLocaleDateString() : "—"}
                 </td>
                 <td className="px-5 py-3.5">
@@ -265,7 +265,7 @@ export default function BackgroundChecksPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Create background check"}
             </button>

@@ -21,7 +21,7 @@ export default function Hero({ data }: { data: HomePageData }) {
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-10">
         <div>
           <div
-            className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-primary"
+            className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-xs uppercase tracking-wide text-primary"
             style={{ animationDelay: "0ms" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-primary-light" />
@@ -53,20 +53,20 @@ export default function Hero({ data }: { data: HomePageData }) {
           >
             <Link
               href="/book-a-demo"
-              className="rounded-lg bg-primary px-7 py-3 text-center font-mono text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
+              className="rounded-lg bg-primary px-7 py-3 text-center text-sm font-semibold text-cream shadow-sm transition-colors hover:bg-primary-dark"
             >
               {data.hero_cta_primary_label}
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg border border-line bg-card px-7 py-3 text-center font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
+              className="rounded-lg border border-line bg-card px-7 py-3 text-center text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
             >
               {data.hero_cta_secondary_label}
             </Link>
           </div>
 
           <p
-            className="animate-fade-in-up mt-5 font-mono text-xs text-ink-soft"
+            className="animate-fade-in-up mt-5 text-xs text-ink-soft"
             style={{ animationDelay: "340ms" }}
           >
             {data.hero_note}

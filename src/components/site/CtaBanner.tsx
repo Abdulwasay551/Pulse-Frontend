@@ -24,13 +24,13 @@ export default function CtaBanner({
         <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
             href="/book-a-demo"
-            className="rounded-lg bg-primary-light px-7 py-3 font-mono text-sm font-semibold text-primary-dark transition-colors hover:bg-cream"
+            className="rounded-lg bg-primary-light px-7 py-3 text-sm font-semibold text-primary-dark transition-colors hover:bg-cream"
           >
             Book a Demo
           </Link>
           <Link
             href="/pricing"
-            className="rounded-lg border border-cream/25 px-7 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-cream/10"
+            className="rounded-lg border border-cream/25 px-7 py-3 text-sm font-semibold text-cream transition-colors hover:bg-cream/10"
           >
             See pricing
           </Link>

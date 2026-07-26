@@ -2,27 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Building2,
-  ClipboardCheck,
-  FileSignature,
-  Plus,
-  Repeat,
-  ScanSearch,
-  ShieldCheck,
-  Sparkles,
-  UserCog,
-  UserMinus,
-  Users,
-  UsersRound,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import ModuleHeader from "@/components/dashboard/ModuleHeader";
-import FeatureSection from "@/components/dashboard/FeatureSection";
-import FeatureTile from "@/components/dashboard/FeatureTile";
+import ModuleFeatureSections from "@/components/dashboard/ModuleFeatureSections";
 import { PipelineWidget } from "@/components/site/widgets";
 import { useAuth } from "@/lib/auth-context";
+import { dashboardModules } from "@/lib/dashboard-modules";
 import { getDashboardSummary, type DashboardSummary } from "@/lib/recruit-api";
 
 const toneDot: Record<string, string> = {
@@ -31,6 +18,8 @@ const toneDot: Record<string, string> = {
   maroon: "bg-maroon",
   neutral: "bg-ink-soft",
 };
+
+const moduleDef = dashboardModules.find((m) => m.key === "recruit")!;
 
 export default function RecruitPage() {
   const { withAuth } = useAuth();
@@ -44,14 +33,10 @@ export default function RecruitPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <ModuleHeader
-          icon={Users}
-          title="EVO-Recruit"
-          description="Applicant tracking, onboarding, offboarding, and rehire."
-        />
+        <ModuleHeader icon={moduleDef.icon} title={moduleDef.label} description={moduleDef.description} />
         <Link
           href="/dashboard/requisitions"
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           <Plus className="h-4 w-4" /> New requisition
         </Link>
@@ -75,7 +60,7 @@ export default function RecruitPage() {
                 <h2 className="font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
                 <Link
                   href="/dashboard/analytics"
-                  className="font-mono text-xs font-semibold text-primary hover:text-primary-dark"
+                  className="text-xs font-semibold text-primary hover:text-primary-dark"
                 >
                   View analytics →
                 </Link>
@@ -88,7 +73,7 @@ export default function RecruitPage() {
               <PipelineWidget stages={summary.pipeline_stages} />
               {summary.source_breakdown.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+                  <h3 className="mb-3 text-[11px] uppercase tracking-wide text-ink-soft">
                     Candidate sources
                   </h3>
                   <div className="flex flex-col gap-2.5">
@@ -96,7 +81,7 @@ export default function RecruitPage() {
                       <div key={s.label}>
                         <div className="mb-1 flex justify-between text-xs">
                           <span className="text-ink">{s.label}</span>
-                          <span className="font-mono text-ink-soft">{s.percent}%</span>
+                          <span className="text-ink-soft">{s.percent}%</span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
                           <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
@@ -119,7 +104,7 @@ export default function RecruitPage() {
                   <div key={a.id} className="flex items-start gap-3 border-b border-line py-3 last:border-0">
                     <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${toneDot[a.tone]}`} />
                     <p className="flex-1 text-sm text-ink">{a.message}</p>
-                    <span className="shrink-0 font-mono text-xs text-ink-soft">{a.time}</span>
+                    <span className="shrink-0 text-xs text-ink-soft">{a.time}</span>
                   </div>
                 ))}
               </div>
@@ -128,49 +113,7 @@ export default function RecruitPage() {
         </>
       )}
 
-      <FeatureSection title="Applicant tracking">
-        <FeatureTile icon={UsersRound} title="Candidates" description="Full pipeline, every stage." href="/dashboard/candidates" />
-        <FeatureTile icon={Building2} title="Clients" description="Companies you place candidates with." href="/dashboard/clients" />
-        <FeatureTile icon={UserCog} title="Requisitions" description="Open roles across every client." href="/dashboard/requisitions" />
-      </FeatureSection>
-
-      <FeatureSection title="Hiring workflow">
-        <FeatureTile
-          icon={FileSignature}
-          title="Digital offer letters"
-          description="Draft, send, and track offers through to signature."
-          href="/dashboard/offer-letters"
-        />
-        <FeatureTile
-          icon={ShieldCheck}
-          title="Background check integration"
-          description="Track screening status before an offer is final."
-          href="/dashboard/background-checks"
-        />
-        <FeatureTile
-          icon={Sparkles}
-          title="AI resume screening"
-          description="Resume-to-requirements fit scoring, via EVO-AI."
-          href="/dashboard/resume-pool"
-        />
-        <FeatureTile icon={ScanSearch} title="Candidate portal" description="Self-service status tracking for applicants." />
-      </FeatureSection>
-
-      <FeatureSection title="Onboarding, offboarding & rehire">
-        <FeatureTile
-          icon={ClipboardCheck}
-          title="Digital onboarding"
-          description="Pre-joining docs, orientation, training, portal access, probation, and devices."
-          href="/dashboard/onboarding"
-        />
-        <FeatureTile
-          icon={UserMinus}
-          title="Offboarding"
-          description="Documents checklist, access status, and hardware clearance."
-          href="/dashboard/offboarding"
-        />
-        <FeatureTile icon={Repeat} title="Rehire & alumni pool" description="Rehire eligibility and talent-pool retention." />
-      </FeatureSection>
+      <ModuleFeatureSections moduleDef={moduleDef} />
     </div>
   );
 }

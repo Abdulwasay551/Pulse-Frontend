@@ -10,7 +10,7 @@ export default function PageHeader({
   return (
     <section className="px-6 pt-16 pb-14 md:pt-20 md:pb-16">
       <div className="mx-auto max-w-3xl text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-primary">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-xs uppercase tracking-wide text-primary">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-light" />
           {eyebrow}
         </div>

@@ -62,7 +62,7 @@ export default function Topbar({
           <input
             type="text"
             placeholder={activeModule.searchPlaceholder}
-            className="w-full bg-transparent font-mono text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
+            className="w-full bg-transparent text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
           />
         </div>
       ) : (
@@ -86,7 +86,7 @@ export default function Topbar({
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-cream">
               {initials}
             </span>
-            <span className="hidden font-mono text-[13px] font-medium text-ink sm:inline">
+            <span className="hidden text-[13px] font-medium text-ink sm:inline">
               {displayName}
             </span>
             <ChevronDown
@@ -98,19 +98,19 @@ export default function Topbar({
             <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-card shadow-lg">
               <div className="border-b border-line px-3.5 py-3">
                 <div className="truncate text-[13px] font-semibold text-ink">{displayName}</div>
-                <div className="truncate font-mono text-[11px] text-ink-soft">{user?.email}</div>
+                <div className="truncate text-[11px] text-ink-soft">{user?.email}</div>
               </div>
               <Link
                 href="/dashboard/settings"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2.5 px-3.5 py-2.5 font-mono text-[13px] text-ink transition-colors hover:bg-cream-dim"
+                className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-ink transition-colors hover:bg-cream-dim"
               >
                 <Settings className="h-[16px] w-[16px] text-ink-soft" />
                 Settings
               </Link>
               <button
                 onClick={logout}
-                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 font-mono text-[13px] text-maroon transition-colors hover:bg-cream-dim"
+                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-maroon transition-colors hover:bg-cream-dim"
               >
                 <LogOut className="h-[16px] w-[16px]" />
                 Log out

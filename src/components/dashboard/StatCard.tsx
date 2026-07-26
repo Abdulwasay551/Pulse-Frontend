@@ -19,13 +19,13 @@ export default function StatCard({
   const content = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <div className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">{label}</div>
+        <div className="text-[11px] uppercase tracking-wide text-ink-soft">{label}</div>
         {href && (
           <ArrowRight className="h-3.5 w-3.5 shrink-0 text-ink-soft/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
         )}
       </div>
       <div
-        className={`mt-2 font-mono text-3xl font-bold tabular-nums ${valueTone === "maroon" ? "text-maroon" : "text-ink"}`}
+        className={`mt-2 text-3xl font-bold tabular-nums ${valueTone === "maroon" ? "text-maroon" : "text-ink"}`}
       >
         {value}
       </div>

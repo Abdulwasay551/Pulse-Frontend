@@ -60,7 +60,7 @@ export default function BookADemoPage() {
               )}
 
               <div className="mb-4">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Full name
                 </label>
                 <input
@@ -73,7 +73,7 @@ export default function BookADemoPage() {
               </div>
 
               <div className="mb-4">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Email ID
                 </label>
                 <input
@@ -87,7 +87,7 @@ export default function BookADemoPage() {
               </div>
 
               <div className="mb-4">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Contact number
                 </label>
                 <input
@@ -101,7 +101,7 @@ export default function BookADemoPage() {
               </div>
 
               <div className="mb-4">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Business name
                 </label>
                 <input
@@ -114,7 +114,7 @@ export default function BookADemoPage() {
               </div>
 
               <div className="mb-6">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Message
                 </label>
                 <textarea
@@ -129,7 +129,7 @@ export default function BookADemoPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+                className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
               >
                 {loading ? "Sending…" : "Book a Demo"}
               </button>

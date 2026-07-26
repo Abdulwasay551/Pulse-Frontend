@@ -25,7 +25,7 @@ export default function StatsBanner({
           <RevealOnView key={s.label} delayMs={i * 100}>
             <StatValue
               value={s.value}
-              className="font-mono text-4xl font-bold tabular-nums text-cream md:text-5xl"
+              className="text-4xl font-bold tabular-nums text-cream md:text-5xl"
             />
             <div className="mt-2 text-sm text-cream/50">{s.label}</div>
           </RevealOnView>
@@ -35,7 +35,7 @@ export default function StatsBanner({
       <RevealOnView delayMs={300} className="mt-16">
         <Link
           href="/book-a-demo"
-          className="inline-block rounded-full bg-cream px-8 py-3.5 font-mono text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
+          className="inline-block rounded-full bg-cream px-8 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
         >
           {ctaLabel}
         </Link>

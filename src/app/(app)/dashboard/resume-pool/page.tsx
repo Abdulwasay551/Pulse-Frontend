@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/auth-api";
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 function scoreTone(score: number | null) {
   if (score === null) return "bg-cream-dim text-ink-soft";
@@ -108,7 +108,7 @@ export default function ResumePoolPage() {
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-line font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
               <th className="px-5 py-3 font-medium">Requisition</th>
               <th className="px-5 py-3 font-medium">Resume</th>
@@ -121,7 +121,7 @@ export default function ResumePoolPage() {
               <tr key={c.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-mono text-[11px] font-bold text-primary">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
                       {c.initials}
                     </span>
                     <div className="min-w-0">
@@ -137,19 +137,19 @@ export default function ResumePoolPage() {
                       href={c.resume_file}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 font-mono text-xs text-primary hover:text-primary-dark"
+                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary-dark"
                     >
                       <FileText className="h-3.5 w-3.5" /> View file
                     </a>
                   ) : c.resume_text ? (
-                    <span className="font-mono text-xs text-ink-soft">Text only</span>
+                    <span className="text-xs text-ink-soft">Text only</span>
                   ) : (
-                    <span className="font-mono text-xs text-ink-soft">—</span>
+                    <span className="text-xs text-ink-soft">—</span>
                   )}
                 </td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${scoreTone(c.ai_score)}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${scoreTone(c.ai_score)}`}
                   >
                     {c.ai_score !== null ? `${c.ai_score}%` : "Not scored"}
                   </span>
@@ -157,7 +157,7 @@ export default function ResumePoolPage() {
                 <td className="px-5 py-3.5 text-right">
                   <button
                     onClick={() => openCandidate(c)}
-                    className="font-mono text-xs font-semibold text-primary hover:text-primary-dark"
+                    className="text-xs font-semibold text-primary hover:text-primary-dark"
                   >
                     Open →
                   </button>
@@ -187,7 +187,7 @@ export default function ResumePoolPage() {
                 Requisition: {active.requisition_title ?? "None linked — screening needs a requisition."}
               </p>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2 font-mono text-xs font-semibold text-ink-soft hover:bg-cream-dim">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
               <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload resume file"}
               <input
                 type="file"
@@ -207,7 +207,7 @@ export default function ResumePoolPage() {
               href={active.resume_file}
               target="_blank"
               rel="noreferrer"
-              className="mb-4 inline-flex items-center gap-1.5 font-mono text-xs text-primary hover:text-primary-dark"
+              className="mb-4 inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary-dark"
             >
               <FileText className="h-3.5 w-3.5" /> Current file on record
             </a>
@@ -225,7 +225,7 @@ export default function ResumePoolPage() {
             <button
               onClick={handleSaveText}
               disabled={saving || resumeText === active.resume_text}
-              className="mt-2 rounded-lg border border-line bg-card px-3.5 py-2 font-mono text-xs font-semibold text-ink-soft transition-colors hover:bg-cream-dim disabled:opacity-50"
+              className="mt-2 rounded-lg border border-line bg-card px-3.5 py-2 text-xs font-semibold text-ink-soft transition-colors hover:bg-cream-dim disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save text"}
             </button>
@@ -237,7 +237,7 @@ export default function ResumePoolPage() {
                 <Sparkles className="h-4 w-4 text-primary" /> AI resume screening
               </h3>
               <span
-                className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${scoreTone(active.ai_score)}`}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${scoreTone(active.ai_score)}`}
               >
                 {active.ai_score !== null ? `${active.ai_score}% match` : "Not scored yet"}
               </span>
@@ -246,7 +246,7 @@ export default function ResumePoolPage() {
             <button
               onClick={handleScreen}
               disabled={screening || !active.requisition}
-              className="w-full rounded-lg bg-primary px-4 py-2.5 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {screening ? "Screening…" : "Run AI screening"}
             </button>

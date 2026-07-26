@@ -13,7 +13,7 @@ export default function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
       <table className="w-full min-w-[560px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-line">
-            <th className="p-4 text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <th className="p-4 text-left text-xs uppercase tracking-wide text-ink-soft">
               Feature
             </th>
             <th className="p-4 text-center font-display font-semibold text-ink">Starter</th>
@@ -39,7 +39,7 @@ export default function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
         </tbody>
       </table>
       </div>
-      <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 font-mono text-xs text-ink-soft">
+      <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-ink-soft">
         <span className="flex items-center gap-1.5">
           <span className="text-primary">✓</span> Included
         </span>

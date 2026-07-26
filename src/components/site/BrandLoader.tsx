@@ -34,7 +34,7 @@ export default function BrandLoader({ label = "Loading" }: { label?: string }) {
           style={{ animationDelay: "300ms" }}
         />
       </svg>
-      <span className="font-mono text-xs uppercase tracking-wide text-ink-soft">{label}…</span>
+      <span className="text-xs uppercase tracking-wide text-ink-soft">{label}…</span>
     </div>
   );
 }

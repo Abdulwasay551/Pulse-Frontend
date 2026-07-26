@@ -93,10 +93,10 @@ export default function SettingsPage() {
       <form onSubmit={handleProfileSave} className="rounded-2xl border border-line bg-card p-6">
         <h2 className="mb-5 font-display text-base font-bold text-ink">Profile</h2>
         <div className="mb-5 flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 font-mono text-lg font-bold text-primary">
+          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-lg font-bold text-primary">
             {initials}
           </span>
-          <div className="font-mono text-xs text-ink-soft">
+          <div className="text-xs text-ink-soft">
             Username: <span className="text-ink">{user?.username}</span>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               First name
             </label>
             <input
@@ -124,7 +124,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Last name
             </label>
             <input
@@ -134,7 +134,7 @@ export default function SettingsPage() {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Email
             </label>
             <input
@@ -150,7 +150,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={profileLoading}
-            className="rounded-lg bg-primary px-6 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
           >
             {profileLoading ? "Saving…" : "Save changes"}
           </button>
@@ -169,7 +169,7 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Current password
             </label>
             <input
@@ -181,7 +181,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               New password
             </label>
             <input
@@ -193,7 +193,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Confirm new password
             </label>
             <input
@@ -210,7 +210,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={passwordLoading}
-            className="rounded-lg bg-primary px-6 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
           >
             {passwordLoading ? "Changing…" : "Change password"}
           </button>

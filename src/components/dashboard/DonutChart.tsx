@@ -34,7 +34,7 @@ export default function DonutChart({
               style={{ background: COLORS[i % COLORS.length] }}
             />
             <span className="text-ink">{d.label}</span>
-            <span className="font-mono text-ink-soft">{d.percent}%</span>
+            <span className="text-ink-soft">{d.percent}%</span>
           </div>
         ))}
       </div>

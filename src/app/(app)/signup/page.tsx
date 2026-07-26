@@ -64,7 +64,7 @@ export default function SignupPage() {
           )}
 
           <div className="mb-4">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Username
             </label>
             <input
@@ -77,7 +77,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="mb-4">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Email
             </label>
             <input
@@ -90,7 +90,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="mb-4">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Password
             </label>
             <input
@@ -103,7 +103,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="mb-6">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Confirm password
             </label>
             <input
@@ -119,13 +119,13 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
           >
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
-        <p className="mt-5 text-center font-mono text-[11px] text-ink-soft">
+        <p className="mt-5 text-center text-[11px] text-ink-soft">
           Already have an account?{" "}
           <Link href="/login" className="text-primary hover:text-primary-dark">
             Log in

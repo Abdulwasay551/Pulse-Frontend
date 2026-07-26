@@ -25,7 +25,7 @@ function ResetPasswordForm() {
         <p className="text-sm text-ink">This reset link is missing some information.</p>
         <Link
           href="/forgot-password"
-          className="mt-6 inline-block w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="mt-6 inline-block w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           Request a new link
         </Link>
@@ -64,7 +64,7 @@ function ResetPasswordForm() {
         </div>
       )}
       <div className="mb-4">
-        <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+        <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
           New password
         </label>
         <input
@@ -77,7 +77,7 @@ function ResetPasswordForm() {
         />
       </div>
       <div className="mb-6">
-        <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+        <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
           Confirm new password
         </label>
         <input
@@ -92,7 +92,7 @@ function ResetPasswordForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+        className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
       >
         {loading ? "Resetting…" : "Reset password"}
       </button>

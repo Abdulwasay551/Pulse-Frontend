@@ -22,7 +22,7 @@ export default function PlacementsChart({
               style={{ height: inView ? `${(d.value / max) * 100}%` : "0%", transitionDelay: `${i * 80}ms` }}
             />
           </div>
-          <span className="font-mono text-[11px] text-ink-soft">{d.month}</span>
+          <span className="text-[11px] text-ink-soft">{d.month}</span>
         </div>
       ))}
     </div>

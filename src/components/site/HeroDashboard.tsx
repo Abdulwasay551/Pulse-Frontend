@@ -43,7 +43,7 @@ export default function HeroDashboard({
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-primary-dark p-6 shadow-2xl shadow-primary-dark/30 sm:p-7">
-      <div className="mb-5 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-primary-light/70">
+      <div className="mb-5 flex items-center justify-between text-[11px] uppercase tracking-wider text-primary-light/70">
         <span>Recruiting desk — live</span>
         <span className="flex items-center gap-1.5 text-primary-light">
           <span className="animate-live-pulse h-1.5 w-1.5 rounded-full bg-primary-light" />
@@ -54,14 +54,14 @@ export default function HeroDashboard({
       {/* Placements chart */}
       <div className="mb-2 flex items-baseline justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-cream/50">
+          <div className="text-[10px] uppercase tracking-wider text-cream/50">
             Placements · last 6 months
           </div>
-          <div className="font-mono text-2xl font-bold tabular-nums text-cream">
+          <div className="text-2xl font-bold tabular-nums text-cream">
             <AnimatedNumber value={totalPlacements} />
           </div>
         </div>
-        <span className="rounded-full bg-primary-light/15 px-2.5 py-1 font-mono text-[10.5px] font-semibold text-primary-light">
+        <span className="rounded-full bg-primary-light/15 px-2.5 py-1 text-[10.5px] font-semibold text-primary-light">
           {growthLabel}
         </span>
       </div>
@@ -79,7 +79,7 @@ export default function HeroDashboard({
                 }}
               />
             </div>
-            <span className="font-mono text-[9.5px] text-cream/40">{p.month}</span>
+            <span className="text-[9.5px] text-cream/40">{p.month}</span>
           </div>
         ))}
       </div>
@@ -93,7 +93,7 @@ export default function HeroDashboard({
             style={{ animationDelay: `${i * 1.8}s` }}
           >
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold ${toneAvatar[n.tone]}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${toneAvatar[n.tone]}`}
             >
               {n.initials}
             </span>
@@ -102,7 +102,7 @@ export default function HeroDashboard({
               <div className="truncate text-[11.5px] text-cream/45">{n.role}</div>
             </div>
             <span
-              className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold whitespace-nowrap ${tonePill[n.tone]}`}
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold whitespace-nowrap ${tonePill[n.tone]}`}
             >
               {n.status}
             </span>
@@ -114,23 +114,23 @@ export default function HeroDashboard({
       <div className="mt-4 grid grid-cols-1 gap-3 border-t border-cream/10 pt-5 sm:grid-cols-2">
         <div className="rounded-xl bg-cream/5 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-cream/50">
+            <span className="text-[10px] uppercase tracking-wider text-cream/50">
               {payrollLabel}
             </span>
-            <span className="rounded-full bg-primary-light/15 px-2 py-0.5 font-mono text-[9.5px] font-semibold text-primary-light">
+            <span className="rounded-full bg-primary-light/15 px-2 py-0.5 text-[9.5px] font-semibold text-primary-light">
               {payrollStatus}
             </span>
           </div>
-          <div className="mt-1.5 font-mono text-lg font-bold tabular-nums text-cream">{payrollAmount}</div>
+          <div className="mt-1.5 text-lg font-bold tabular-nums text-cream">{payrollAmount}</div>
           <div className="text-[11px] text-cream/40">{payrollSubtext}</div>
         </div>
 
         <div className="rounded-xl bg-cream/5 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-cream/50">
+            <span className="text-[10px] uppercase tracking-wider text-cream/50">
               Attendance · this week
             </span>
-            <span className="font-mono text-[11px] font-semibold text-cream">
+            <span className="text-[11px] font-semibold text-cream">
               <AnimatedNumber value={attendancePercent} suffix="%" />
             </span>
           </div>

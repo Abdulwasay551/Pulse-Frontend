@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/login"
-                className="mt-6 inline-block w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
+                className="mt-6 inline-block w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
               >
                 Back to log in
               </Link>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
               <div className="mb-6">
-                <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
                   Email
                 </label>
                 <input
@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+                className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
               >
                 {loading ? "Sending…" : "Send reset link"}
               </button>
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="mt-5 text-center font-mono text-[11px] text-ink-soft">
+        <p className="mt-5 text-center text-[11px] text-ink-soft">
           <Link href="/login" className="text-primary hover:text-primary-dark">
             Back to log in
           </Link>

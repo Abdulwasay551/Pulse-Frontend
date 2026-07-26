@@ -19,7 +19,7 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
 
           {columns.map((col) => (
             <div key={col.heading}>
-              <h4 className="mb-4 font-mono text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 {col.heading}
               </h4>
               <ul className="flex flex-col gap-2.5">

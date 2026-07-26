@@ -33,7 +33,7 @@ const statusOptions: RequisitionStatus[] = ["Open", "Interviewing", "Offer stage
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 interface FormState {
   title: string;
@@ -147,7 +147,7 @@ export default function RequisitionsPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           <Plus className="h-4 w-4" /> New requisition
         </button>
@@ -156,7 +156,7 @@ export default function RequisitionsPage() {
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-line font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Role</th>
               <th className="px-5 py-3 font-medium">Recruiter</th>
               <th className="px-5 py-3 font-medium">Candidates</th>
@@ -174,18 +174,18 @@ export default function RequisitionsPage() {
                   <div className="text-xs text-ink-soft">{r.client_name}</div>
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft">{r.recruiter || "—"}</td>
-                <td className="px-5 py-3.5 font-mono text-ink">{r.candidates_count}</td>
-                <td className={`px-5 py-3.5 font-mono text-xs font-semibold ${priorityTone[r.priority]}`}>
+                <td className="px-5 py-3.5 text-ink">{r.candidates_count}</td>
+                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[r.priority]}`}>
                   {r.priority}
                 </td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${statusTone[r.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[r.status]}`}
                   >
                     {r.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 font-mono text-xs text-ink-soft">{r.posted_at}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft">{r.posted_at}</td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
@@ -297,7 +297,7 @@ export default function RequisitionsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Add requisition"}
             </button>

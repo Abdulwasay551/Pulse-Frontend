@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
             <div key={t.label}>
               <div className="mb-1.5 flex justify-between text-sm">
                 <span className="text-ink">{t.label}</span>
-                <span className="font-mono text-ink-soft">{t.days} days</span>
+                <span className="text-ink-soft">{t.days} days</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-cream-dim">
                 <div

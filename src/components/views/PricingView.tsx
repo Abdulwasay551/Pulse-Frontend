@@ -32,7 +32,7 @@ export default function PricingView({
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-4xl">
           <div className="mx-auto mb-10 max-w-xl text-center">
-            <div className="mb-3 font-mono text-xs uppercase tracking-wide text-primary">
+            <div className="mb-3 text-xs uppercase tracking-wide text-primary">
               Compare plans
             </div>
             <h2 className="font-display text-3xl font-bold text-ink">
@@ -46,7 +46,7 @@ export default function PricingView({
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-2xl">
           <div className="mb-10 text-center">
-            <div className="mb-3 font-mono text-xs uppercase tracking-wide text-primary">FAQ</div>
+            <div className="mb-3 text-xs uppercase tracking-wide text-primary">FAQ</div>
             <h2 className="font-display text-3xl font-bold text-ink">
               Questions agency owners ask us
             </h2>

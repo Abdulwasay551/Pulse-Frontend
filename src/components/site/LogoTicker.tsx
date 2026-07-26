@@ -5,7 +5,7 @@ export default function LogoTicker({ logos }: { logos: TrustLogo[] }) {
 
   return (
     <section className="border-y border-line bg-card py-10">
-      <p className="mb-6 text-center font-mono text-xs uppercase tracking-wide text-ink-soft">
+      <p className="mb-6 text-center text-xs uppercase tracking-wide text-ink-soft">
         Trusted by recruiting teams at
       </p>
       <div className="overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">

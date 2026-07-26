@@ -34,7 +34,7 @@ const sourceOptions: CandidateSource[] = ["LinkedIn", "Referral", "Job Board", "
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 interface FormState {
   name: string;
@@ -158,7 +158,7 @@ export default function CandidatesPage() {
           />
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
           >
             <Plus className="h-4 w-4" /> New candidate
           </button>
@@ -170,7 +170,7 @@ export default function CandidatesPage() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`rounded-full px-3.5 py-1.5 font-mono text-xs font-semibold transition-colors ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
               filter === s ? "bg-primary text-cream" : "bg-card text-ink-soft hover:bg-cream-dim"
             }`}
           >
@@ -182,7 +182,7 @@ export default function CandidatesPage() {
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-line font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
               <th className="px-5 py-3 font-medium">Client</th>
               <th className="px-5 py-3 font-medium">Stage</th>
@@ -196,7 +196,7 @@ export default function CandidatesPage() {
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-mono text-[11px] font-bold text-primary">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
                       {c.initials}
                     </span>
                     <div className="min-w-0">
@@ -208,13 +208,13 @@ export default function CandidatesPage() {
                 <td className="px-5 py-3.5 text-ink-soft">{c.client_name ?? "—"}</td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${stageTone[c.stage]}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${stageTone[c.stage]}`}
                   >
                     {c.stage}
                   </span>
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft">{c.source}</td>
-                <td className="px-5 py-3.5 font-mono text-xs text-ink-soft">{c.applied_at}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft">{c.applied_at}</td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
@@ -334,7 +334,7 @@ export default function CandidatesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Add candidate"}
             </button>

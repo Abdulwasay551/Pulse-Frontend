@@ -68,7 +68,7 @@ export default function DashboardHubPage() {
           backgroundColor: "var(--primary-dark)",
         }}
       >
-        <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary-light uppercase">
+        <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary-light uppercase">
           The EvoHR Suite
         </span>
         <h1 className="font-display text-3xl font-bold text-cream md:text-5xl">Welcome back, {firstName}</h1>
@@ -94,7 +94,7 @@ export default function DashboardHubPage() {
                 </span>
                 <h2 className={`font-display text-lg font-bold ${variant.title}`}>{m.title}</h2>
                 <p className={`mt-2 text-sm leading-relaxed ${variant.desc}`}>{m.description}</p>
-                <span className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold ${variant.cta}`}>
+                <span className={`mt-auto flex w-fit items-center gap-1.5 pt-5 text-xs font-semibold ${variant.cta}`}>
                   Open module
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </span>

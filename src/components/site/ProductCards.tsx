@@ -237,7 +237,7 @@ export default function ProductCards({
   return (
     <section id="solutions" className="py-24">
       <RevealOnView className="mx-auto mb-14 max-w-2xl px-6 text-center">
-        <div className="mb-3 font-mono text-xs uppercase tracking-wide text-primary">
+        <div className="mb-3 text-xs uppercase tracking-wide text-primary">
           {eyebrow}
         </div>
         <h2 className="font-display text-3xl font-bold text-ink md:text-4xl">{title}</h2>
@@ -306,7 +306,7 @@ export default function ProductCards({
                             className="h-6 w-6"
                           />
                         </div>
-                        <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                        <span className={`mb-3 inline-block w-fit text-xs font-semibold tracking-wide ${variant.tag}`}>
                           {product.tag}
                         </span>
                         <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
@@ -315,12 +315,12 @@ export default function ProductCards({
                         <Link
                           href="/solutions"
                           onClick={(e) => e.stopPropagation()}
-                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 text-xs font-semibold transition-colors ${variant.cta}`}
                         >
                           Explore {product.name}
                           <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                         </Link>
-                        <span className="pt-3 font-mono text-[11px] text-ink-soft/70 lg:hidden">
+                        <span className="pt-3 text-[11px] text-ink-soft/70 lg:hidden">
                           Tap for details
                         </span>
                       </div>
@@ -331,7 +331,7 @@ export default function ProductCards({
                       <div
                         className={`absolute inset-0 flex h-full flex-col overflow-y-auto rounded-3xl p-7 shadow-md shadow-ink/5 [backface-visibility:hidden] [transform:rotateY(180deg)] ${variant.card} ${CORNER_OVERRIDE[i % CORNER_OVERRIDE.length]}`}
                       >
-                        <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${variant.tag}`}>
+                        <span className={`mb-3 inline-block w-fit text-xs font-semibold tracking-wide ${variant.tag}`}>
                           {product.tag}
                         </span>
                         <h3 className={`font-display text-lg font-bold ${variant.title}`}>{product.name}</h3>
@@ -351,7 +351,7 @@ export default function ProductCards({
                         <Link
                           href="/solutions"
                           onClick={(e) => e.stopPropagation()}
-                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 font-mono text-xs font-semibold transition-colors ${variant.cta}`}
+                          className={`mt-auto flex w-fit items-center gap-1.5 pt-5 text-xs font-semibold transition-colors ${variant.cta}`}
                         >
                           Explore {product.name}
                           <ArrowUpRight className="h-3.5 w-3.5" />
@@ -384,7 +384,7 @@ export default function ProductCards({
                 className={`min-w-0 flex-1 rounded-3xl p-10 ${activeVariant.panelBase} ${isRightOrigin ? "order-2" : "order-1"}`}
                 style={activeVariant.panelPattern}
               >
-                <span className={`mb-4 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
+                <span className={`mb-4 inline-block w-fit text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
                   {activeProduct.tag}
                 </span>
                 <h3 className={`font-display text-3xl font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>
@@ -405,7 +405,7 @@ export default function ProductCards({
                     )}
                     <Link
                       href="/solutions"
-                      className="mt-8 flex w-fit items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 font-mono text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
+                      className="mt-8 flex w-fit items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
                     >
                       Explore {activeProduct.name}
                       <ArrowUpRight className="h-3.5 w-3.5" />
@@ -461,7 +461,7 @@ export default function ProductCards({
                         className="h-6 w-6"
                       />
                     </div>
-                    <span className={`mb-3 inline-block w-fit font-mono text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
+                    <span className={`mb-3 inline-block w-fit text-xs font-semibold tracking-wide ${activeVariant.tag}`}>
                       {activeProduct.tag}
                     </span>
                     <h3 className={`font-display text-lg font-bold ${activeVariant.title}`}>{activeProduct.name}</h3>

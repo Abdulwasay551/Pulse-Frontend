@@ -18,7 +18,7 @@ export default function Testimonials({
     <section className="px-6 py-24">
       <div className="mx-auto max-w-6xl">
         <RevealOnView className="mx-auto mb-14 max-w-2xl text-center">
-          <div className="mb-3 font-mono text-xs uppercase tracking-wide text-primary">
+          <div className="mb-3 text-xs uppercase tracking-wide text-primary">
             {eyebrow}
           </div>
           <h2 className="font-display text-3xl font-bold text-ink md:text-4xl">{title}</h2>
@@ -34,12 +34,12 @@ export default function Testimonials({
               <Quote className="mb-4 h-6 w-6 text-primary-light" strokeWidth={2.5} />
               <p className="flex-1 text-[15px] leading-relaxed text-ink">&ldquo;{t.quote}&rdquo;</p>
               <div className="mt-6 flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-bold text-primary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                   {t.initials}
                 </span>
                 <div>
                   <div className="text-sm font-semibold text-ink">{t.name}</div>
-                  <div className="font-mono text-[11px] text-ink-soft">{t.title}</div>
+                  <div className="text-[11px] text-ink-soft">{t.title}</div>
                 </div>
               </div>
             </RevealOnView>

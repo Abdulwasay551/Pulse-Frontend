@@ -23,13 +23,13 @@ export default function UseCasesView({
           {cases.map((c) => (
             <div key={c.tag} className="flex flex-col rounded-2xl border border-line bg-card p-7">
               <div className="flex items-start justify-between gap-4">
-                <span className="font-mono text-xs font-semibold tracking-wide text-primary">
+                <span className="text-xs font-semibold tracking-wide text-primary">
                   {c.tag}
                 </span>
                 <div className="text-right">
                   <StatValue
                     value={c.stat}
-                    className="font-mono text-2xl font-bold tabular-nums text-ink"
+                    className="text-2xl font-bold tabular-nums text-ink"
                   />
                   <div className="text-[11px] text-ink-soft">{c.stat_label}</div>
                 </div>
@@ -52,14 +52,14 @@ export default function UseCasesView({
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-4xl">
           <div className="mx-auto mb-10 max-w-xl text-center">
-            <div className="mb-3 font-mono text-xs uppercase tracking-wide text-primary">
+            <div className="mb-3 text-xs uppercase tracking-wide text-primary">
               {data.shift_eyebrow}
             </div>
             <h2 className="font-display text-3xl font-bold text-ink">{data.shift_title}</h2>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="rounded-2xl border border-line bg-card p-7">
-              <h3 className="mb-5 font-mono text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 The old way
               </h3>
               <ul className="space-y-3.5">
@@ -72,7 +72,7 @@ export default function UseCasesView({
               </ul>
             </div>
             <div className="rounded-2xl border border-primary bg-primary-dark p-7">
-              <h3 className="mb-5 font-mono text-xs font-semibold uppercase tracking-wide text-primary-light/70">
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-wide text-primary-light/70">
                 The EvoHR way
               </h3>
               <ul className="space-y-3.5">

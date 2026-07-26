@@ -18,7 +18,7 @@ const statusOptions: PayrollStatus[] = ["Reconciled", "Needs review", "Processin
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 interface FormState {
   period: string;
@@ -116,7 +116,7 @@ export default function PayrollPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
           <Plus className="h-4 w-4" /> Run payroll
         </button>
@@ -136,7 +136,7 @@ export default function PayrollPage() {
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-line font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Run</th>
               <th className="px-5 py-3 font-medium">Contractors</th>
               <th className="px-5 py-3 font-medium">Amount</th>
@@ -148,11 +148,11 @@ export default function PayrollPage() {
             {payrollRuns.map((p) => (
               <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5 font-semibold text-ink">{p.period}</td>
-                <td className="px-5 py-3.5 font-mono text-ink-soft">{p.contractors}</td>
-                <td className="px-5 py-3.5 font-mono font-semibold text-ink">{formatCurrency(Number(p.amount))}</td>
+                <td className="px-5 py-3.5 text-ink-soft">{p.contractors}</td>
+                <td className="px-5 py-3.5 font-semibold text-ink">{formatCurrency(Number(p.amount))}</td>
                 <td className="px-5 py-3.5">
                   <span
-                    className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${statusTone[p.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[p.status]}`}
                   >
                     {p.status}
                   </span>
@@ -243,7 +243,7 @@ export default function PayrollPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Add payroll run"}
             </button>

@@ -20,7 +20,7 @@ const statusOptions: ClientStatus[] = ["Active", "Prospect", "At risk"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
-const labelClass = "mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft";
+const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 interface FormState {
   name: string;
@@ -113,7 +113,7 @@ export default function ClientsPage() {
           <CsvToolbar csv={clientsCsv} resourceLabel="clients" requiredFields={CLIENT_REQUIRED_FIELDS} onImported={load} />
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
           >
             <Plus className="h-4 w-4" /> New client
           </button>
@@ -153,7 +153,7 @@ export default function ClientsPage() {
                   <Building2 className="h-5 w-5" />
                 </span>
                 <span
-                  className={`rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold whitespace-nowrap ${statusTone[c.status]}`}
+                  className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${statusTone[c.status]}`}
                 >
                   {c.status}
                 </span>
@@ -163,7 +163,7 @@ export default function ClientsPage() {
 
               <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
                 <span className="text-ink-soft">Open roles</span>
-                <span className="font-mono font-semibold text-ink">{c.open_roles}</span>
+                <span className="font-semibold text-ink">{c.open_roles}</span>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span className="text-ink-soft">Contact</span>
@@ -172,7 +172,7 @@ export default function ClientsPage() {
               {c.contact_email && (
                 <a
                   href={`mailto:${c.contact_email}`}
-                  className="mt-3 block font-mono text-[11px] text-primary hover:text-primary-dark"
+                  className="mt-3 block text-[11px] text-primary hover:text-primary-dark"
                 >
                   {c.contact_email}
                 </a>
@@ -243,7 +243,7 @@ export default function ClientsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Add client"}
             </button>

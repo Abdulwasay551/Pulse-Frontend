@@ -20,7 +20,7 @@ export default function ResourcesView({
       <section className="px-6 pb-24">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="rounded-2xl border border-line bg-card p-7">
-            <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
+            <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary">
               BLOG
             </span>
             <h2 className="font-display text-xl font-bold text-ink">
@@ -34,14 +34,14 @@ export default function ResourcesView({
                   className="border-b border-line py-3.5 last:border-0 hover:text-primary"
                 >
                   <div className="text-sm font-semibold text-ink">{p.title}</div>
-                  <div className="mt-1 font-mono text-[11px] text-ink-soft">{p.meta}</div>
+                  <div className="mt-1 text-[11px] text-ink-soft">{p.meta}</div>
                 </a>
               ))}
             </div>
           </div>
 
           <div className="rounded-2xl border border-line bg-card p-7">
-            <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
+            <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary">
               GUIDES
             </span>
             <h2 className="font-display text-xl font-bold text-ink">
@@ -55,7 +55,7 @@ export default function ResourcesView({
                   className="flex items-center justify-between gap-4 border-b border-line py-3.5 last:border-0 hover:text-primary"
                 >
                   <div className="text-sm font-semibold text-ink">{g.title}</div>
-                  <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 font-mono text-[10px] text-ink-soft">
+                  <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[10px] text-ink-soft">
                     {g.meta}
                   </span>
                 </a>
@@ -64,7 +64,7 @@ export default function ResourcesView({
           </div>
 
           <div className="rounded-2xl border border-line bg-card p-7">
-            <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
+            <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary">
               HELP CENTER
             </span>
             <h2 className="font-display text-xl font-bold text-ink">Popular articles</h2>
@@ -76,19 +76,19 @@ export default function ResourcesView({
                   className="flex items-center justify-between gap-4 border-b border-line py-3.5 last:border-0 hover:text-primary"
                 >
                   <div className="text-sm font-semibold text-ink">{a.title}</div>
-                  <span className="shrink-0 font-mono text-[11px] text-ink-soft">{a.meta}</span>
+                  <span className="shrink-0 text-[11px] text-ink-soft">{a.meta}</span>
                 </a>
               ))}
             </div>
           </div>
 
           <div className="rounded-2xl border border-line bg-primary-dark p-7">
-            <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary-light">
+            <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary-light">
               API DOCS
             </span>
             <h2 className="font-display text-xl font-bold text-cream">{data.api_docs_title}</h2>
             <p className="mt-2 text-sm text-cream/50">{data.api_docs_description}</p>
-            <pre className="mt-5 whitespace-pre-wrap rounded-xl bg-black/25 p-4 font-mono text-[12px] leading-relaxed text-primary-light">
+            <pre className="mt-5 whitespace-pre-wrap rounded-xl bg-black/25 p-4 text-[12px] leading-relaxed text-primary-light">
               {data.api_docs_snippet}
             </pre>
           </div>

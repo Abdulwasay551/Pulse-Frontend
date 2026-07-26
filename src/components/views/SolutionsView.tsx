@@ -28,7 +28,7 @@ export default function SolutionsView({
             >
               <div>
                 <ProductIcon type={product.widget_type} className="mb-4 h-12 w-12" />
-                <span className="mb-3 inline-block font-mono text-xs font-semibold tracking-wide text-primary">
+                <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary">
                   {product.tag}
                 </span>
                 <h2 className="font-display text-2xl font-bold text-ink md:text-3xl">

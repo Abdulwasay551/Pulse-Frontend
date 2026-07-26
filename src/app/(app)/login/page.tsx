@@ -62,7 +62,7 @@ export default function LoginPage() {
           )}
 
           <div className="mb-4">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Username or email
             </label>
             <input
@@ -75,7 +75,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="mb-2">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wide text-ink-soft">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
               Password
             </label>
             <input
@@ -88,7 +88,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="mb-6 flex justify-end">
-            <Link href="/forgot-password" className="font-mono text-xs text-primary hover:text-primary-dark">
+            <Link href="/forgot-password" className="text-xs text-primary hover:text-primary-dark">
               Forgot password?
             </Link>
           </div>
@@ -96,13 +96,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary px-5 py-3 font-mono text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
           >
             {loading ? "Logging in…" : "Log in"}
           </button>
         </form>
 
-        <p className="mt-5 text-center font-mono text-[11px] text-ink-soft">
+        <p className="mt-5 text-center text-[11px] text-ink-soft">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-primary hover:text-primary-dark">
             Sign up

@@ -43,7 +43,7 @@ export function MiniRows({ rows }: { rows: DemoRowData[] }) {
         >
           <span className="truncate text-ink">{row.label}</span>
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] font-semibold whitespace-nowrap ${toneClasses[row.tone]}`}
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-semibold whitespace-nowrap ${toneClasses[row.tone]}`}
           >
             {row.status}
           </span>
@@ -67,10 +67,10 @@ export function PipelineWidget({ stages }: { stages: StageCountData[] }) {
           }`}
           style={{ transitionDelay: `${i * 100}ms` }}
         >
-          <div className="font-mono text-base font-bold tabular-nums text-ink">
+          <div className="text-base font-bold tabular-nums text-ink">
             {inView ? <AnimatedNumber value={s.count} durationMs={800} /> : 0}
           </div>
-          <div className="mt-0.5 font-mono text-[8.5px] uppercase tracking-wide text-ink-soft">
+          <div className="mt-0.5 text-[8.5px] uppercase tracking-wide text-ink-soft">
             {s.label}
           </div>
         </div>
@@ -88,7 +88,7 @@ export function ITWidget({ skills }: { skills: SkillBarData[] }) {
         <div key={s.label}>
           <div className="mb-1 flex justify-between text-[11px]">
             <span className="text-ink">{s.label}</span>
-            <span className="font-mono text-ink-soft">
+            <span className="text-ink-soft">
               {inView ? <AnimatedNumber value={s.percent} durationMs={900} suffix="% match" /> : "0% match"}
             </span>
           </div>
@@ -128,7 +128,7 @@ export function TrendGraph({ data, dark = false }: { data: TrendGraphData; dark?
     <div ref={ref} className={`rounded-2xl p-5 ${chipBg}`}>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <div className={`font-mono text-[10px] font-semibold uppercase tracking-wide ${labelColor}`}>
+          <div className={`text-[10px] font-semibold uppercase tracking-wide ${labelColor}`}>
             {data.statLabel}
           </div>
           <div className={`mt-1 font-display text-2xl font-bold tabular-nums ${statColor}`}>
@@ -144,7 +144,7 @@ export function TrendGraph({ data, dark = false }: { data: TrendGraphData; dark?
             )}
           </div>
         </div>
-        <span className={`mb-1 shrink-0 rounded-full px-2 py-1 font-mono text-[11px] font-semibold whitespace-nowrap ${deltaClasses}`}>
+        <span className={`mb-1 shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap ${deltaClasses}`}>
           {inView ? <AnimatedNumber value={data.deltaValue} prefix="+" suffix="%" durationMs={900} /> : "+0%"}
         </span>
       </div>
