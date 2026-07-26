@@ -31,7 +31,7 @@ export default function RecruitPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <ModuleHeader icon={moduleDef.icon} title={moduleDef.label} description={moduleDef.description} />
         <Link
@@ -54,61 +54,68 @@ export default function RecruitPage() {
             ))}
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
-                <Link
-                  href="/dashboard/analytics"
-                  className="text-xs font-semibold text-primary hover:text-primary-dark"
-                >
-                  View analytics →
-                </Link>
-              </div>
-              <PlacementsChart data={summary.placements_trend} />
-            </div>
-
-            <div className="rounded-2xl border border-line bg-card p-6">
-              <h2 className="mb-5 font-display text-lg font-bold text-ink">Pipeline</h2>
-              <PipelineWidget stages={summary.pipeline_stages} />
-              {summary.source_breakdown.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-[11px] uppercase tracking-wide text-ink-soft">
-                    Candidate sources
-                  </h3>
-                  <div className="flex flex-col gap-2.5">
-                    {summary.source_breakdown.map((s) => (
-                      <div key={s.label}>
-                        <div className="mb-1 flex justify-between text-xs">
-                          <span className="text-ink">{s.label}</span>
-                          <span className="text-ink-soft">{s.percent}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
-                          <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="rounded-2xl border border-line bg-card p-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <h2 className="font-display text-lg font-bold text-ink">Placements · last 6 months</h2>
+                  <Link
+                    href="/dashboard/analytics"
+                    className="text-xs font-semibold text-primary hover:text-primary-dark"
+                  >
+                    View analytics →
+                  </Link>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-line bg-card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-ink">Recent activity</h2>
-            {summary.recent_activity.length === 0 ? (
-              <p className="text-sm text-ink-soft">Nothing yet — activity shows up here as you work your desk.</p>
-            ) : (
-              <div className="flex flex-col">
-                {summary.recent_activity.map((a) => (
-                  <div key={a.id} className="flex items-start gap-3 border-b border-line py-3 last:border-0">
-                    <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${toneDot[a.tone]}`} />
-                    <p className="flex-1 text-sm text-ink">{a.message}</p>
-                    <span className="shrink-0 text-xs text-ink-soft">{a.time}</span>
-                  </div>
-                ))}
+                <PlacementsChart data={summary.placements_trend} />
               </div>
-            )}
+            </div>
+
+            {/* A persistent right rail — "at a glance" widgets stay visible
+                while the main column (and the sub-module tiles below) is
+                what you scroll through. */}
+            <div className="lg:col-span-1">
+              <div className="flex flex-col gap-6 lg:sticky lg:top-6">
+                <div className="rounded-2xl border border-line bg-card p-6">
+                  <h2 className="mb-5 font-display text-lg font-bold text-ink">Pipeline</h2>
+                  <PipelineWidget stages={summary.pipeline_stages} />
+                  {summary.source_breakdown.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="mb-3 text-[11px] uppercase tracking-wide text-ink-soft">Candidate sources</h3>
+                      <div className="flex flex-col gap-2.5">
+                        {summary.source_breakdown.map((s) => (
+                          <div key={s.label}>
+                            <div className="mb-1 flex justify-between text-xs">
+                              <span className="text-ink">{s.label}</span>
+                              <span className="text-ink-soft">{s.percent}%</span>
+                            </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
+                              <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-line bg-card p-6">
+                  <h2 className="mb-4 font-display text-lg font-bold text-ink">Recent activity</h2>
+                  {summary.recent_activity.length === 0 ? (
+                    <p className="text-sm text-ink-soft">Nothing yet — activity shows up here as you work your desk.</p>
+                  ) : (
+                    <div className="flex max-h-[420px] flex-col overflow-y-auto">
+                      {summary.recent_activity.map((a) => (
+                        <div key={a.id} className="flex items-start gap-2.5 border-b border-line py-3 last:border-0">
+                          <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${toneDot[a.tone]}`} />
+                          <p className="flex-1 text-sm text-ink">{a.message}</p>
+                          <span className="shrink-0 text-xs text-ink-soft">{a.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}

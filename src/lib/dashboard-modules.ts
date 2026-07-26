@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Clock,
   ClipboardCheck,
+  ClipboardList,
   FileCheck,
   FileSignature,
   FileText,
@@ -21,6 +22,7 @@ import {
   Grid3x3,
   HeartPulse,
   IdCard,
+  KeyRound,
   Landmark,
   Laptop,
   Layers,
@@ -46,6 +48,9 @@ import {
 } from "lucide-react";
 
 export interface ModuleFeature {
+  /** Exact wording from the Evo HRIS functional spec — this is the
+   * sub-sub-module name, shown verbatim in the sidebar flyout and on the
+   * hub page tile. Don't paraphrase; if the spec changes, update here. */
   label: string;
   description: string;
   icon: LucideIcon;
@@ -55,6 +60,8 @@ export interface ModuleFeature {
 }
 
 export interface ModuleFeatureSection {
+  /** The sub-module name (e.g. "Acquisition", "Attendance Management") —
+   * exact wording from the spec. */
   label: string;
   icon: LucideIcon;
   features: ModuleFeature[];
@@ -68,12 +75,13 @@ export interface ModuleNavLink {
 
 export interface ModuleDef {
   key: string;
+  /** The module name (e.g. "EVO-Recruit") — one module = one dashboard. */
   label: string;
   icon: LucideIcon;
   description: string;
   overviewHref: string;
   /** Flat links shown right under Overview, outside any collapsible
-   * section — for module-level pages that aren't one of the PDF's
+   * sub-module — for module-level pages that aren't part of the spec's
    * functional groupings (e.g. Recruit's Analytics). */
   extraLinks: ModuleNavLink[];
   /** Each module searches its own data — there's no cross-module search
@@ -83,14 +91,15 @@ export interface ModuleDef {
   sections: ModuleFeatureSection[];
 }
 
-// The single source of truth for every module's feature taxonomy, sourced
-// from the Evo HRIS functional spec (Acquisition/Onboarding/Off boarding for
-// Recruit; Attendance Management/Employee Engagement/Employee Records/
-// Workforce Dashboard for People; Goals & Appraisal/Learning & Growth for
-// Talent; Payroll/Benefits for Payroll & Benefits; Assets Management for
-// IT & Assets). Both the per-module Sidebar and every module's hub page
-// render from this list, so a feature's real/"coming soon" status only
-// ever needs updating in one place.
+const onboardingHref = (category: string) => `/dashboard/onboarding?category=${encodeURIComponent(category)}`;
+const offboardingHref = (category: string) => `/dashboard/offboarding?category=${encodeURIComponent(category)}`;
+
+// The single source of truth for every module's three-level feature
+// hierarchy — module (one dashboard) -> sub-module (collapsible section) ->
+// sub-sub-module (a feature/leaf) — sourced verbatim from the Evo HRIS
+// functional spec. Both the per-module Sidebar and every module's hub page
+// render from this list, so a feature's exact name, grouping, and real/
+// "coming soon" status only ever need updating in one place.
 export const dashboardModules: ModuleDef[] = [
   {
     key: "recruit",
@@ -119,14 +128,21 @@ export const dashboardModules: ModuleDef[] = [
         label: "Onboarding",
         icon: ClipboardCheck,
         features: [
-          { label: "Onboarding", description: "Pre-joining docs, orientation, training, portal access, probation, devices.", icon: ClipboardCheck, href: "/dashboard/onboarding" },
+          { label: "Pre-Joining Documents", description: "Documents collected before day one.", icon: FileText, href: onboardingHref("Pre-Joining Documents") },
+          { label: "Orientation", description: "Company orientation scheduling.", icon: CalendarCheck, href: onboardingHref("Orientation") },
+          { label: "Training Plan and Schedule", description: "30/60/90 training plans.", icon: ClipboardList, href: onboardingHref("Training Plan") },
+          { label: "Portal Access and Installations", description: "HR/payroll portal accounts and software installs.", icon: KeyRound, href: onboardingHref("Portal Access") },
+          { label: "Probation Evaluation", description: "Probation-period review and sign-off.", icon: Star, href: onboardingHref("Probation Evaluation") },
+          { label: "Device Assignment", description: "Laptop, badge, and hardware handoff.", icon: Laptop, href: onboardingHref("Device Assignment") },
         ],
       },
       {
         label: "Off boarding",
         icon: UserMinus,
         features: [
-          { label: "Offboarding", description: "Documents checklist, access status, hardware clearance.", icon: UserMinus, href: "/dashboard/offboarding" },
+          { label: "Documents Checklist", description: "Exit paperwork and final settlement.", icon: FileText, href: offboardingHref("Documents Checklist") },
+          { label: "Access Status", description: "Email, SSO, and system access revocation.", icon: KeyRound, href: offboardingHref("Access Status") },
+          { label: "Hardware Clearance", description: "Laptop and badge return.", icon: Laptop, href: offboardingHref("Hardware Clearance") },
           { label: "Rehire & Alumni Pool", description: "Rehire eligibility and talent-pool retention.", icon: Repeat },
         ],
       },
@@ -142,13 +158,13 @@ export const dashboardModules: ModuleDef[] = [
     extraLinks: [],
     sections: [
       {
-        label: "Employee Records",
-        icon: UserSquare,
+        label: "Attendance Management",
+        icon: Clock,
         features: [
-          { label: "Employee Database", description: "360° employee profiles in one place.", icon: UserSquare },
-          { label: "Organizational Chart", description: "Reporting hierarchy across the company.", icon: Network },
-          { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck },
-          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText },
+          { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock },
+          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer },
+          { label: "Shift Scheduling per Department", description: "Per-department shift planning.", icon: CalendarClock },
+          { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck },
         ],
       },
       {
@@ -158,25 +174,25 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Surveys", description: "Read the room across every team.", icon: Activity },
           { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity },
           { label: "Recognition Programs", description: "Celebrate wins, department by department.", icon: Award },
-          { label: "Promotion & Transfer Workflows", description: "Structured internal moves, within department.", icon: ArrowLeftRight },
+          { label: "Promotion & Transfer Workflows within Department", description: "Structured internal moves.", icon: ArrowLeftRight },
         ],
       },
       {
-        label: "Attendance Management",
-        icon: Clock,
+        label: "Employee Records",
+        icon: UserSquare,
         features: [
-          { label: "Clock-in / Clock-out Tracking", description: "Time tracking per employee.", icon: Clock },
-          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer },
-          { label: "Shift Scheduling", description: "Per-department shift planning.", icon: CalendarClock },
-          { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck },
+          { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare },
+          { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network },
+          { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck },
+          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText },
         ],
       },
       {
         label: "Workforce Dashboard",
         icon: BarChart3,
         features: [
-          { label: "Headcount & Attrition Trends", description: "Forecasting powered by EVO-AI.", icon: BarChart3 },
-          { label: "KPI Tracking Dashboards", description: "Day-to-day workforce KPIs.", icon: PieChart },
+          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3 },
+          { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart },
         ],
       },
     ],
@@ -195,19 +211,19 @@ export const dashboardModules: ModuleDef[] = [
         icon: Target,
         features: [
           { label: "Goal Setting & KPIs", description: "Set and track goals per employee.", icon: Target },
-          { label: "Performance Appraisals", description: "Yearly 360° feedback cycles.", icon: Star },
-          { label: "Competency Mapping", description: "Map skills against role expectations.", icon: Layers },
-          { label: "Value-Addition Scoring", description: "Performance scoring powered by EVO-AI.", icon: Sparkles },
+          { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star },
+          { label: "Competency Mapping of Employees", description: "Map skills against role expectations.", icon: Layers },
+          { label: "Value-Addition / Performance Scoring", description: "Powered by EVO-AI.", icon: Sparkles },
         ],
       },
       {
         label: "Learning & Growth",
         icon: GraduationCap,
         features: [
-          { label: "Learning Management System", description: "Training and course delivery.", icon: GraduationCap },
+          { label: "Training & Learning Management System (LMS)", description: "Training and course delivery.", icon: GraduationCap },
           { label: "Career Development Paths", description: "Mapped per department hierarchy.", icon: Map },
           { label: "Skills & Competency Mapping", description: "A living map of who can do what.", icon: Grid3x3 },
-          { label: "Succession Planning", description: "9-box grid and succession candidates.", icon: Grid3x3 },
+          { label: "Succession Planning / 9-Box Grid", description: "Succession candidates, mapped.", icon: Grid3x3 },
         ],
       },
     ],
@@ -225,11 +241,11 @@ export const dashboardModules: ModuleDef[] = [
         label: "Payroll",
         icon: Wallet,
         features: [
-          { label: "Payroll Processing & Payslips", description: "Process pay runs and view payslips.", icon: Wallet, href: "/dashboard/payroll" },
+          { label: "Payroll Processing, Payslips", description: "Process pay runs and view payslips.", icon: Wallet, href: "/dashboard/payroll" },
           { label: "Multi-Country Tax Compliance", description: "Stay compliant across every jurisdiction.", icon: Globe2 },
-          { label: "Multi-Currency & Compliance Calendar", description: "Multi-currency support with key dates tracked.", icon: Globe2 },
+          { label: "Multi-Currency Support & Compliance Calendar", description: "Multi-currency support with key dates tracked.", icon: Globe2 },
           { label: "Direct Deposit / Banking Integration", description: "Banking integration for payouts.", icon: Landmark },
-          { label: "Payroll Audit & Reconciliation", description: "Reports for every run.", icon: FileCheck },
+          { label: "Payroll Audit & Reconciliation Reports", description: "Reports for every run.", icon: FileCheck },
         ],
       },
       {
@@ -237,7 +253,7 @@ export const dashboardModules: ModuleDef[] = [
         icon: HeartPulse,
         features: [
           { label: "Benefits Enrollment", description: "Health insurance, yearly bonuses.", icon: HeartPulse },
-          { label: "Claims & Reimbursement", description: "Submission and approval workflows.", icon: Receipt },
+          { label: "Claims & Reimbursement Workflows", description: "Submission and approval workflows.", icon: Receipt },
           { label: "Benefit Cost Analysis", description: "See what benefits actually cost.", icon: PieChart },
         ],
       },
@@ -259,7 +275,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Device Provisioning", description: "Tied to onboarding and offboarding.", icon: Boxes },
           { label: "Asset Inventory Tracking", description: "Laptops, monitors, and every assigned device.", icon: Boxes },
           { label: "Warranty Tracking", description: "Know what's covered, and until when.", icon: BadgeCheck },
-          { label: "IT Support Requests", description: "Device queries and repair requests.", icon: LifeBuoy },
+          { label: "IT Support Requests Management", description: "Device queries and repair requests.", icon: LifeBuoy },
           { label: "Device Tracker", description: "Issue history, repairs, and damage records.", icon: Smartphone },
           { label: "BYOD Security Policy", description: "Track policy compliance per device.", icon: ShieldCheck },
         ],

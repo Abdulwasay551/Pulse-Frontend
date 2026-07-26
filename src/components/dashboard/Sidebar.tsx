@@ -24,10 +24,13 @@ export default function Sidebar({
   const [collapsed, setCollapsed] = useState(false);
   const activeModule = findActiveModule(pathname);
   const activeSectionLabel = activeModule ? sectionContainsPathname(activeModule, pathname) : null;
-  // Only tracks the user's manual toggles — the section containing the
-  // current route is derived (and always shown open) below, rather than
-  // synced here via an effect.
+  // Only tracks the user's manual toggles ("pinned" open/closed) — the
+  // section containing the current route is derived (and always shown
+  // open by default) below, rather than synced here via an effect.
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // Hovering a sub-module previews its sub-sub-modules without pinning it
+  // open — clicking still pins/unpins independently of hover.
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
   const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
   const initials = displayName
@@ -162,10 +165,15 @@ export default function Sidebar({
               });
             }
 
-            const isOpen = expanded[section.label] ?? section.label === activeSectionLabel;
+            const pinned = expanded[section.label] ?? section.label === activeSectionLabel;
+            const isOpen = pinned || hoveredSection === section.label;
             const SectionIcon = section.icon;
             return (
-              <div key={section.label}>
+              <div
+                key={section.label}
+                onMouseEnter={() => setHoveredSection(section.label)}
+                onMouseLeave={() => setHoveredSection((prev) => (prev === section.label ? null : prev))}
+              >
                 <button
                   onClick={() => toggleSection(section.label)}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -25,6 +27,19 @@ const CATEGORIES: OnboardingCategory[] = [
   "Device Assignment",
 ];
 
+// The sidebar/hub use the functional spec's full phrasing ("Training Plan
+// and Schedule", "Portal Access and Installations") while the backend's
+// stored category value is the shorter enum key — this maps key -> the
+// exact spec wording for display in the category cross-section view.
+const CATEGORY_LABELS: Record<OnboardingCategory, string> = {
+  "Pre-Joining Documents": "Pre-Joining Documents",
+  Orientation: "Orientation",
+  "Training Plan": "Training Plan and Schedule",
+  "Portal Access": "Portal Access and Installations",
+  "Probation Evaluation": "Probation Evaluation",
+  "Device Assignment": "Device Assignment",
+};
+
 const onboardingStatusOptions: OnboardingStatus[] = ["Not Started", "In Progress", "Completed"];
 
 const statusTone: Record<OnboardingStatus, string> = {
@@ -43,8 +58,24 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function OnboardingPage() {
+function isOnboardingCategory(value: string | null): value is OnboardingCategory {
+  return !!value && (CATEGORIES as string[]).includes(value);
+}
+
+export default function OnboardingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <OnboardingPage />
+    </Suspense>
+  );
+}
+
+function OnboardingPage() {
   const { withAuth } = useAuth();
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const category = isOnboardingCategory(categoryParam) ? categoryParam : null;
+
   const [records, setRecords] = useState<Onboarding[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +141,10 @@ export default function OnboardingPage() {
   async function updateOnboardingStatus(o: Onboarding, status: OnboardingStatus) {
     await withAuth((token) => onboardingsApi.update(token, o.id, { status }));
     await load();
+  }
+
+  if (category) {
+    return <CategoryCrossSection category={category} records={records} loading={loading} onChanged={load} />;
   }
 
   if (active) {
@@ -244,6 +279,201 @@ export default function OnboardingPage() {
   );
 }
 
+/** A cross-candidate view for one onboarding category (a sub-sub-module in
+ * the sidebar) — every task in that category across every onboarding
+ * record, e.g. "every Orientation task, whoever it belongs to." */
+function CategoryCrossSection({
+  category,
+  records,
+  loading,
+  onChanged,
+}: {
+  category: OnboardingCategory;
+  records: Onboarding[];
+  loading: boolean;
+  onChanged: () => Promise<void>;
+}) {
+  const { withAuth } = useAuth();
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ onboarding: "", title: "", due_date: "", notes: "" });
+  const [saving, setSaving] = useState(false);
+
+  const rows = records
+    .flatMap((o) => o.tasks.filter((t) => t.category === category).map((t) => ({ task: t, onboarding: o })))
+    .sort((a, b) => a.onboarding.candidate_detail.name.localeCompare(b.onboarding.candidate_detail.name));
+
+  function openCreate() {
+    setForm({ onboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "" });
+    setShowForm(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.onboarding || !form.title) return;
+    setSaving(true);
+    try {
+      await withAuth((token) =>
+        onboardingTasksApi.create(token, {
+          onboarding: Number(form.onboarding),
+          category,
+          title: form.title,
+          due_date: form.due_date || null,
+          notes: form.notes,
+        })
+      );
+      setShowForm(false);
+      await onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function cycleTaskStatus(taskId: number, current: TaskStatus) {
+    const next: Record<TaskStatus, TaskStatus> = { Pending: "In Progress", "In Progress": "Done", Done: "Pending" };
+    await withAuth((token) => onboardingTasksApi.update(token, taskId, { status: next[current] }));
+    await onChanged();
+  }
+
+  async function removeTask(taskId: number) {
+    await withAuth((token) => onboardingTasksApi.remove(token, taskId));
+    await onChanged();
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <Link
+        href="/dashboard/onboarding"
+        className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> All onboarding
+      </Link>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink">{CATEGORY_LABELS[category]}</h1>
+          <p className="mt-1 text-sm text-ink-soft">Every {category.toLowerCase()} task, across every onboarding.</p>
+        </div>
+        <button
+          onClick={openCreate}
+          disabled={records.length === 0}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" /> New task
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-line bg-card">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
+              <th className="px-5 py-3 font-medium">Candidate</th>
+              <th className="px-5 py-3 font-medium">Task</th>
+              <th className="px-5 py-3 font-medium">Due</th>
+              <th className="px-5 py-3 font-medium">Status</th>
+              <th className="px-5 py-3 font-medium" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ task, onboarding }) => (
+              <tr key={task.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10.5px] font-bold text-primary">
+                      {onboarding.candidate_detail.initials}
+                    </span>
+                    <span className="font-semibold text-ink">{onboarding.candidate_detail.name}</span>
+                  </div>
+                </td>
+                <td className="px-5 py-3.5 text-ink">{task.title}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft">{task.due_date ?? "—"}</td>
+                <td className="px-5 py-3.5">
+                  <button
+                    onClick={() => cycleTaskStatus(task.id, task.status)}
+                    className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[task.status]}`}
+                  >
+                    {task.status}
+                  </button>
+                </td>
+                <td className="px-5 py-3.5 text-right">
+                  <button
+                    onClick={() => removeTask(task.id)}
+                    aria-label={`Remove task ${task.title}`}
+                    className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!loading && rows.length === 0 && (
+          <div className="p-10 text-center text-sm text-ink-soft">
+            No {category.toLowerCase()} tasks yet across any onboarding record.
+          </div>
+        )}
+        {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+      </div>
+
+      {showForm && (
+        <Modal title={`New ${CATEGORY_LABELS[category]} task`} onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className={labelClass}>Candidate</label>
+              <select
+                required
+                value={form.onboarding}
+                onChange={(e) => setForm({ ...form, onboarding: e.target.value })}
+                className={inputClass}
+              >
+                {records.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.candidate_detail.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Task</label>
+              <input
+                required
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Due date</label>
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Notes</label>
+              <textarea
+                rows={2}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              {saving ? "Adding…" : "Add task"}
+            </button>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 function OnboardingDetail({
   onboarding,
   onBack,
@@ -348,7 +578,7 @@ function OnboardingDetail({
           return (
             <div key={category} className="rounded-2xl border border-line bg-card p-5">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-display text-sm font-bold text-ink">{category}</h2>
+                <h2 className="font-display text-sm font-bold text-ink">{CATEGORY_LABELS[category]}</h2>
                 <button
                   onClick={() => openTaskForm(category)}
                   className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
@@ -395,7 +625,7 @@ function OnboardingDetail({
       </div>
 
       {showTaskForm && (
-        <Modal title={`Add task · ${showTaskForm}`} onClose={() => setShowTaskForm(null)}>
+        <Modal title={`Add task · ${CATEGORY_LABELS[showTaskForm]}`} onClose={() => setShowTaskForm(null)}>
           <form onSubmit={handleAddTask}>
             <div className="mb-4">
               <label className={labelClass}>Task</label>
