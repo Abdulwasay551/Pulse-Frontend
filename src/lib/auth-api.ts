@@ -1,5 +1,7 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
+export type UserRole = "HR" | "Employee";
+
 export interface AuthUser {
   id: number;
   username: string;
@@ -7,6 +9,11 @@ export interface AuthUser {
   first_name: string;
   last_name: string;
   date_joined: string;
+  // A missing profile (pre-existing accounts) reads as HR with no
+  // organization/employee — see the backend's UserSerializer.
+  role: UserRole;
+  organization: string | null;
+  employee: { id: number; name: string } | null;
 }
 
 export interface AuthSession {
@@ -107,8 +114,25 @@ export async function downloadFile(path: string, accessToken: string, filename: 
   URL.revokeObjectURL(url);
 }
 
-export function register(data: { username: string; email: string; password: string; password2: string }) {
+export function register(data: {
+  username: string;
+  email: string;
+  password: string;
+  password2: string;
+  organization_name?: string;
+  invite_token?: string;
+}) {
   return apiFetch<AuthSession>("/auth/register/", { method: "POST", body: JSON.stringify(data) });
+}
+
+export interface InviteDetail {
+  email: string;
+  organization: string;
+  employee_name: string;
+}
+
+export function getInviteDetail(token: string) {
+  return apiFetch<InviteDetail>(`/invites/${token}/`, { method: "GET" });
 }
 
 export function login(data: { identifier: string; password: string }) {

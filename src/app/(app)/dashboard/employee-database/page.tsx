@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileText, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { FileText, KeyRound, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -14,6 +14,7 @@ import {
   type EmployeeDocument,
   type EmployeeStatus,
 } from "@/lib/people-api";
+import { createEmployeeAccount, sendEmployeeInvite } from "@/lib/role-api";
 import { ApiError } from "@/lib/auth-api";
 
 const EMPLOYEE_REQUIRED_FIELDS = ["name"];
@@ -70,6 +71,13 @@ export default function EmployeeDatabasePage() {
     file: null,
   });
   const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  const [loginTarget, setLoginTarget] = useState<Employee | null>(null);
+  const [loginMode, setLoginMode] = useState<"invite" | "create">("invite");
+  const [loginForm, setLoginForm] = useState({ email: "", username: "", password: "" });
+  const [loginSaving, setLoginSaving] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginResult, setLoginResult] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -174,6 +182,46 @@ export default function EmployeeDatabasePage() {
     setEditing(updated.find((e) => e.id === editing.id) ?? null);
   }
 
+  function openLogin(e: Employee) {
+    setLoginTarget(e);
+    setLoginMode("invite");
+    setLoginForm({ email: e.email, username: "", password: "" });
+    setLoginError(null);
+    setLoginResult(null);
+  }
+
+  async function handleSendInvite(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (!loginTarget) return;
+    setLoginError(null);
+    setLoginSaving(true);
+    try {
+      await withAuth((token) => sendEmployeeInvite(token, { employee: loginTarget.id, email: loginForm.email }));
+      setLoginResult(`Invite sent to ${loginForm.email}.`);
+    } catch (err) {
+      setLoginError(err instanceof ApiError ? err.message : "Couldn't send the invite. Please try again.");
+    } finally {
+      setLoginSaving(false);
+    }
+  }
+
+  async function handleCreateAccount(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (!loginTarget) return;
+    setLoginError(null);
+    setLoginSaving(true);
+    try {
+      await withAuth((token) =>
+        createEmployeeAccount(token, { employee: loginTarget.id, username: loginForm.username, password: loginForm.password })
+      );
+      setLoginResult(`Account created — username "${loginForm.username}". Share the password with them directly.`);
+    } catch (err) {
+      setLoginError(err instanceof ApiError ? err.message : "Couldn't create the account. Please try again.");
+    } finally {
+      setLoginSaving(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -235,6 +283,14 @@ export default function EmployeeDatabasePage() {
                 <td className="px-5 py-3.5 text-xs text-ink-soft">{e.hire_date}</td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => openLogin(e)}
+                      aria-label={`Manage login for ${e.name}`}
+                      title="Manage login"
+                      className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
+                    >
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </button>
                     <button
                       onClick={() => openEdit(e)}
                       aria-label={`Edit ${e.name}`}
@@ -439,6 +495,90 @@ export default function EmployeeDatabasePage() {
                 </button>
               </div>
             </div>
+          )}
+        </Modal>
+      )}
+
+      {loginTarget && (
+        <Modal title={`Manage login · ${loginTarget.name}`} onClose={() => setLoginTarget(null)}>
+          {loginResult ? (
+            <div className="rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">{loginResult}</div>
+          ) : (
+            <>
+              <div className="mb-4 flex gap-2">
+                <button
+                  onClick={() => setLoginMode("invite")}
+                  className={`flex-1 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${loginMode === "invite" ? "bg-primary text-cream" : "bg-cream text-ink-soft hover:bg-cream-dim"}`}
+                >
+                  Email invite
+                </button>
+                <button
+                  onClick={() => setLoginMode("create")}
+                  className={`flex-1 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${loginMode === "create" ? "bg-primary text-cream" : "bg-cream text-ink-soft hover:bg-cream-dim"}`}
+                >
+                  Set password directly
+                </button>
+              </div>
+
+              {loginError && (
+                <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">{loginError}</div>
+              )}
+
+              {loginMode === "invite" ? (
+                <form onSubmit={handleSendInvite}>
+                  <p className="mb-4 text-sm text-ink-soft">
+                    Sends a signup link to this address — they set their own password when they accept.
+                  </p>
+                  <div className="mb-6">
+                    <label className={labelClass}>Email</label>
+                    <input
+                      required
+                      type="email"
+                      value={loginForm.email}
+                      onChange={(ev) => setLoginForm({ ...loginForm, email: ev.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loginSaving}
+                    className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+                  >
+                    {loginSaving ? "Sending…" : "Send invite"}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleCreateAccount}>
+                  <p className="mb-4 text-sm text-ink-soft">Creates the login immediately — share the password with them yourself.</p>
+                  <div className="mb-4">
+                    <label className={labelClass}>Username</label>
+                    <input
+                      required
+                      value={loginForm.username}
+                      onChange={(ev) => setLoginForm({ ...loginForm, username: ev.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className={labelClass}>Password</label>
+                    <input
+                      required
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(ev) => setLoginForm({ ...loginForm, password: ev.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loginSaving}
+                    className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+                  >
+                    {loginSaving ? "Creating…" : "Create account"}
+                  </button>
+                </form>
+              )}
+            </>
           )}
         </Modal>
       )}

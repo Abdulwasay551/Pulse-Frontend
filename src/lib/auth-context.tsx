@@ -10,7 +10,14 @@ interface AuthContextValue {
   user: AuthUser | null;
   status: AuthStatus;
   login: (identifier: string, password: string) => Promise<void>;
-  register: (data: { username: string; email: string; password: string; password2: string }) => Promise<void>;
+  register: (data: {
+    username: string;
+    email: string;
+    password: string;
+    password2: string;
+    organization_name?: string;
+    invite_token?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: AuthUser) => void;
   /** Runs an authenticated request with the current access token, silently
@@ -67,7 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (data: { username: string; email: string; password: string; password2: string }) => {
+    async (data: {
+      username: string;
+      email: string;
+      password: string;
+      password2: string;
+      organization_name?: string;
+      invite_token?: string;
+    }) => {
       const session = await authApi.register(data);
       accessTokenRef.current = session.access;
       setUser(session.user);
