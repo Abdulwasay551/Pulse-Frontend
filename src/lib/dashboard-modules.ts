@@ -181,10 +181,10 @@ export const dashboardModules: ModuleDef[] = [
         label: "Employee Records",
         icon: UserSquare,
         features: [
-          { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare },
-          { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network },
+          { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database" },
+          { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network, href: "/dashboard/org-chart" },
           { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck },
-          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText },
+          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText, href: "/dashboard/employee-database" },
         ],
       },
       {
