@@ -1,5 +1,17 @@
 import type { LucideIcon } from "lucide-react";
-import { BarChart3, Briefcase, Building2, LayoutGrid, Users, Wallet } from "lucide-react";
+import {
+  BarChart3,
+  Briefcase,
+  Building2,
+  ClipboardCheck,
+  FileSignature,
+  FileText,
+  LayoutGrid,
+  ShieldCheck,
+  UserMinus,
+  Users,
+  Wallet,
+} from "lucide-react";
 
 export interface ModuleNavItem {
   href: string;
@@ -32,6 +44,11 @@ export const dashboardModules: ModuleDef[] = [
       { href: "/dashboard/candidates", label: "Candidates", icon: Users },
       { href: "/dashboard/clients", label: "Clients", icon: Building2 },
       { href: "/dashboard/requisitions", label: "Requisitions", icon: Briefcase },
+      { href: "/dashboard/resume-pool", label: "Resume Pool", icon: FileText },
+      { href: "/dashboard/offer-letters", label: "Offer Letters", icon: FileSignature },
+      { href: "/dashboard/background-checks", label: "Background Checks", icon: ShieldCheck },
+      { href: "/dashboard/onboarding", label: "Onboarding", icon: ClipboardCheck },
+      { href: "/dashboard/offboarding", label: "Offboarding", icon: UserMinus },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },

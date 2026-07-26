@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { clientsApi, type Client, type ClientStatus } from "@/lib/recruit-api";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { clientsApi, clientsCsv, type Client, type ClientStatus } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
+
+const CLIENT_REQUIRED_FIELDS = ["name"];
 
 const statusTone: Record<ClientStatus, string> = {
   Active: "bg-primary/15 text-primary",
@@ -106,12 +109,15 @@ export default function ClientsPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Clients</h1>
           <p className="mt-1 text-sm text-ink-soft">Every company your desk places candidates with.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New client
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar csv={clientsCsv} resourceLabel="clients" requiredFields={CLIENT_REQUIRED_FIELDS} onImported={load} />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New client
+          </button>
+        </div>
       </div>
 
       {loading ? (

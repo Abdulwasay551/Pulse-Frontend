@@ -60,7 +60,12 @@ async function parseErrorBody(res: Response): Promise<{ message: string; fieldEr
 // request/error-parsing plumbing.
 export async function apiFetch<T>(path: string, options: RequestInit = {}, accessToken?: string | null): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+  // FormData (file uploads) needs the browser to set its own multipart
+  // boundary in Content-Type — setting it to json here would corrupt the
+  // upload.
+  if (!(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
   const res = await fetch(`${API_BASE}${path}`, {
@@ -77,6 +82,29 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, acces
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+// CSV/file export endpoints return an attachment, not JSON — a plain <a
+// href> can't attach the Authorization header, so this fetches the blob
+// with auth and triggers the browser's normal save-file flow manually.
+export async function downloadFile(path: string, accessToken: string, filename: string): Promise<void> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const { message } = await parseErrorBody(res);
+    throw new ApiError(message, res.status);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function register(data: { username: string; email: string; password: string; password2: string }) {

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import {
   candidatesApi,
+  candidatesCsv,
   clientsApi,
   requisitionsApi,
   type Candidate,
@@ -15,6 +17,8 @@ import {
   type Requisition,
 } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
+
+const CANDIDATE_REQUIRED_FIELDS = ["name", "role"];
 
 const stageTone: Record<CandidateStage, string> = {
   Sourced: "bg-cream-dim text-ink-soft",
@@ -145,12 +149,20 @@ export default function CandidatesPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Candidates</h1>
           <p className="mt-1 text-sm text-ink-soft">Every candidate across every open requisition.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New candidate
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={candidatesCsv}
+            resourceLabel="candidates"
+            requiredFields={CANDIDATE_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-mono text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New candidate
+          </button>
+        </div>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">

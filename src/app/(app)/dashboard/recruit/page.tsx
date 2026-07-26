@@ -135,15 +135,40 @@ export default function RecruitPage() {
       </FeatureSection>
 
       <FeatureSection title="Hiring workflow">
-        <FeatureTile icon={FileSignature} title="Offer letters & e-signatures" description="Generate and send offers for signature." />
+        <FeatureTile
+          icon={FileSignature}
+          title="Digital offer letters"
+          description="Draft, send, and track offers through to signature."
+          href="/dashboard/offer-letters"
+        />
+        <FeatureTile
+          icon={ShieldCheck}
+          title="Background check integration"
+          description="Track screening status before an offer is final."
+          href="/dashboard/background-checks"
+        />
+        <FeatureTile
+          icon={Sparkles}
+          title="AI resume screening"
+          description="Resume-to-requirements fit scoring, via EVO-AI."
+          href="/dashboard/resume-pool"
+        />
         <FeatureTile icon={ScanSearch} title="Candidate portal" description="Self-service status tracking for applicants." />
-        <FeatureTile icon={ShieldCheck} title="Background checks" description="Screening integrations before an offer is final." />
-        <FeatureTile icon={Sparkles} title="AI resume & candidate scoring" description="Resume screening and fit scoring, via EVO-AI." />
       </FeatureSection>
 
       <FeatureSection title="Onboarding, offboarding & rehire">
-        <FeatureTile icon={ClipboardCheck} title="Digital onboarding" description="Document collection, employee ID, orientation scheduling." />
-        <FeatureTile icon={UserMinus} title="Offboarding & exit interviews" description="Structured offboarding, device clearance handoff to EVO-IT." />
+        <FeatureTile
+          icon={ClipboardCheck}
+          title="Digital onboarding"
+          description="Pre-joining docs, orientation, training, portal access, probation, and devices."
+          href="/dashboard/onboarding"
+        />
+        <FeatureTile
+          icon={UserMinus}
+          title="Offboarding"
+          description="Documents checklist, access status, and hardware clearance."
+          href="/dashboard/offboarding"
+        />
         <FeatureTile icon={Repeat} title="Rehire & alumni pool" description="Rehire eligibility and talent-pool retention." />
       </FeatureSection>
     </div>

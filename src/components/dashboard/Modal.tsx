@@ -7,10 +7,14 @@ export default function Modal({
   title,
   onClose,
   children,
+  wide,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** Wider variant for content that needs more room (e.g. the CSV import
+   * wizard's column-mapping table) — default max-w-md is too cramped. */
+  wide?: boolean;
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -26,7 +30,9 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-card p-6 shadow-xl"
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-line bg-card p-6 shadow-xl ${
+          wide ? "max-w-2xl" : "max-w-md"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">

@@ -41,9 +41,17 @@ interface FormState {
   recruiter: string;
   priority: RequisitionPriority;
   status: RequisitionStatus;
+  requirements: string;
 }
 
-const emptyForm: FormState = { title: "", client: "", recruiter: "", priority: "Medium", status: "Open" };
+const emptyForm: FormState = {
+  title: "",
+  client: "",
+  recruiter: "",
+  priority: "Medium",
+  status: "Open",
+  requirements: "",
+};
 
 export default function RequisitionsPage() {
   const { withAuth } = useAuth();
@@ -87,6 +95,7 @@ export default function RequisitionsPage() {
       recruiter: r.recruiter,
       priority: r.priority,
       status: r.status,
+      requirements: r.requirements,
     });
     setError(null);
     setShowForm(true);
@@ -106,6 +115,7 @@ export default function RequisitionsPage() {
       recruiter: form.recruiter,
       priority: form.priority,
       status: form.status,
+      requirements: form.requirements,
     };
     try {
       if (editing) {
@@ -273,6 +283,16 @@ export default function RequisitionsPage() {
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Requirements</label>
+              <textarea
+                rows={4}
+                value={form.requirements}
+                onChange={(e) => setForm({ ...form, requirements: e.target.value })}
+                placeholder="Key skills, keywords, and experience — used by AI resume screening to score candidates against this role."
+                className={inputClass}
+              />
             </div>
             <button
               type="submit"
