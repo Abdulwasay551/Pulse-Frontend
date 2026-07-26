@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronDown, ChevronsLeft, ChevronsRight, LayoutGrid, X } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth-context";
-import { featureHref, findActiveModule, hrefPathname, type ModuleDef } from "@/lib/dashboard-modules";
+import { featureHref, findActiveModuleForRoute, hrefPathname, type ModuleDef } from "@/lib/dashboard-modules";
 
 function sectionContainsPathname(moduleDef: ModuleDef, pathname: string) {
   return moduleDef.sections.find((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))?.label ?? null;
@@ -29,7 +29,7 @@ export default function Sidebar({
   const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const activeModule = findActiveModule(pathname);
+  const activeModule = findActiveModuleForRoute(pathname, searchParams);
   const activeSectionLabel = activeModule ? sectionContainsPathname(activeModule, pathname) : null;
   // Only tracks the user's manual toggles ("pinned" open/closed) — the
   // section containing the current route is derived (and always shown

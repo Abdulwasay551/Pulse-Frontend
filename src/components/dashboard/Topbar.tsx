@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Menu, Settings, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { findActiveModule } from "@/lib/dashboard-modules";
+import { findActiveModuleForRoute } from "@/lib/dashboard-modules";
 
 export default function Topbar({
   onOpenSidebar,
@@ -16,10 +16,11 @@ export default function Topbar({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, logout: signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const activeModule = findActiveModule(pathname);
+  const activeModule = findActiveModuleForRoute(pathname, searchParams);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

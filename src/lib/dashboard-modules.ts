@@ -121,7 +121,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Digital Offer Letters", description: "Draft, send, and track offers to signature.", icon: FileSignature, href: "/dashboard/offer-letters" },
           { label: "Background Check Integration", description: "Screening status before an offer is final.", icon: ShieldCheck, href: "/dashboard/background-checks" },
           { label: "AI Resume Screening", description: "Resume-to-requirements fit scoring.", icon: Sparkles, href: "/dashboard/ai-resume-screening" },
-          { label: "Candidate Portal", description: "Self-service status tracking for applicants.", icon: ScanSearch },
+          { label: "Candidate Portal", description: "Self-service status tracking for applicants.", icon: ScanSearch, href: "/dashboard/candidate-portal" },
         ],
       },
       {
@@ -143,7 +143,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Documents Checklist", description: "Exit paperwork and final settlement.", icon: FileText, href: offboardingHref("Documents Checklist") },
           { label: "Access Status", description: "Email, SSO, and system access revocation.", icon: KeyRound, href: offboardingHref("Access Status") },
           { label: "Hardware Clearance", description: "Laptop and badge return.", icon: Laptop, href: offboardingHref("Hardware Clearance") },
-          { label: "Rehire & Alumni Pool", description: "Rehire eligibility and talent-pool retention.", icon: Repeat },
+          { label: "Rehire & Alumni Pool", description: "Rehire eligibility and talent-pool retention.", icon: Repeat, href: "/dashboard/rehire-pool" },
         ],
       },
     ],
@@ -316,4 +316,17 @@ export function findActiveModule(pathname: string): ModuleDef | null {
         m.sections.some((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))
     ) ?? null
   );
+}
+
+/** The "coming soon" placeholder isn't a real feature of any module (it's
+ * the landing spot for every not-yet-built one), so findActiveModule alone
+ * can't place it — without this, the sidebar would simply vanish on it.
+ * Resolves the module via its `?module=` query param instead, falling back
+ * to the normal pathname-based lookup for every other route. */
+export function findActiveModuleForRoute(pathname: string, searchParams: URLSearchParams): ModuleDef | null {
+  if (pathname === "/dashboard/coming-soon") {
+    const label = searchParams.get("module");
+    return dashboardModules.find((m) => m.label === label) ?? null;
+  }
+  return findActiveModule(pathname);
 }

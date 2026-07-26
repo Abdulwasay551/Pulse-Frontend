@@ -55,6 +55,7 @@ export interface Candidate {
   resume_text: string;
   ai_score: number | null;
   ai_score_notes: string;
+  portal_token: string;
   created_at: string;
   updated_at: string;
 }
@@ -274,6 +275,7 @@ export interface Offboarding {
   last_working_day: string;
   reason: string;
   rehire_eligible: boolean;
+  rehire_notes: string;
   status: OffboardingStatus;
   tasks: OffboardingTask[];
   progress: number;
@@ -286,6 +288,7 @@ export interface OffboardingWrite {
   last_working_day: string;
   reason?: string;
   rehire_eligible?: boolean;
+  rehire_notes?: string;
   status?: OffboardingStatus;
 }
 
