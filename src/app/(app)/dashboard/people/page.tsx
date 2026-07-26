@@ -77,6 +77,22 @@ export default function PeopleManagementPage() {
               </div>
             </div>
           </div>
+
+          <div className="mt-6 rounded-2xl border border-line bg-card p-6">
+            <h2 className="mb-5 font-display text-lg font-bold text-ink">Workforce KPIs</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {summary.kpis.map((k) => (
+                <Link
+                  key={k.label}
+                  href={k.href}
+                  className="group rounded-xl border border-line bg-cream p-4 transition-colors hover:border-primary/40"
+                >
+                  <div className="text-2xl font-bold text-ink">{k.value}</div>
+                  <div className="mt-1 text-xs text-ink-soft">{k.label}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </>
       )}
 

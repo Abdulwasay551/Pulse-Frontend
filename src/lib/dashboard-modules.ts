@@ -161,20 +161,20 @@ export const dashboardModules: ModuleDef[] = [
         label: "Attendance Management",
         icon: Clock,
         features: [
-          { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock },
-          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer },
-          { label: "Shift Scheduling per Department", description: "Per-department shift planning.", icon: CalendarClock },
-          { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck },
+          { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock, href: "/dashboard/attendance" },
+          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance" },
+          { label: "Shift Scheduling per Department", description: "Per-department shift planning.", icon: CalendarClock, href: "/dashboard/shift-scheduling" },
+          { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck, href: "/dashboard/leave-requests" },
         ],
       },
       {
         label: "Employee Engagement",
         icon: Activity,
         features: [
-          { label: "Surveys", description: "Read the room across every team.", icon: Activity },
-          { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity },
-          { label: "Recognition Programs", description: "Celebrate wins, department by department.", icon: Award },
-          { label: "Promotion & Transfer Workflows within Department", description: "Structured internal moves.", icon: ArrowLeftRight },
+          { label: "Surveys", description: "Read the room across every team.", icon: Activity, href: "/dashboard/surveys" },
+          { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity, href: "/dashboard/surveys" },
+          { label: "Recognition Programs", description: "Celebrate wins, department by department.", icon: Award, href: "/dashboard/recognition" },
+          { label: "Promotion & Transfer Workflows within Department", description: "Structured internal moves.", icon: ArrowLeftRight, href: "/dashboard/promotions" },
         ],
       },
       {
@@ -183,7 +183,7 @@ export const dashboardModules: ModuleDef[] = [
         features: [
           { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database" },
           { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network, href: "/dashboard/org-chart" },
-          { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck },
+          { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck, href: "/dashboard/employee-self-service" },
           { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText, href: "/dashboard/employee-database" },
         ],
       },
@@ -191,8 +191,8 @@ export const dashboardModules: ModuleDef[] = [
         label: "Workforce Dashboard",
         icon: BarChart3,
         features: [
-          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3 },
-          { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart },
+          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3, href: "/dashboard/people" },
+          { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart, href: "/dashboard/people" },
         ],
       },
     ],
