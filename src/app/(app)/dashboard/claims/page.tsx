@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { benefitPlansApi, benefitClaimsApi, type BenefitPlan, type BenefitClaim, type ClaimStatus } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
@@ -117,7 +118,7 @@ export default function ClaimsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -131,11 +132,13 @@ export default function ClaimsPage() {
           <tbody>
             {claims.map((c) => (
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{c.employee_detail.name}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{c.claim_type}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{c.plan_name || "—"}</td>
-                <td className="px-5 py-3.5 text-ink-soft">${c.amount}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                  <EmployeeLink employee={c.employee_detail} />
+                </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Claim">{c.claim_type}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Plan">{c.plan_name || "—"}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Amount">${c.amount}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <select
                     value={c.status}
                     onChange={(e) => updateStatus(c, e.target.value as ClaimStatus)}
@@ -149,7 +152,7 @@ export default function ClaimsPage() {
                   </select>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleDelete(c)}
                       aria-label={`Delete claim for ${c.employee_detail.name}`}

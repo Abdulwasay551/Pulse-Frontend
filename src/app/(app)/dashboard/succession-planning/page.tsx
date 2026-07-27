@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { successionPlansApi, type NineBoxRating, type SuccessionPlan } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 
@@ -121,7 +122,7 @@ export default function SuccessionPlanningPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -134,17 +135,12 @@ export default function SuccessionPlanningPage() {
           <tbody>
             {plans.map((p) => (
               <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {p.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{p.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={p.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{p.potential_rating}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{p.performance_rating}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Potential">{p.potential_rating}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Performance">{p.performance_rating}</td>
+                <td className="px-5 py-3.5" data-label="Ready now">
                   <button
                     onClick={() => toggleReady(p)}
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${p.ready_now ? "bg-primary/15 text-primary" : "bg-cream-dim text-ink-soft"}`}
@@ -153,7 +149,7 @@ export default function SuccessionPlanningPage() {
                   </button>
                 </td>
                 <td className="px-5 py-3.5">
-                  <button onClick={() => handleDelete(p)} aria-label={`Remove ${p.employee_detail.name}`} className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100">
+                  <button onClick={() => handleDelete(p)} aria-label={`Remove ${p.employee_detail.name}`} className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </td>

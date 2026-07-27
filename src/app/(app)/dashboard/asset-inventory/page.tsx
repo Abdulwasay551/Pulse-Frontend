@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, type Asset, type AssetCategory, type AssetStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
@@ -48,7 +50,17 @@ const emptyForm: FormState = {
   notes: "",
 };
 
-export default function AssetInventoryPage() {
+export default function AssetInventoryPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <AssetInventoryPage />
+    </Suspense>
+  );
+}
+
+function AssetInventoryPage() {
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
   const { withAuth } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -65,6 +77,12 @@ export default function AssetInventoryPage() {
       const [a, e] = await withAuth((token) => Promise.all([assetsApi.list(token), employeesApi.list(token)]));
       setAssets(a);
       setEmployees(e);
+      const assetParam = searchParams.get("asset");
+      if (!autoOpenedRef.current && assetParam) {
+        autoOpenedRef.current = true;
+        const target = a.find((asset) => String(asset.id) === assetParam);
+        if (target) openEdit(target);
+      }
     } finally {
       setLoading(false);
     }
@@ -153,7 +171,7 @@ export default function AssetInventoryPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Asset</th>
@@ -166,19 +184,23 @@ export default function AssetInventoryPage() {
           <tbody>
             {assets.map((a) => (
               <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="font-semibold text-ink">{a.name}</div>
-                  <div className="text-xs text-ink-soft">{a.asset_tag}{a.is_byod && " · BYOD"}</div>
+                <td className="px-5 py-3.5" data-label="Asset">
+                  <button onClick={() => openEdit(a)} className="text-left">
+                    <div className="font-semibold text-ink hover:text-primary hover:underline">{a.name}</div>
+                    <div className="text-xs text-ink-soft">{a.asset_tag}{a.is_byod && " · BYOD"}</div>
+                  </button>
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{a.category}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{a.assigned_to_detail?.name ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Category">{a.category}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Assigned to">
+                  {a.assigned_to_detail ? <EmployeeLink employee={a.assigned_to_detail} /> : "—"}
+                </td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[a.status]}`}>
                     {a.status}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(a)}
                       aria-label={`Edit ${a.name}`}

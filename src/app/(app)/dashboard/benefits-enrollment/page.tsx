@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   benefitPlansApi,
@@ -256,7 +257,7 @@ export default function BenefitsEnrollmentPage() {
           </button>
         </div>
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
-          <table className="w-full text-left text-sm">
+          <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-3 font-medium">Employee</th>
@@ -269,10 +270,12 @@ export default function BenefitsEnrollmentPage() {
             <tbody>
               {enrollments.map((en) => (
                 <tr key={en.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5 font-semibold text-ink">{en.employee_detail.name}</td>
-                  <td className="px-5 py-3.5 text-ink-soft">{en.plan_detail.name}</td>
-                  <td className="px-5 py-3.5 text-ink-soft">{en.coverage_level}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                    <EmployeeLink employee={en.employee_detail} />
+                  </td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Plan">{en.plan_detail.name}</td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Coverage">{en.coverage_level}</td>
+                  <td className="px-5 py-3.5" data-label="Status">
                     <select
                       value={en.status}
                       onChange={(ev) => updateEnrollmentStatus(en, ev.target.value as EnrollmentStatus)}
@@ -286,7 +289,7 @@ export default function BenefitsEnrollmentPage() {
                     </select>
                   </td>
                   <td className="px-5 py-3.5">
-                    <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => handleDeleteEnrollment(en)}
                         aria-label={`Delete enrollment for ${en.employee_detail.name}`}

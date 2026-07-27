@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, shiftsApi, type Employee, type Shift } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -139,7 +140,7 @@ export default function ShiftSchedulingPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -152,21 +153,16 @@ export default function ShiftSchedulingPage() {
           <tbody>
             {visible.map((s) => (
               <tr key={s.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {s.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{s.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={s.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{s.employee_detail.department || "—"}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{s.date}</td>
-                <td className="px-5 py-3.5 text-ink-soft">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Department">{s.employee_detail.department || "—"}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Date">{s.date}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Shift">
                   {s.start_time}–{s.end_time}
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(s)}
                       aria-label={`Edit shift for ${s.employee_detail.name}`}

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { appraisalsApi, getEmployeeScore, type Appraisal, type AppraisalStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -204,7 +205,7 @@ function AppraisalsPage() {
 
       {view === "scores" ? (
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
-          <table className="w-full text-left text-sm">
+          <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-3 font-medium">Employee</th>
@@ -215,20 +216,15 @@ function AppraisalsPage() {
             <tbody>
               {(scoreRows ?? []).map((row) => (
                 <tr key={row.employee.id} className="border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                        {row.employee.initials}
-                      </span>
-                      <span className="font-semibold text-ink">{row.employee.name}</span>
-                    </div>
+                  <td className="px-5 py-3.5" data-label="Employee">
+                    <EmployeeLink employee={row.employee} />
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5" data-label="Score">
                     <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary">
                       {row.score !== null ? `${row.score}%` : "—"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-xs text-ink-soft">{row.notes}</td>
+                  <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Notes">{row.notes}</td>
                 </tr>
               ))}
             </tbody>
@@ -240,7 +236,7 @@ function AppraisalsPage() {
         </div>
       ) : (
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -253,19 +249,14 @@ function AppraisalsPage() {
           <tbody>
             {appraisals.map((a) => (
               <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {a.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{a.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={a.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{a.period}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Period">{a.period}</td>
+                <td className="px-5 py-3.5" data-label="Rating">
                   <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary">{a.overall_rating}/5</span>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[a.status]}`}>{a.status}</span>
                 </td>
                 <td className="px-5 py-3.5">
@@ -278,10 +269,10 @@ function AppraisalsPage() {
                     >
                       <Sparkles className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => openEdit(a)} aria-label={`Edit appraisal for ${a.employee_detail.name}`} className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-cream-dim hover:text-ink group-hover:opacity-100">
+                    <button onClick={() => openEdit(a)} aria-label={`Edit appraisal for ${a.employee_detail.name}`} className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-cream-dim hover:text-ink group-hover:opacity-100">
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => handleDelete(a)} aria-label={`Delete appraisal for ${a.employee_detail.name}`} className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100">
+                    <button onClick={() => handleDelete(a)} aria-label={`Delete appraisal for ${a.employee_detail.name}`} className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>

@@ -275,3 +275,63 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Responsive data tables — every dashboard table gets the `eh-table` class
+   instead of a bare `<table>`. Above `sm` it's a normal table; below it, the
+   header row hides and each `<tr>` becomes a self-contained block ("card")
+   with its cells stacked as label/value rows (the label comes from the
+   cell's `data-label` attribute) — no horizontal scrolling, and nothing
+   gets silently clipped off the right edge of a phone screen. A cell with
+   no `data-label` (the row-actions cell) right-aligns its content instead
+   of showing a label. */
+@media (max-width: 639.98px) {
+  .eh-table thead {
+    display: none;
+  }
+
+  .eh-table,
+  .eh-table tbody,
+  .eh-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .eh-table tr {
+    border-bottom: 1px solid var(--line);
+    padding: 0.625rem 0;
+  }
+
+  .eh-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .eh-table td {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.3rem 0 !important;
+    border: none !important;
+  }
+
+  .eh-table td:not([data-label]) {
+    justify-content: flex-end;
+  }
+
+  .eh-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+  }
+
+  /* Action-cell buttons are normally revealed on row hover, which doesn't
+     exist on touch — always show them on mobile instead of gating on
+     `:hover`. */
+  .eh-table .eh-row-actions {
+    opacity: 1 !important;
+  }
+}

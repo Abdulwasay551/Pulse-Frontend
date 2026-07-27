@@ -141,7 +141,7 @@ export default function PayrollPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Run</th>
@@ -154,10 +154,10 @@ export default function PayrollPage() {
           <tbody>
             {payrollRuns.map((p) => (
               <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{p.period}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{p.contractors}</td>
-                <td className="px-5 py-3.5 font-semibold text-ink">{formatCurrency(Number(p.amount), p.currency)}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Run">{p.period}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Contractors">{p.contractors}</td>
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Amount">{formatCurrency(Number(p.amount), p.currency)}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[p.status]}`}
                   >
@@ -165,7 +165,7 @@ export default function PayrollPage() {
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(p)}
                       aria-label={`Edit ${p.period}`}

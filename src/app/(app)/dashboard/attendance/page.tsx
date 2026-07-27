@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { attendanceRecordsApi, employeesApi, type AttendanceRecord, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -158,7 +159,7 @@ function AttendancePage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -172,18 +173,13 @@ function AttendancePage() {
           <tbody>
             {visible.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {r.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{r.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={r.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{r.date}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{r.clock_in ?? "—"}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{r.clock_out ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Date">{r.date}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Clock in">{r.clock_in ?? "—"}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Clock out">{r.clock_out ?? "—"}</td>
+                <td className="px-5 py-3.5" data-label="Overtime">
                   {Number(r.overtime_hours) > 0 ? (
                     <span className="rounded-full bg-amber-soft px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap text-amber">
                       {r.overtime_hours}h
@@ -193,7 +189,7 @@ function AttendancePage() {
                   )}
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(r)}
                       aria-label={`Edit record for ${r.employee_detail.name}`}

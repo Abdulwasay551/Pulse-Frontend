@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CandidateLink from "@/components/dashboard/CandidateLink";
 import {
   backgroundChecksApi,
   candidatesApi,
@@ -134,7 +135,7 @@ export default function BackgroundChecksPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -148,30 +149,25 @@ export default function BackgroundChecksPage() {
           <tbody>
             {checks.map((b) => (
               <tr key={b.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {b.candidate_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{b.candidate_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Candidate">
+                  <CandidateLink candidate={b.candidate_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{b.check_type}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Check type">{b.check_type}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[b.status]}`}
                   >
                     {b.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Initiated">
                   {b.initiated_at ? new Date(b.initiated_at).toLocaleDateString() : "—"}
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Completed">
                   {b.completed_at ? new Date(b.completed_at).toLocaleDateString() : "—"}
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(b)}
                       aria-label={`Edit check for ${b.candidate_detail.name}`}

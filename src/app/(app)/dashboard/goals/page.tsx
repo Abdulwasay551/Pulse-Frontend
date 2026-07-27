@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { goalsApi, type Goal, type GoalStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -126,7 +127,7 @@ export default function GoalsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -140,17 +141,12 @@ export default function GoalsPage() {
           <tbody>
             {goals.map((g) => (
               <tr key={g.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {g.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{g.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={g.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink">{g.title}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{g.target_date ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink" data-label="Goal">{g.title}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Target date">{g.target_date ?? "—"}</td>
+                <td className="px-5 py-3.5" data-label="Progress">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-24 overflow-hidden rounded-full bg-cream-dim">
                       <div className="h-full rounded-full bg-primary" style={{ width: `${g.progress}%` }} />
@@ -158,13 +154,13 @@ export default function GoalsPage() {
                     <span className="text-xs text-ink-soft">{g.progress}%</span>
                   </div>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[g.status]}`}>
                     {g.status}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button onClick={() => openEdit(g)} aria-label={`Edit ${g.title}`} className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink">
                       <Pencil className="h-3.5 w-3.5" />
                     </button>

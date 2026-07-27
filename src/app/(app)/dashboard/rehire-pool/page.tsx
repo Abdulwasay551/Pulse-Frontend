@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Repeat } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CandidateLink from "@/components/dashboard/CandidateLink";
 import { offboardingsApi, type Offboarding } from "@/lib/recruit-api";
 
 const inputClass =
@@ -69,7 +70,7 @@ export default function RehirePoolPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -82,20 +83,12 @@ export default function RehirePoolPage() {
           <tbody>
             {alumni.map((o) => (
               <tr key={o.id} className="border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {o.candidate_detail.initials}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold text-ink">{o.candidate_detail.name}</div>
-                      <div className="truncate text-xs text-ink-soft">{o.candidate_detail.role}</div>
-                    </div>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Candidate">
+                  <CandidateLink candidate={o.candidate_detail} subtitle={o.candidate_detail.role} />
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{o.last_working_day}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{o.reason || "—"}</td>
-                <td className="max-w-xs px-5 py-3.5 text-xs text-ink-soft">
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Last working day">{o.last_working_day}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Reason">{o.reason || "—"}</td>
+                <td className="max-w-xs px-5 py-3.5 text-xs text-ink-soft" data-label="Notes">
                   <span className="line-clamp-2">{o.rehire_notes || "—"}</span>
                 </td>
                 <td className="px-5 py-3.5">

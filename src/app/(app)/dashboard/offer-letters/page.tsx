@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CandidateLink from "@/components/dashboard/CandidateLink";
 import {
   candidatesApi,
   offerLettersApi,
@@ -154,7 +155,7 @@ export default function OfferLettersPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -168,18 +169,13 @@ export default function OfferLettersPage() {
           <tbody>
             {offers.map((o) => (
               <tr key={o.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {o.candidate_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{o.candidate_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Candidate">
+                  <CandidateLink candidate={o.candidate_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{o.job_title}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{o.salary ?? "—"}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{o.start_date ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Job title">{o.job_title}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Salary">{o.salary ?? "—"}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Start date">{o.start_date ?? "—"}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[o.status]}`}
                   >
@@ -187,7 +183,7 @@ export default function OfferLettersPage() {
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(o)}
                       aria-label={`Edit offer for ${o.candidate_detail.name}`}

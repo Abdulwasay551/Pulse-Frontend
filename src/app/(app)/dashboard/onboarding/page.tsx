@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CandidateLink from "@/components/dashboard/CandidateLink";
 import {
   candidatesApi,
   onboardingsApi,
@@ -363,7 +364,7 @@ function CategoryCrossSection({
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -376,17 +377,12 @@ function CategoryCrossSection({
           <tbody>
             {rows.map(({ task, onboarding }) => (
               <tr key={task.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10.5px] font-bold text-primary">
-                      {onboarding.candidate_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{onboarding.candidate_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Candidate">
+                  <CandidateLink candidate={onboarding.candidate_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink">{task.title}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{task.due_date ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink" data-label="Task">{task.title}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Due">{task.due_date ?? "—"}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <button
                     onClick={() => cycleTaskStatus(task.id, task.status)}
                     className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[task.status]}`}
@@ -398,7 +394,7 @@ function CategoryCrossSection({
                   <button
                     onClick={() => removeTask(task.id)}
                     aria-label={`Remove task ${task.title}`}
-                    className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                    className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

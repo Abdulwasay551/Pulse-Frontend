@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import CandidateLink from "@/components/dashboard/CandidateLink";
 import { candidatesApi, screenCandidate, type Candidate } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -64,7 +65,7 @@ export default function AiResumeScreeningPage() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -79,26 +80,26 @@ export default function AiResumeScreeningPage() {
               const canScreen = !!c.requisition && !!c.resume_text;
               return (
                 <tr key={c.id} className="border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                        {c.initials}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="truncate font-semibold text-ink">{c.name}</div>
-                        <div className="truncate text-xs text-ink-soft">{c.role}</div>
-                      </div>
-                    </div>
+                  <td className="px-5 py-3.5" data-label="Candidate">
+                    <CandidateLink candidate={c} subtitle={c.role} />
                   </td>
-                  <td className="px-5 py-3.5 text-ink-soft">{c.requisition_title ?? "—"}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Requisition">
+                    {c.requisition_title ? (
+                      <Link href="/dashboard/requisitions" className="hover:text-primary hover:underline">
+                        {c.requisition_title}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5" data-label="Score">
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${scoreTone(c.ai_score)}`}
                     >
                       {c.ai_score !== null ? `${c.ai_score}%` : "Not scored"}
                     </span>
                   </td>
-                  <td className="max-w-xs px-5 py-3.5 text-xs text-ink-soft">
+                  <td className="max-w-xs px-5 py-3.5 text-xs text-ink-soft" data-label="Notes">
                     <span className="line-clamp-2">{c.ai_score_notes || "—"}</span>
                   </td>
                   <td className="px-5 py-3.5 text-right">

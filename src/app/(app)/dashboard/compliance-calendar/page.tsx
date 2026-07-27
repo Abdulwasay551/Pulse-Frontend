@@ -123,7 +123,7 @@ export default function ComplianceCalendarPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Event</th>
@@ -137,17 +137,17 @@ export default function ComplianceCalendarPage() {
           <tbody>
             {events.map((ev) => (
               <tr key={ev.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{ev.title}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{ev.country}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{ev.category}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{ev.due_date}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Event">{ev.title}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Country">{ev.country}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Category">{ev.category}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Due date">{ev.due_date}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[ev.calendar_status]}`}>
                     {ev.calendar_status}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     {!ev.completed && (
                       <button
                         onClick={() => toggleCompleted(ev)}

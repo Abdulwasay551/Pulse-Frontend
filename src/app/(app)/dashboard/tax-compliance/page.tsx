@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   taxProfilesApi,
@@ -145,7 +146,7 @@ export default function TaxCompliancePage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -159,19 +160,21 @@ export default function TaxCompliancePage() {
           <tbody>
             {profiles.map((p) => (
               <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{p.employee_detail.name}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{p.country}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{p.filing_status}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                  <EmployeeLink employee={p.employee_detail} />
+                </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Country">{p.country}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Filing status">{p.filing_status}</td>
+                <td className="px-5 py-3.5" data-label="Compliance">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${complianceTone[p.compliance_status]}`}
                   >
                     {p.compliance_status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{p.last_reviewed ?? "—"}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Last reviewed">{p.last_reviewed ?? "—"}</td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(p)}
                       aria-label={`Edit tax profile for ${p.employee_detail.name}`}

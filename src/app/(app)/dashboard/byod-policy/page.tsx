@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { assetsApi, byodComplianceApi, type Asset, type BYODCompliance, type BYODComplianceStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -126,7 +127,7 @@ export default function ByodPolicyPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -141,18 +142,24 @@ export default function ByodPolicyPage() {
           <tbody>
             {checks.map((c) => (
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{c.employee_detail.name}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{c.asset_tag}</td>
-                <td className="px-5 py-3.5">{c.encryption_enabled ? "✓" : "—"}</td>
-                <td className="px-5 py-3.5">{c.antivirus_installed ? "✓" : "—"}</td>
-                <td className="px-5 py-3.5">{c.passcode_enabled ? "✓" : "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                  <EmployeeLink employee={c.employee_detail} />
+                </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Device">
+                  <Link href={`/dashboard/asset-inventory?asset=${c.asset}`} className="hover:text-primary hover:underline">
+                    {c.asset_tag}
+                  </Link>
+                </td>
+                <td className="px-5 py-3.5" data-label="Encryption">{c.encryption_enabled ? "✓" : "—"}</td>
+                <td className="px-5 py-3.5" data-label="Antivirus">{c.antivirus_installed ? "✓" : "—"}</td>
+                <td className="px-5 py-3.5" data-label="Passcode">{c.passcode_enabled ? "✓" : "—"}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${complianceTone[c.compliance_status]}`}>
                     {c.compliance_status}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleDelete(c)}
                       aria-label={`Delete compliance check for ${c.employee_detail.name}`}

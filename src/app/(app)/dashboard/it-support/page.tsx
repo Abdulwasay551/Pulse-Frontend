@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, supportTicketsApi, type Asset, type SupportTicket, type TicketCategory, type TicketPriority, type TicketStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
@@ -126,7 +128,7 @@ export default function ItSupportPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Ticket</th>
@@ -139,16 +141,25 @@ export default function ItSupportPage() {
           <tbody>
             {tickets.map((t) => (
               <tr key={t.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Ticket">
                   <div className="font-semibold text-ink">{t.subject}</div>
                   <div className="text-xs text-ink-soft">
                     {t.category}
-                    {t.asset_tag && ` · ${t.asset_tag}`}
+                    {t.asset_tag && (
+                      <>
+                        {" · "}
+                        <Link href={`/dashboard/asset-inventory?asset=${t.asset}`} className="hover:text-primary hover:underline">
+                          {t.asset_tag}
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{t.employee_detail.name}</td>
-                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[t.priority]}`}>{t.priority}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Employee">
+                  <EmployeeLink employee={t.employee_detail} />
+                </td>
+                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[t.priority]}`} data-label="Priority">{t.priority}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <select
                     value={t.status}
                     onChange={(e) => updateStatus(t, e.target.value as TicketStatus)}
@@ -162,7 +173,7 @@ export default function ItSupportPage() {
                   </select>
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleDelete(t)}
                       aria-label={`Delete ticket ${t.subject}`}

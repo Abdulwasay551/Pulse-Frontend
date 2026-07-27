@@ -1,11 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { FileText, KeyRound, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import {
   deleteEmployeeDocument,
   employeesApi,
@@ -96,6 +98,8 @@ function EmployeeDatabasePage() {
   });
   const [uploadingFromDocsTab, setUploadingFromDocsTab] = useState(false);
 
+  const autoOpenedRef = useRef(false);
+
   const [loginTarget, setLoginTarget] = useState<Employee | null>(null);
   const [loginMode, setLoginMode] = useState<"invite" | "create">("invite");
   const [loginForm, setLoginForm] = useState({ email: "", username: "", password: "" });
@@ -108,6 +112,15 @@ function EmployeeDatabasePage() {
       const [emps, docs] = await withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)]));
       setEmployees(emps);
       setDocuments(docs);
+      const employeeParam = searchParams.get("employee");
+      if (!autoOpenedRef.current && employeeParam) {
+        autoOpenedRef.current = true;
+        const target = emps.find((e) => String(e.id) === employeeParam);
+        if (target) {
+          setView("employees");
+          openEdit(target);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -336,7 +349,7 @@ function EmployeeDatabasePage() {
 
       {view === "documents" ? (
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
-          <table className="w-full text-left text-sm">
+          <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-3 font-medium">Document</th>
@@ -349,7 +362,7 @@ function EmployeeDatabasePage() {
             <tbody>
               {documents.map((d) => (
                 <tr key={d.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5" data-label="Document">
                     <a
                       href={d.file}
                       target="_blank"
@@ -360,11 +373,13 @@ function EmployeeDatabasePage() {
                       {d.title}
                     </a>
                   </td>
-                  <td className="px-5 py-3.5 text-ink-soft">{d.employee_detail.name}</td>
-                  <td className="px-5 py-3.5 text-ink-soft">{d.doc_type}</td>
-                  <td className="px-5 py-3.5 text-xs text-ink-soft">{d.uploaded_at.slice(0, 10)}</td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Employee">
+                    <EmployeeLink employee={d.employee_detail} />
+                  </td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Type">{d.doc_type}</td>
+                  <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Uploaded">{d.uploaded_at.slice(0, 10)}</td>
                   <td className="px-5 py-3.5">
-                    <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => handleDeleteFromDocsTab(d)}
                         aria-label={`Delete ${d.title}`}
@@ -385,7 +400,7 @@ function EmployeeDatabasePage() {
         </div>
       ) : (
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -399,29 +414,37 @@ function EmployeeDatabasePage() {
           <tbody>
             {employees.map((e) => (
               <tr key={e.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <button onClick={() => openEdit(e)} className="flex items-center gap-3 text-left">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
                       {e.initials}
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-ink">{e.name}</div>
+                      <div className="truncate font-semibold text-ink hover:text-primary hover:underline">{e.name}</div>
                       <div className="truncate text-xs text-ink-soft">{e.job_title || "—"}</div>
                     </div>
-                  </div>
+                  </button>
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{e.department || "—"}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{e.manager_name ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Department">{e.department || "—"}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Manager">
+                  {e.manager && e.manager_name ? (
+                    <Link href={`/dashboard/employee-database?employee=${e.manager}`} className="hover:text-primary hover:underline">
+                      {e.manager_name}
+                    </Link>
+                  ) : (
+                    (e.manager_name ?? "—")
+                  )}
+                </td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[e.status]}`}
                   >
                     {e.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{e.hire_date}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Hired">{e.hire_date}</td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openLogin(e)}
                       aria-label={`Manage login for ${e.name}`}

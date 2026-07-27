@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -154,7 +155,7 @@ export default function RequisitionsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Role</th>
@@ -169,25 +170,31 @@ export default function RequisitionsPage() {
           <tbody>
             {requisitions.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Role">
                   <div className="font-semibold text-ink">{r.title}</div>
-                  <div className="text-xs text-ink-soft">{r.client_name}</div>
+                  <Link href="/dashboard/clients" className="text-xs text-ink-soft hover:text-primary hover:underline">
+                    {r.client_name}
+                  </Link>
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{r.recruiter || "—"}</td>
-                <td className="px-5 py-3.5 text-ink">{r.candidates_count}</td>
-                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[r.priority]}`}>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Recruiter">{r.recruiter || "—"}</td>
+                <td className="px-5 py-3.5 text-ink" data-label="Candidates">
+                  <Link href="/dashboard/candidates" className="hover:text-primary hover:underline">
+                    {r.candidates_count}
+                  </Link>
+                </td>
+                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[r.priority]}`} data-label="Priority">
                   {r.priority}
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[r.status]}`}
                   >
                     {r.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{r.posted_at}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Posted">{r.posted_at}</td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(r)}
                       aria-label={`Edit ${r.title}`}

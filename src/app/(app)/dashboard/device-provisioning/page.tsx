@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Laptop, UserCheck, UserX } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import AssetLink from "@/components/dashboard/AssetLink";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, type Asset } from "@/lib/it-assets-api";
 
@@ -70,7 +72,7 @@ export default function DeviceProvisioningPage() {
       <div className="mb-8">
         <h2 className="mb-4 font-display text-lg font-bold text-ink">Available to provision</h2>
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
-          <table className="w-full text-left text-sm">
+          <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-3 font-medium">Asset</th>
@@ -81,13 +83,13 @@ export default function DeviceProvisioningPage() {
             <tbody>
               {available.map((a) => (
                 <tr key={a.id} className="border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2 font-semibold text-ink">
-                      <Laptop className="h-4 w-4 text-ink-soft" /> {a.name}
+                  <td className="px-5 py-3.5" data-label="Asset">
+                    <div className="flex items-center gap-2">
+                      <Laptop className="h-4 w-4 shrink-0 text-ink-soft" />
+                      <AssetLink asset={a} />
                     </div>
-                    <div className="text-xs text-ink-soft">{a.asset_tag}</div>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5" data-label="Assign to">
                     <select
                       value={assignTarget[a.id] ?? ""}
                       onChange={(e) => setAssignTarget({ ...assignTarget, [a.id]: e.target.value })}
@@ -123,7 +125,7 @@ export default function DeviceProvisioningPage() {
       <div>
         <h2 className="mb-4 font-display text-lg font-bold text-ink">Currently provisioned</h2>
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
-          <table className="w-full text-left text-sm">
+          <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-3 font-medium">Asset</th>
@@ -135,12 +137,13 @@ export default function DeviceProvisioningPage() {
             <tbody>
               {assigned.map((a) => (
                 <tr key={a.id} className="border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5">
-                    <div className="font-semibold text-ink">{a.name}</div>
-                    <div className="text-xs text-ink-soft">{a.asset_tag}</div>
+                  <td className="px-5 py-3.5" data-label="Asset">
+                    <AssetLink asset={a} />
                   </td>
-                  <td className="px-5 py-3.5 text-ink-soft">{a.assigned_to_detail?.name}</td>
-                  <td className="px-5 py-3.5 text-xs text-ink-soft">{a.assigned_at ?? "—"}</td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Assigned to">
+                    {a.assigned_to_detail && <EmployeeLink employee={a.assigned_to_detail} />}
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Since">{a.assigned_at ?? "—"}</td>
                   <td className="px-5 py-3.5">
                     <button
                       onClick={() => unassign(a)}

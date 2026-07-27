@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BadgeCheck, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { bankAccountsApi, type BankAccount, type BankAccountType } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
@@ -140,7 +141,7 @@ export default function DirectDepositPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -154,14 +155,16 @@ export default function DirectDepositPage() {
           <tbody>
             {accounts.map((a) => (
               <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink">{a.employee_detail.name}</td>
-                <td className="px-5 py-3.5 text-ink-soft">{a.bank_name}</td>
-                <td className="px-5 py-3.5 text-ink-soft">•••• {a.account_number_last4}</td>
-                <td className="px-5 py-3.5 text-ink-soft">
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                  <EmployeeLink employee={a.employee_detail} />
+                </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Bank">{a.bank_name}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Account">•••• {a.account_number_last4}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Type">
                   {a.account_type}
                   {a.is_primary && <span className="ml-1.5 text-[10px] font-semibold text-primary">Primary</span>}
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" data-label="Status">
                   {a.verified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary">
                       <BadgeCheck className="h-3 w-3" /> Verified
@@ -173,7 +176,7 @@ export default function DirectDepositPage() {
                   )}
                 </td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(a)}
                       aria-label={`Edit bank account for ${a.employee_detail.name}`}

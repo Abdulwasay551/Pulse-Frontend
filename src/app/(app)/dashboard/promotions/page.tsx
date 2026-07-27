@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import {
   employeesApi,
   promotionRequestsApi,
@@ -126,7 +127,7 @@ export default function PromotionsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
@@ -140,24 +141,19 @@ export default function PromotionsPage() {
           <tbody>
             {requests.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {r.employee_detail.initials}
-                    </span>
-                    <span className="font-semibold text-ink">{r.employee_detail.name}</span>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Employee">
+                  <EmployeeLink employee={r.employee_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="From">
                   {r.from_title || "—"}
                   {r.from_department && <div className="text-xs">{r.from_department}</div>}
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="To">
                   {r.to_title || "—"}
                   {r.to_department && <div className="text-xs">{r.to_department}</div>}
                 </td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{r.effective_date ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Effective">{r.effective_date ?? "—"}</td>
+                <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[r.status]}`}
                   >
@@ -187,7 +183,7 @@ export default function PromotionsPage() {
                     <button
                       onClick={() => handleDelete(r)}
                       aria-label={`Delete promotion request for ${r.employee_detail.name}`}
-                      className="rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                      className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

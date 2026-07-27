@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import CandidateLink from "@/components/dashboard/CandidateLink";
+import Link from "next/link";
 import {
   candidatesApi,
   candidatesCsv,
@@ -54,7 +57,17 @@ const emptyForm: FormState = {
   source: "Sourced",
 };
 
-export default function CandidatesPage() {
+export default function CandidatesPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <CandidatesPage />
+    </Suspense>
+  );
+}
+
+function CandidatesPage() {
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
   const { withAuth } = useAuth();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -76,6 +89,12 @@ export default function CandidatesPage() {
       setCandidates(c);
       setClients(cl);
       setRequisitions(r);
+      const candidateParam = searchParams.get("candidate");
+      if (!autoOpenedRef.current && candidateParam) {
+        autoOpenedRef.current = true;
+        const target = c.find((cand) => String(cand.id) === candidateParam);
+        if (target) openEdit(target);
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +199,7 @@ export default function CandidatesPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="w-full text-left text-sm">
+        <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
@@ -194,29 +213,29 @@ export default function CandidatesPage() {
           <tbody>
             {filtered.map((c) => (
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
-                      {c.initials}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold text-ink">{c.name}</div>
-                      <div className="truncate text-xs text-ink-soft">{c.role}</div>
-                    </div>
-                  </div>
+                <td className="px-5 py-3.5" data-label="Candidate">
+                  <CandidateLink candidate={c} subtitle={c.role} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{c.client_name ?? "—"}</td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Client">
+                  {c.client && c.client_name ? (
+                    <Link href="/dashboard/clients" className="hover:text-primary hover:underline">
+                      {c.client_name}
+                    </Link>
+                  ) : (
+                    (c.client_name ?? "—")
+                  )}
+                </td>
+                <td className="px-5 py-3.5" data-label="Stage">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${stageTone[c.stage]}`}
                   >
                     {c.stage}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft">{c.source}</td>
-                <td className="px-5 py-3.5 text-xs text-ink-soft">{c.applied_at}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Source">{c.source}</td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Applied">{c.applied_at}</td>
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(c)}
                       aria-label={`Edit ${c.name}`}
