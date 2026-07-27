@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { FileText, KeyRound, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -9,6 +10,7 @@ import {
   deleteEmployeeDocument,
   employeesApi,
   employeesCsv,
+  listEmployeeDocuments,
   uploadEmployeeDocument,
   type Employee,
   type EmployeeDocument,
@@ -16,6 +18,8 @@ import {
 } from "@/lib/people-api";
 import { createEmployeeAccount, sendEmployeeInvite } from "@/lib/role-api";
 import { ApiError } from "@/lib/auth-api";
+
+type ViewMode = "employees" | "documents";
 
 const EMPLOYEE_REQUIRED_FIELDS = ["name"];
 
@@ -54,9 +58,20 @@ const emptyForm: FormState = {
   status: "Active",
 };
 
-export default function EmployeeDatabasePage() {
+export default function EmployeeDatabasePageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <EmployeeDatabasePage />
+    </Suspense>
+  );
+}
+
+function EmployeeDatabasePage() {
+  const searchParams = useSearchParams();
+  const [view, setView] = useState<ViewMode>(searchParams.get("view") === "documents" ? "documents" : "employees");
   const { withAuth } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState<Employee | null>(null);
@@ -72,6 +87,15 @@ export default function EmployeeDatabasePage() {
   });
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadForm, setUploadForm] = useState<{ employee: string; title: string; doc_type: EmployeeDocument["doc_type"]; file: File | null }>({
+    employee: "",
+    title: "",
+    doc_type: "Other",
+    file: null,
+  });
+  const [uploadingFromDocsTab, setUploadingFromDocsTab] = useState(false);
+
   const [loginTarget, setLoginTarget] = useState<Employee | null>(null);
   const [loginMode, setLoginMode] = useState<"invite" | "create">("invite");
   const [loginForm, setLoginForm] = useState({ email: "", username: "", password: "" });
@@ -81,8 +105,9 @@ export default function EmployeeDatabasePage() {
 
   async function load() {
     try {
-      const data = await withAuth((token) => employeesApi.list(token));
-      setEmployees(data);
+      const [emps, docs] = await withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)]));
+      setEmployees(emps);
+      setDocuments(docs);
     } finally {
       setLoading(false);
     }
@@ -92,6 +117,36 @@ export default function EmployeeDatabasePage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function openUploadFromDocsTab() {
+    setUploadForm({ employee: employees[0] ? String(employees[0].id) : "", title: "", doc_type: "Other", file: null });
+    setShowUploadForm(true);
+  }
+
+  async function handleUploadFromDocsTab() {
+    if (!uploadForm.employee || !uploadForm.file || !uploadForm.title) return;
+    setUploadingFromDocsTab(true);
+    try {
+      await withAuth((token) =>
+        uploadEmployeeDocument(token, {
+          employee: Number(uploadForm.employee),
+          doc_type: uploadForm.doc_type,
+          title: uploadForm.title,
+          file: uploadForm.file!,
+        })
+      );
+      setShowUploadForm(false);
+      await load();
+    } finally {
+      setUploadingFromDocsTab(false);
+    }
+  }
+
+  async function handleDeleteFromDocsTab(doc: EmployeeDocument) {
+    if (!confirm(`Delete "${doc.title}"?`)) return;
+    await withAuth((token) => deleteEmployeeDocument(token, doc.id));
+    await load();
+  }
 
   function openCreate() {
     setEditing(null);
@@ -166,8 +221,9 @@ export default function EmployeeDatabasePage() {
         })
       );
       setDocForm({ title: "", doc_type: "Other", file: null });
-      const updated = await withAuth((token) => employeesApi.list(token));
+      const [updated, docs] = await withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)]));
       setEmployees(updated);
+      setDocuments(docs);
       setEditing(updated.find((e) => e.id === editing.id) ?? null);
     } finally {
       setUploadingDoc(false);
@@ -177,8 +233,9 @@ export default function EmployeeDatabasePage() {
   async function handleDeleteDoc(docId: number) {
     if (!editing) return;
     await withAuth((token) => deleteEmployeeDocument(token, docId));
-    const updated = await withAuth((token) => employeesApi.list(token));
+    const [updated, docs] = await withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)]));
     setEmployees(updated);
+    setDocuments(docs);
     setEditing(updated.find((e) => e.id === editing.id) ?? null);
   }
 
@@ -226,25 +283,107 @@ export default function EmployeeDatabasePage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Employee Database</h1>
-          <p className="mt-1 text-sm text-ink-soft">360° employee profiles — contact info, role, manager, and documents.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            {view === "documents" ? "Document Management" : "Employee Database"}
+          </h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            {view === "documents"
+              ? "Contracts, certifications, and ID proofs — across every employee."
+              : "360° employee profiles — contact info, role, manager, and documents."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <CsvToolbar
-            csv={employeesCsv}
-            resourceLabel="employees"
-            requiredFields={EMPLOYEE_REQUIRED_FIELDS}
-            onImported={load}
-          />
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-          >
-            <Plus className="h-4 w-4" /> New employee
-          </button>
+          {view === "employees" ? (
+            <>
+              <CsvToolbar
+                csv={employeesCsv}
+                resourceLabel="employees"
+                requiredFields={EMPLOYEE_REQUIRED_FIELDS}
+                onImported={load}
+              />
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+              >
+                <Plus className="h-4 w-4" /> New employee
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={openUploadFromDocsTab}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+            >
+              <Upload className="h-4 w-4" /> Upload document
+            </button>
+          )}
         </div>
       </div>
 
+      <div className="mb-6 flex gap-2">
+        <button
+          onClick={() => setView("employees")}
+          className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${view === "employees" ? "bg-primary text-cream" : "bg-card text-ink-soft hover:bg-cream-dim"}`}
+        >
+          Employees
+        </button>
+        <button
+          onClick={() => setView("documents")}
+          className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${view === "documents" ? "bg-primary text-cream" : "bg-card text-ink-soft hover:bg-cream-dim"}`}
+        >
+          Documents
+        </button>
+      </div>
+
+      {view === "documents" ? (
+        <div className="overflow-hidden rounded-2xl border border-line bg-card">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
+                <th className="px-5 py-3 font-medium">Document</th>
+                <th className="px-5 py-3 font-medium">Employee</th>
+                <th className="px-5 py-3 font-medium">Type</th>
+                <th className="px-5 py-3 font-medium">Uploaded</th>
+                <th className="px-5 py-3 font-medium" />
+              </tr>
+            </thead>
+            <tbody>
+              {documents.map((d) => (
+                <tr key={d.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
+                  <td className="px-5 py-3.5">
+                    <a
+                      href={d.file}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 font-semibold text-primary hover:text-primary-dark"
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      {d.title}
+                    </a>
+                  </td>
+                  <td className="px-5 py-3.5 text-ink-soft">{d.employee_detail.name}</td>
+                  <td className="px-5 py-3.5 text-ink-soft">{d.doc_type}</td>
+                  <td className="px-5 py-3.5 text-xs text-ink-soft">{d.uploaded_at.slice(0, 10)}</td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={() => handleDeleteFromDocsTab(d)}
+                        aria-label={`Delete ${d.title}`}
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!loading && documents.length === 0 && (
+            <div className="p-10 text-center text-sm text-ink-soft">No documents uploaded yet.</div>
+          )}
+          {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        </div>
+      ) : (
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="w-full text-left text-sm">
           <thead>
@@ -316,6 +455,7 @@ export default function EmployeeDatabasePage() {
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
       </div>
+      )}
 
       {showForm && (
         <Modal title={editing ? editing.name : "New employee"} onClose={() => setShowForm(false)} wide>
@@ -580,6 +720,66 @@ export default function EmployeeDatabasePage() {
               )}
             </>
           )}
+        </Modal>
+      )}
+
+      {showUploadForm && (
+        <Modal title="Upload document" onClose={() => setShowUploadForm(false)}>
+          <div className="mb-4">
+            <label className={labelClass}>Employee</label>
+            <select
+              required
+              value={uploadForm.employee}
+              onChange={(ev) => setUploadForm({ ...uploadForm, employee: ev.target.value })}
+              className={inputClass}
+            >
+              <option value="">Choose an employee</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className={labelClass}>Title</label>
+            <input
+              value={uploadForm.title}
+              onChange={(ev) => setUploadForm({ ...uploadForm, title: ev.target.value })}
+              className={inputClass}
+            />
+          </div>
+          <div className="mb-4">
+            <label className={labelClass}>Type</label>
+            <select
+              value={uploadForm.doc_type}
+              onChange={(ev) => setUploadForm({ ...uploadForm, doc_type: ev.target.value as EmployeeDocument["doc_type"] })}
+              className={inputClass}
+            >
+              {docTypeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-6">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
+              <Upload className="h-3.5 w-3.5" /> {uploadForm.file ? uploadForm.file.name : "Choose file"}
+              <input
+                type="file"
+                className="hidden"
+                onChange={(ev) => setUploadForm({ ...uploadForm, file: ev.target.files?.[0] ?? null })}
+              />
+            </label>
+          </div>
+          <button
+            onClick={handleUploadFromDocsTab}
+            disabled={uploadingFromDocsTab || !uploadForm.employee || !uploadForm.file || !uploadForm.title}
+            className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+          >
+            {uploadingFromDocsTab ? "Uploading…" : "Upload document"}
+          </button>
         </Modal>
       )}
     </div>

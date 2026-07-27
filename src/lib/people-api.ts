@@ -6,6 +6,7 @@ export type EmployeeStatus = "Active" | "On Leave" | "Terminated";
 export interface EmployeeDocument {
   id: number;
   employee: number;
+  employee_detail: EmployeeLite;
   doc_type: "Contract" | "Certification" | "ID Proof" | "Other";
   title: string;
   file: string;
@@ -70,6 +71,10 @@ export const employeesCsv = csvApi("/people/employees/", "employees.csv");
 
 export function getPeopleDashboardSummary(token: string) {
   return apiFetch<PeopleDashboardSummary>("/people/dashboard-summary/", { method: "GET" }, token);
+}
+
+export function listEmployeeDocuments(token: string) {
+  return apiFetch<EmployeeDocument[]>("/people/employee-documents/", { method: "GET" }, token);
 }
 
 export function uploadEmployeeDocument(token: string, data: EmployeeDocumentWrite) {

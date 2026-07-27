@@ -93,6 +93,7 @@ export interface ModuleDef {
 
 const onboardingHref = (category: string) => `/dashboard/onboarding?category=${encodeURIComponent(category)}`;
 const offboardingHref = (category: string) => `/dashboard/offboarding?category=${encodeURIComponent(category)}`;
+const surveysHref = (kind: string) => `/dashboard/surveys?kind=${encodeURIComponent(kind)}`;
 
 // The single source of truth for every module's three-level feature
 // hierarchy — module (one dashboard) -> sub-module (collapsible section) ->
@@ -161,8 +162,8 @@ export const dashboardModules: ModuleDef[] = [
         label: "Attendance Management",
         icon: Clock,
         features: [
-          { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock, href: "/dashboard/attendance" },
-          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance" },
+          { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock, href: "/dashboard/attendance?view=clock" },
+          { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance?view=overtime" },
           { label: "Shift Scheduling per Department", description: "Per-department shift planning.", icon: CalendarClock, href: "/dashboard/shift-scheduling" },
           { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck, href: "/dashboard/leave-requests" },
         ],
@@ -171,8 +172,8 @@ export const dashboardModules: ModuleDef[] = [
         label: "Employee Engagement",
         icon: Activity,
         features: [
-          { label: "Surveys", description: "Read the room across every team.", icon: Activity, href: "/dashboard/surveys" },
-          { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity, href: "/dashboard/surveys" },
+          { label: "Surveys", description: "Read the room across every team.", icon: Activity, href: surveysHref("Survey") },
+          { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity, href: surveysHref("Pulse Check") },
           { label: "Recognition Programs", description: "Celebrate wins, department by department.", icon: Award, href: "/dashboard/recognition" },
           { label: "Promotion & Transfer Workflows within Department", description: "Structured internal moves.", icon: ArrowLeftRight, href: "/dashboard/promotions" },
         ],
@@ -181,18 +182,18 @@ export const dashboardModules: ModuleDef[] = [
         label: "Employee Records",
         icon: UserSquare,
         features: [
-          { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database" },
+          { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database?view=employees" },
           { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network, href: "/dashboard/org-chart" },
           { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck, href: "/dashboard/employee-self-service" },
-          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText, href: "/dashboard/employee-database" },
+          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText, href: "/dashboard/employee-database?view=documents" },
         ],
       },
       {
         label: "Workforce Dashboard",
         icon: BarChart3,
         features: [
-          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3, href: "/dashboard/people" },
-          { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart, href: "/dashboard/people" },
+          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3, href: "/dashboard/workforce-dashboard?view=forecast" },
+          { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart, href: "/dashboard/workforce-dashboard?view=kpis" },
         ],
       },
     ],
@@ -211,9 +212,9 @@ export const dashboardModules: ModuleDef[] = [
         icon: Target,
         features: [
           { label: "Goal Setting & KPIs", description: "Set and track goals per employee.", icon: Target, href: "/dashboard/goals" },
-          { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star, href: "/dashboard/appraisals" },
-          { label: "Competency Mapping of Employees", description: "Map skills against role expectations.", icon: Layers, href: "/dashboard/competency-mapping" },
-          { label: "Value-Addition / Performance Scoring", description: "Powered by EVO-AI.", icon: Sparkles, href: "/dashboard/appraisals" },
+          { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star, href: "/dashboard/appraisals?view=appraisals" },
+          { label: "Competency Mapping of Employees", description: "Map skills against role expectations.", icon: Layers, href: "/dashboard/competency-mapping?view=employees" },
+          { label: "Value-Addition / Performance Scoring", description: "Powered by EVO-AI.", icon: Sparkles, href: "/dashboard/appraisals?view=scores" },
         ],
       },
       {
@@ -222,7 +223,7 @@ export const dashboardModules: ModuleDef[] = [
         features: [
           { label: "Training & Learning Management System (LMS)", description: "Training and course delivery.", icon: GraduationCap, href: "/dashboard/learning" },
           { label: "Career Development Paths", description: "Mapped per department hierarchy.", icon: Map, href: "/dashboard/career-paths" },
-          { label: "Skills & Competency Mapping", description: "A living map of who can do what.", icon: Grid3x3, href: "/dashboard/competency-mapping" },
+          { label: "Skills & Competency Mapping", description: "A living map of who can do what.", icon: Grid3x3, href: "/dashboard/competency-mapping?view=skills" },
           { label: "Succession Planning / 9-Box Grid", description: "Succession candidates, mapped.", icon: Grid3x3, href: "/dashboard/succession-planning" },
         ],
       },

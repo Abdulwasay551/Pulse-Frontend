@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -31,12 +32,22 @@ function emptyForm(employees: Employee[]): FormState {
   };
 }
 
-export default function AttendancePage() {
+export default function AttendancePageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <AttendancePage />
+    </Suspense>
+  );
+}
+
+function AttendancePage() {
+  const searchParams = useSearchParams();
+  const initialOvertime = searchParams.get("view") === "overtime";
   const { withAuth } = useAuth();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showOvertimeOnly, setShowOvertimeOnly] = useState(false);
+  const [showOvertimeOnly, setShowOvertimeOnly] = useState(initialOvertime);
 
   const [editing, setEditing] = useState<AttendanceRecord | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -119,8 +130,14 @@ export default function AttendancePage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Clock-in / Clock-out Tracking</h1>
-          <p className="mt-1 text-sm text-ink-soft">Daily attendance per employee, with overtime hours tracked.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            {showOvertimeOnly ? "Overtime Tracking" : "Clock-in / Clock-out Tracking"}
+          </h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            {showOvertimeOnly
+              ? "Flag and approve overtime hours across every employee."
+              : "Daily attendance per employee, with overtime hours tracked."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button

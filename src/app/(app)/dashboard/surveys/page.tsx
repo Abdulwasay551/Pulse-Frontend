@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -19,7 +20,18 @@ const inputClass =
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 const kindOptions: SurveyKind[] = ["Survey", "Pulse Check"];
 
-export default function SurveysPage() {
+export default function SurveysPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <SurveysPage />
+    </Suspense>
+  );
+}
+
+function SurveysPage() {
+  const searchParams = useSearchParams();
+  const kindParam = searchParams.get("kind");
+  const activeKind: SurveyKind | null = kindParam === "Survey" || kindParam === "Pulse Check" ? kindParam : null;
   const { withAuth } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -27,7 +39,7 @@ export default function SurveysPage() {
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ kind: "Survey" as SurveyKind, title: "", question: "" });
+  const [form, setForm] = useState({ kind: (activeKind ?? "Survey") as SurveyKind, title: "", question: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,9 +63,10 @@ export default function SurveysPage() {
   }, []);
 
   const active = surveys.find((s) => s.id === activeId) ?? null;
+  const visible = activeKind ? surveys.filter((s) => s.kind === activeKind) : surveys;
 
   function openCreate() {
-    setForm({ kind: "Survey", title: "", question: "" });
+    setForm({ kind: activeKind ?? "Survey", title: "", question: "" });
     setError(null);
     setShowForm(true);
   }
@@ -223,26 +236,34 @@ export default function SurveysPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Surveys & Pulse Checks</h1>
-          <p className="mt-1 text-sm text-ink-soft">Read the room across every team.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            {activeKind === "Pulse Check" ? "Pulse Checks" : activeKind === "Survey" ? "Surveys" : "Surveys & Pulse Checks"}
+          </h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            {activeKind === "Pulse Check"
+              ? "Lightweight, frequent sentiment checks."
+              : activeKind === "Survey"
+                ? "Read the room across every team."
+                : "Read the room across every team."}
+          </p>
         </div>
         <button
           onClick={openCreate}
           className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
         >
-          <Plus className="h-4 w-4" /> New survey
+          <Plus className="h-4 w-4" /> New {activeKind === "Pulse Check" ? "pulse check" : "survey"}
         </button>
       </div>
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : surveys.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
-          No surveys yet.
+          {activeKind ? `No ${activeKind === "Pulse Check" ? "pulse checks" : "surveys"} yet.` : "No surveys yet."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {surveys.map((s) => (
+          {visible.map((s) => (
             <div
               key={s.id}
               onClick={() => setActiveId(s.id)}
