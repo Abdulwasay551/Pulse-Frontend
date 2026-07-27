@@ -15,6 +15,7 @@ const statusTone: Record<PayrollStatus, string> = {
 };
 
 const statusOptions: PayrollStatus[] = ["Reconciled", "Needs review", "Processing"];
+const currencyOptions = ["USD", "EUR", "GBP", "CAD", "AUD", "INR"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -24,13 +25,18 @@ interface FormState {
   period: string;
   contractors: string;
   amount: string;
+  currency: string;
   status: PayrollStatus;
 }
 
-const emptyForm: FormState = { period: "", contractors: "0", amount: "0", status: "Processing" };
+const emptyForm: FormState = { period: "", contractors: "0", amount: "0", currency: "USD", status: "Processing" };
 
-function formatCurrency(amount: number) {
-  return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+function formatCurrency(amount: number, currency = "USD") {
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  }
 }
 
 export default function PayrollPage() {
@@ -71,7 +77,7 @@ export default function PayrollPage() {
 
   function openEdit(p: PayrollRun) {
     setEditing(p);
-    setForm({ period: p.period, contractors: String(p.contractors), amount: p.amount, status: p.status });
+    setForm({ period: p.period, contractors: String(p.contractors), amount: p.amount, currency: p.currency, status: p.status });
     setError(null);
     setShowForm(true);
   }
@@ -84,6 +90,7 @@ export default function PayrollPage() {
       period: form.period,
       contractors: Number(form.contractors),
       amount: form.amount,
+      currency: form.currency,
       status: form.status,
     };
     try {
@@ -149,7 +156,7 @@ export default function PayrollPage() {
               <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5 font-semibold text-ink">{p.period}</td>
                 <td className="px-5 py-3.5 text-ink-soft">{p.contractors}</td>
-                <td className="px-5 py-3.5 font-semibold text-ink">{formatCurrency(Number(p.amount))}</td>
+                <td className="px-5 py-3.5 font-semibold text-ink">{formatCurrency(Number(p.amount), p.currency)}</td>
                 <td className="px-5 py-3.5">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[p.status]}`}
@@ -215,7 +222,7 @@ export default function PayrollPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Amount ($)</label>
+                <label className={labelClass}>Amount</label>
                 <input
                   type="number"
                   min="0"
@@ -225,6 +232,20 @@ export default function PayrollPage() {
                   className={inputClass}
                 />
               </div>
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Currency</label>
+              <select
+                value={form.currency}
+                onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                className={inputClass}
+              >
+                {currencyOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-6">
               <label className={labelClass}>Status</label>
