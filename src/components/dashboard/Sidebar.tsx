@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronDown, ChevronsLeft, ChevronsRight, LayoutGrid, X } from "lucide-react";
 import Logo from "@/components/site/Logo";
+import SidebarHoverLabel from "@/components/dashboard/SidebarHoverLabel";
 import { useAuth } from "@/lib/auth-context";
 import { featureHref, findActiveModuleForRoute, hrefPathname, type ModuleDef } from "@/lib/dashboard-modules";
 
@@ -39,6 +40,26 @@ export default function Sidebar({
   // open — clicking still pins/unpins independently of hover. Shared by
   // both the expanded (inline list) and collapsed (flyout) rail.
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  // Touch devices fire a synthetic mouseenter on first tap but never a
+  // matching mouseleave, so hover-preview would open and then never
+  // close — only trust real hover on devices that actually support it
+  // (fine pointer + real :hover), and rely on click/tap alone otherwise.
+  const [canHover, setCanHover] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const listener = (e: MediaQueryListEvent) => setCanHover(e.matches);
+    mq.addEventListener("change", listener);
+    return () => mq.removeEventListener("change", listener);
+  }, []);
+
+  function handleSectionEnter(label: string) {
+    if (canHover) setHoveredSection(label);
+  }
+  function handleSectionLeave(label: string) {
+    if (canHover) setHoveredSection((prev) => (prev === label ? null : prev));
+  }
 
   const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
   const initials = displayName
@@ -156,29 +177,35 @@ export default function Sidebar({
               );
             }
 
-            const pinned = expanded[section.label] ?? section.label === activeSectionLabel;
-            const isOpen = pinned || hoveredSection === section.label;
             const SectionIcon = section.icon;
 
             if (collapsed) {
+              // No default-active fallback here — on the collapsed rail
+              // the flyout is an absolute overlay on top of page content,
+              // so auto-pinning the current section open (as the expanded
+              // rail does below) would leave a panel permanently
+              // overlapping the page. Only an explicit tap (pinned via
+              // toggleSection) or real mouse hover opens it here.
+              const pinnedCollapsed = expanded[section.label] === true;
+              const isOpenCollapsed = pinnedCollapsed || hoveredSection === section.label;
               return (
                 <div
                   key={section.label}
                   className="relative"
-                  onMouseEnter={() => setHoveredSection(section.label)}
-                  onMouseLeave={() => setHoveredSection((prev) => (prev === section.label ? null : prev))}
+                  onMouseEnter={() => handleSectionEnter(section.label)}
+                  onMouseLeave={() => handleSectionLeave(section.label)}
                 >
                   <button
                     onClick={() => toggleSection(section.label)}
                     title={section.label}
                     aria-label={section.label}
                     className={`flex w-full items-center justify-center rounded-lg py-2.5 transition-colors ${
-                      isOpen ? "bg-cream/10 text-cream" : "text-cream/60 hover:bg-cream/5 hover:text-cream"
+                      isOpenCollapsed ? "bg-cream/10 text-cream" : "text-cream/60 hover:bg-cream/5 hover:text-cream"
                     }`}
                   >
                     <SectionIcon className="h-[18px] w-[18px] shrink-0" />
                   </button>
-                  {isOpen && (
+                  {isOpenCollapsed && (
                     <div className="absolute top-0 left-full z-[60] ml-2 w-60 rounded-xl border border-cream/10 bg-primary-dark p-2 shadow-xl">
                       <div className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40">
                         {section.label}
@@ -200,7 +227,7 @@ export default function Sidebar({
                               }`}
                             >
                               <Icon className="h-[15px] w-[15px] shrink-0" />
-                              <span className="truncate">{feature.label}</span>
+                              <SidebarHoverLabel label={feature.label} />
                               {!feature.href && (
                                 <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
                                   Soon
@@ -216,18 +243,21 @@ export default function Sidebar({
               );
             }
 
+            const pinned = expanded[section.label] ?? section.label === activeSectionLabel;
+            const isOpen = pinned || hoveredSection === section.label;
+
             return (
               <div
                 key={section.label}
-                onMouseEnter={() => setHoveredSection(section.label)}
-                onMouseLeave={() => setHoveredSection((prev) => (prev === section.label ? null : prev))}
+                onMouseEnter={() => handleSectionEnter(section.label)}
+                onMouseLeave={() => handleSectionLeave(section.label)}
               >
                 <button
                   onClick={() => toggleSection(section.label)}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
                 >
                   <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                  <span className="flex-1 truncate text-left">{section.label}</span>
+                  <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
                   <ChevronDown
                     className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
@@ -250,7 +280,7 @@ export default function Sidebar({
                           }`}
                         >
                           <Icon className="h-[15px] w-[15px] shrink-0" />
-                          <span className="truncate">{feature.label}</span>
+                          <SidebarHoverLabel label={feature.label} />
                           {!feature.href && (
                             <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
                               Soon
@@ -325,7 +355,7 @@ function SidebarLink({
       }`}
     >
       <Icon className="h-[18px] w-[18px] shrink-0" />
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && <SidebarHoverLabel label={label} className="min-w-0 flex-1" />}
     </Link>
   );
 }

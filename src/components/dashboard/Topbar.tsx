@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Menu, Settings, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { findActiveModuleForRoute } from "@/lib/dashboard-modules";
+import ModulesMenu from "./ModulesMenu";
 
 export default function Topbar({
   onOpenSidebar,
@@ -56,6 +57,8 @@ export default function Topbar({
           <Menu className="h-5 w-5" />
         </button>
       )}
+
+      <ModulesMenu />
 
       {activeModule ? (
         <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex">
