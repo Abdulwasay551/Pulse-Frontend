@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { useAuth } from "@/lib/auth-context";
 import { employeesApi, getPeopleDashboardSummary, type Employee, type PeopleDashboardSummary } from "@/lib/people-api";
@@ -62,6 +63,13 @@ function WorkforceDashboardPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
+        <Link
+          href="/dashboard/people"
+          className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          EVO-People Management
+        </Link>
         <h1 className="font-display text-2xl font-bold text-ink">Workforce Dashboard</h1>
         <p className="mt-1 text-sm text-ink-soft">Headcount trends and day-to-day workforce KPIs, powered by EVO-AI.</p>
       </div>

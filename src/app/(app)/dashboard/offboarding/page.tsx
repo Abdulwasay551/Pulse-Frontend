@@ -154,6 +154,13 @@ function OffboardingPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
+          <Link
+            href="/dashboard/recruit"
+            className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            EVO-Recruit
+          </Link>
           <h1 className="font-display text-2xl font-bold text-ink">Offboarding</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Documents checklist, access revocation, and hardware clearance — and rehire eligibility for later.

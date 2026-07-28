@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import ModuleHeader from "@/components/dashboard/ModuleHeader";
-import ModuleFeatureSections from "@/components/dashboard/ModuleFeatureSections";
+import ModuleSectionCards from "@/components/dashboard/ModuleSectionCards";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules } from "@/lib/dashboard-modules";
 import { getPeopleDashboardSummary, type PeopleDashboardSummary } from "@/lib/people-api";
@@ -96,7 +96,8 @@ export default function PeopleManagementPage() {
         </>
       )}
 
-      <ModuleFeatureSections moduleDef={moduleDef} />
+      <h2 className="mt-10 mb-4 font-display text-lg font-bold text-ink">Sub-modules</h2>
+      <ModuleSectionCards moduleDef={moduleDef} />
     </div>
   );
 }

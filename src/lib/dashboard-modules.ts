@@ -63,8 +63,17 @@ export interface ModuleFeatureSection {
   /** The sub-module name (e.g. "Acquisition", "Attendance Management") —
    * exact wording from the spec. */
   label: string;
+  description: string;
   icon: LucideIcon;
   features: ModuleFeature[];
+  /** A sub-module's own dashboard — stats plus this section's feature
+   * cards, one level below the module hub. Present for every section in a
+   * multi-section module; a single-section module (e.g. IT & Assets) has
+   * no separate sub-dashboard since it would just duplicate the module
+   * hub. For sections whose features already funnel through one real
+   * flow (Onboarding, Off boarding, Workforce Dashboard), this points at
+   * that existing page rather than a new one. */
+  href?: string;
 }
 
 export interface ModuleNavLink {
@@ -113,7 +122,9 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Acquisition",
+        description: "Clients, requisitions, and the full candidate pipeline.",
         icon: Briefcase,
+        href: "/dashboard/acquisition",
         features: [
           { label: "Clients", description: "Companies you place candidates with.", icon: Building2, href: "/dashboard/clients" },
           { label: "Job Openings", description: "Open roles across every client.", icon: Briefcase, href: "/dashboard/requisitions" },
@@ -127,7 +138,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Onboarding",
+        description: "Pre-joining documents through device assignment.",
         icon: ClipboardCheck,
+        href: "/dashboard/onboarding",
         features: [
           { label: "Pre-Joining Documents", description: "Documents collected before day one.", icon: FileText, href: onboardingHref("Pre-Joining Documents") },
           { label: "Orientation", description: "Company orientation scheduling.", icon: CalendarCheck, href: onboardingHref("Orientation") },
@@ -139,7 +152,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Off boarding",
+        description: "Exit documents, access revocation, and rehire eligibility.",
         icon: UserMinus,
+        href: "/dashboard/offboarding",
         features: [
           { label: "Documents Checklist", description: "Exit paperwork and final settlement.", icon: FileText, href: offboardingHref("Documents Checklist") },
           { label: "Access Status", description: "Email, SSO, and system access revocation.", icon: KeyRound, href: offboardingHref("Access Status") },
@@ -160,7 +175,9 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Attendance Management",
+        description: "Clock-ins, overtime, shifts, and leave, in one place.",
         icon: Clock,
+        href: "/dashboard/attendance-management",
         features: [
           { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock, href: "/dashboard/attendance?view=clock" },
           { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance?view=overtime" },
@@ -170,7 +187,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Employee Engagement",
+        description: "Surveys, recognition, and internal moves.",
         icon: Activity,
+        href: "/dashboard/employee-engagement",
         features: [
           { label: "Surveys", description: "Read the room across every team.", icon: Activity, href: surveysHref("Survey") },
           { label: "Pulse Checks", description: "Lightweight, frequent sentiment checks.", icon: Activity, href: surveysHref("Pulse Check") },
@@ -180,7 +199,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Employee Records",
+        description: "Profiles, org chart, self-service, and documents.",
         icon: UserSquare,
+        href: "/dashboard/employee-records",
         features: [
           { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database?view=employees" },
           { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network, href: "/dashboard/org-chart" },
@@ -190,7 +211,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Workforce Dashboard",
+        description: "Headcount trends and day-to-day workforce KPIs.",
         icon: BarChart3,
+        href: "/dashboard/workforce-dashboard",
         features: [
           { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3, href: "/dashboard/workforce-dashboard?view=forecast" },
           { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart, href: "/dashboard/workforce-dashboard?view=kpis" },
@@ -209,7 +232,9 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Goals & Appraisal",
+        description: "Goal tracking, reviews, and value-addition scoring.",
         icon: Target,
+        href: "/dashboard/goals-appraisal",
         features: [
           { label: "Goal Setting & KPIs", description: "Set and track goals per employee.", icon: Target, href: "/dashboard/goals" },
           { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star, href: "/dashboard/appraisals?view=appraisals" },
@@ -219,7 +244,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Learning & Growth",
+        description: "Courses, career paths, skills, and succession.",
         icon: GraduationCap,
+        href: "/dashboard/learning-growth",
         features: [
           { label: "Training & Learning Management System (LMS)", description: "Training and course delivery.", icon: GraduationCap, href: "/dashboard/learning" },
           { label: "Career Development Paths", description: "Mapped per department hierarchy.", icon: Map, href: "/dashboard/career-paths" },
@@ -240,7 +267,9 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Payroll",
+        description: "Processing, tax compliance, deposits, and audit.",
         icon: Wallet,
+        href: "/dashboard/payroll-overview",
         features: [
           { label: "Payroll Processing, Payslips", description: "Process pay runs and view payslips.", icon: Wallet, href: "/dashboard/payroll" },
           { label: "Multi-Country Tax Compliance", description: "Stay compliant across every jurisdiction.", icon: Globe2, href: "/dashboard/tax-compliance" },
@@ -251,7 +280,9 @@ export const dashboardModules: ModuleDef[] = [
       },
       {
         label: "Benefits",
+        description: "Enrollment, claims, and cost analysis.",
         icon: HeartPulse,
+        href: "/dashboard/benefits-overview",
         features: [
           { label: "Benefits Enrollment", description: "Health insurance, yearly bonuses.", icon: HeartPulse, href: "/dashboard/benefits-enrollment" },
           { label: "Claims & Reimbursement Workflows", description: "Submission and approval workflows.", icon: Receipt, href: "/dashboard/claims" },
@@ -271,6 +302,7 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Assets Management",
+        description: "Device lifecycle, warranty, support, and compliance.",
         icon: Boxes,
         features: [
           { label: "Device Provisioning", description: "Tied to onboarding and offboarding.", icon: Boxes, href: "/dashboard/device-provisioning" },

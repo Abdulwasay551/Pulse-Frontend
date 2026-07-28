@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import ModuleHeader from "@/components/dashboard/ModuleHeader";
-import ModuleFeatureSections from "@/components/dashboard/ModuleFeatureSections";
+import ModuleSectionCards from "@/components/dashboard/ModuleSectionCards";
 import { PipelineWidget } from "@/components/site/widgets";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules } from "@/lib/dashboard-modules";
@@ -69,7 +69,8 @@ export default function RecruitPage() {
                 <PlacementsChart data={summary.placements_trend} />
               </div>
 
-              <ModuleFeatureSections moduleDef={moduleDef} />
+              <h2 className="mt-6 mb-4 font-display text-lg font-bold text-ink">Sub-modules</h2>
+              <ModuleSectionCards moduleDef={moduleDef} />
             </div>
 
             {/* A persistent right rail — "at a glance" widgets stay visible
