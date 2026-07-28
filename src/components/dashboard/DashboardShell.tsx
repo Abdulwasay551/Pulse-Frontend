@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import Breadcrumbs from "./Breadcrumbs";
 import { findActiveModuleForRoute } from "@/lib/dashboard-modules";
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       {hasSidebar && <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />}
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onOpenSidebar={() => setMobileOpen(true)} showMenuButton={hasSidebar} />
+        <Breadcrumbs />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>

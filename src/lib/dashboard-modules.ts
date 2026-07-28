@@ -363,3 +363,83 @@ export function findActiveModuleForRoute(pathname: string, searchParams: URLSear
   }
   return findActiveModule(pathname);
 }
+
+export interface Crumb {
+  label: string;
+  /** Absent = the current page, rendered as plain (non-link) text. */
+  href?: string;
+}
+
+/** Derives a page's full breadcrumb trail (module → sub-module → feature)
+ * straight from `dashboardModules`, the same source the Sidebar reads —
+ * so a page's breadcrumb can never drift out of sync with where it
+ * actually lives in the nav hierarchy. Returns an empty array for pages
+ * with nothing meaningful to show (the root hub itself). */
+export function getBreadcrumbTrail(pathname: string, searchParams: URLSearchParams): Crumb[] {
+  const moduleDef = findActiveModuleForRoute(pathname, searchParams);
+
+  if (pathname === "/dashboard/coming-soon") {
+    const trail: Crumb[] = [];
+    if (moduleDef) trail.push({ label: moduleDef.label, href: moduleDef.overviewHref });
+    const sectionLabel = searchParams.get("section");
+    const featureLabel = searchParams.get("feature");
+    if (sectionLabel) trail.push({ label: sectionLabel });
+    if (featureLabel) trail.push({ label: featureLabel });
+    return trail;
+  }
+
+  if (!moduleDef) {
+    if (pathname === "/dashboard/settings") return [{ label: "Settings" }];
+    return [];
+  }
+
+  if (pathname === moduleDef.overviewHref) {
+    return [{ label: moduleDef.label }];
+  }
+
+  const extraLink = moduleDef.extraLinks.find((l) => l.href === pathname);
+  if (extraLink) {
+    return [{ label: moduleDef.label, href: moduleDef.overviewHref }, { label: extraLink.label }];
+  }
+
+  const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+
+  // Exact match (pathname + query) against a feature's own href — the
+  // precise case, since several features share a base pathname and are
+  // only distinguished by a query string (e.g. attendance's two views).
+  for (const section of moduleDef.sections) {
+    for (const feature of section.features) {
+      if (feature.href === currentUrl) {
+        return [
+          { label: moduleDef.label, href: moduleDef.overviewHref },
+          { label: section.label, href: section.href },
+          { label: feature.label },
+        ];
+      }
+    }
+  }
+
+  // A sub-module's own hub page (e.g. Onboarding, Workforce Dashboard, or
+  // one of the dedicated sub-dashboards) — matched by bare pathname since
+  // these pages don't carry a distinguishing query string of their own.
+  const section = moduleDef.sections.find((s) => s.href && hrefPathname(s.href) === pathname);
+  if (section) {
+    return [{ label: moduleDef.label, href: moduleDef.overviewHref }, { label: section.label }];
+  }
+
+  // Fallback: same pathname as a feature, but reached with a different
+  // (or no) query string than that feature's own href specifies.
+  for (const s of moduleDef.sections) {
+    for (const feature of s.features) {
+      if (feature.href && hrefPathname(feature.href) === pathname) {
+        return [
+          { label: moduleDef.label, href: moduleDef.overviewHref },
+          { label: s.label, href: s.href },
+          { label: feature.label },
+        ];
+      }
+    }
+  }
+
+  return [{ label: moduleDef.label, href: moduleDef.overviewHref }];
+}
