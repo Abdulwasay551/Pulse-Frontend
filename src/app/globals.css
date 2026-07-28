@@ -290,28 +290,47 @@ body {
   }
 
   .eh-table,
-  .eh-table tbody,
-  .eh-table tr {
+  .eh-table tbody {
     display: block;
     width: 100%;
   }
 
+  /* Padding lives on the table itself, not per-row, so the first/last
+     row's own margins don't get clipped by the outer card's overflow. */
+  .eh-table {
+    padding: 0.75rem;
+  }
+
+  /* Each row is its own bordered, padded card — not just a divider line —
+     so rows read as distinct records instead of one dense, edge-to-edge
+     block of text. */
   .eh-table tr {
-    border-bottom: 1px solid var(--line);
-    padding: 0.625rem 0;
+    display: block;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.25rem 0.875rem;
+    margin-bottom: 0.625rem;
   }
 
   .eh-table tr:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
   }
 
   .eh-table td {
     display: flex !important;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.3rem 0 !important;
+    gap: 1rem;
+    padding: 0.55rem 0 !important;
     border: none !important;
+  }
+
+  /* A divider between each label/value line within the card (but not
+     after the last one) keeps a multi-field row scannable without
+     relying on space-between alone to separate them. */
+  .eh-table td[data-label]:not(:last-child) {
+    border-bottom: 1px solid var(--line) !important;
   }
 
   .eh-table td:not([data-label]) {
@@ -321,6 +340,7 @@ body {
   .eh-table td[data-label]::before {
     content: attr(data-label);
     flex-shrink: 0;
+    max-width: 40%;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
