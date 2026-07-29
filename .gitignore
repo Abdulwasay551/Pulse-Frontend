@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capacitor native platform projects — these are large, machine/toolchain
+# -generated Gradle/Xcode projects regenerated on demand via `npx cap add
+# android` / `npx cap add ios` (or `npx cap sync` if they already exist
+# locally); keeping them out of the repo for now so a routine web push
+# doesn't drag a native project (and its build output) along with it.
+/android
+/ios
+*.apk
+*.aab
+*.ipa

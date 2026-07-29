@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/core": "^8.4.2",
     "lucide-react": "^1.25.0",
     "motion": "^12.42.2",
     "next": "16.2.10",
@@ -16,6 +17,8 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
