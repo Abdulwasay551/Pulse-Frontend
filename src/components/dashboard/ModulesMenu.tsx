@@ -23,7 +23,7 @@ export default function ModulesMenu() {
   }, []);
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative hidden sm:block" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium text-ink-soft transition-colors hover:bg-cream-dim hover:text-ink"
@@ -51,9 +51,19 @@ export default function ModulesMenu() {
                   <div className="flex flex-col gap-3">
                     {moduleDef.sections.map((section) => (
                       <div key={section.label}>
-                        <div className="px-2 pb-1 text-[10.5px] font-semibold uppercase tracking-wide text-ink-soft/70">
-                          {section.label}
-                        </div>
+                        {section.href ? (
+                          <Link
+                            href={section.href}
+                            onClick={() => setOpen(false)}
+                            className="block px-2 pb-1 text-[10.5px] font-semibold uppercase tracking-wide text-ink-soft/70 transition-colors hover:text-primary"
+                          >
+                            {section.label}
+                          </Link>
+                        ) : (
+                          <div className="px-2 pb-1 text-[10.5px] font-semibold uppercase tracking-wide text-ink-soft/70">
+                            {section.label}
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           {section.features.map((feature) => {
                             const href = featureHref(moduleDef, section, feature);

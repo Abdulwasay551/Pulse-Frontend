@@ -207,9 +207,19 @@ export default function Sidebar({
                   </button>
                   {isOpenCollapsed && (
                     <div className="absolute top-0 left-full z-[60] ml-2 w-60 rounded-xl border border-cream/10 bg-primary-dark p-2 shadow-xl">
-                      <div className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40">
-                        {section.label}
-                      </div>
+                      {section.href ? (
+                        <Link
+                          href={section.href}
+                          onClick={onClose}
+                          className="block px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40 transition-colors hover:text-primary-light"
+                        >
+                          {section.label}
+                        </Link>
+                      ) : (
+                        <div className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40">
+                          {section.label}
+                        </div>
+                      )}
                       <div className="flex flex-col gap-0.5">
                         {section.features.map((feature) => {
                           const href = featureHref(activeModule, section, feature);
@@ -245,6 +255,7 @@ export default function Sidebar({
 
             const pinned = expanded[section.label] ?? section.label === activeSectionLabel;
             const isOpen = pinned || hoveredSection === section.label;
+            const sectionActive = !!section.href && hrefPathname(section.href) === pathname;
 
             return (
               <div
@@ -252,16 +263,40 @@ export default function Sidebar({
                 onMouseEnter={() => handleSectionEnter(section.label)}
                 onMouseLeave={() => handleSectionLeave(section.label)}
               >
-                <button
-                  onClick={() => toggleSection(section.label)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
-                >
-                  <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                  <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+                {section.href ? (
+                  <div className="flex items-center gap-0.5">
+                    <Link
+                      href={section.href}
+                      onClick={onClose}
+                      className={`flex flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] transition-colors ${
+                        sectionActive ? "bg-primary-light/15 text-primary-light" : "text-cream/60 hover:bg-cream/5 hover:text-cream"
+                      }`}
+                    >
+                      <SectionIcon className="h-[18px] w-[18px] shrink-0" />
+                      <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
+                    </Link>
+                    <button
+                      onClick={() => toggleSection(section.label)}
+                      aria-label={isOpen ? `Collapse ${section.label}` : `Expand ${section.label}`}
+                      className="shrink-0 rounded-lg p-2.5 text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
+                    >
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => toggleSection(section.label)}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
+                  >
+                    <SectionIcon className="h-[18px] w-[18px] shrink-0" />
+                    <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                )}
                 {isOpen && (
                   <div className="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5 border-l border-cream/10 pl-3">
                     {section.features.map((feature) => {

@@ -346,7 +346,11 @@ export function findActiveModule(pathname: string): ModuleDef | null {
       (m) =>
         m.overviewHref === pathname ||
         m.extraLinks.some((l) => l.href === pathname) ||
-        m.sections.some((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))
+        m.sections.some(
+          (s) =>
+            (s.href && hrefPathname(s.href) === pathname) ||
+            s.features.some((f) => f.href && hrefPathname(f.href) === pathname)
+        )
     ) ?? null
   );
 }
