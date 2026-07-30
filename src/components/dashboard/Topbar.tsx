@@ -160,11 +160,11 @@ export default function Topbar({
         </button>
       )}
 
-      <nav className="hidden shrink-0 items-center gap-1 sm:flex">
+      {/* <nav className="hidden shrink-0 items-center gap-1 sm:flex">
         {dashboardModules.map((m) => (
           <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} />
         ))}
-      </nav>
+      </nav> */}
 
       {activeModule ? (
         <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex">
