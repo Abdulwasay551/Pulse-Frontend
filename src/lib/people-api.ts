@@ -26,6 +26,7 @@ export interface Employee {
   direct_reports_count: number;
   hire_date: string;
   status: EmployeeStatus;
+  monthly_salary: string | null;
   source_candidate: number | null;
   portal_token: string;
   documents: EmployeeDocument[];
@@ -42,6 +43,7 @@ export interface EmployeeWrite {
   manager?: number | null;
   hire_date?: string;
   status?: EmployeeStatus;
+  monthly_salary?: number | string | null;
 }
 
 export interface EmployeeDocumentWrite {

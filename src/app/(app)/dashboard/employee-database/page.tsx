@@ -47,6 +47,7 @@ interface FormState {
   manager: string;
   hire_date: string;
   status: EmployeeStatus;
+  monthly_salary: string;
 }
 
 const emptyForm: FormState = {
@@ -58,6 +59,7 @@ const emptyForm: FormState = {
   manager: "",
   hire_date: new Date().toISOString().slice(0, 10),
   status: "Active",
+  monthly_salary: "",
 };
 
 export default function EmployeeDatabasePageWrapper() {
@@ -179,6 +181,7 @@ function EmployeeDatabasePage() {
       manager: e.manager ? String(e.manager) : "",
       hire_date: e.hire_date,
       status: e.status,
+      monthly_salary: e.monthly_salary ?? "",
     });
     setError(null);
     setShowForm(true);
@@ -197,6 +200,7 @@ function EmployeeDatabasePage() {
       manager: form.manager ? Number(form.manager) : null,
       hire_date: form.hire_date,
       status: form.status,
+      monthly_salary: form.monthly_salary === "" ? null : Number(form.monthly_salary),
     };
     try {
       if (editing) {
@@ -577,6 +581,18 @@ function EmployeeDatabasePage() {
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Monthly salary (USD)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.monthly_salary}
+                onChange={(ev) => setForm({ ...form, monthly_salary: ev.target.value })}
+                placeholder="e.g. 5500"
+                className={inputClass}
+              />
             </div>
             <button
               type="submit"
