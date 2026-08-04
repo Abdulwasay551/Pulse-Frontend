@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
-export type UserRole = "HR" | "Employee";
+export type UserRole = "HR" | "Employee" | "IT Manager" | "Finance Admin" | "Department Head" | "Recruiter";
 
 export interface AuthUser {
   id: number;

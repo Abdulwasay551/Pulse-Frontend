@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bell, ChevronDown, Lock, LogOut, Menu, Settings, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref, findActiveModuleForRoute, type ModuleDef } from "@/lib/dashboard-modules";
+import { visibleModuleKeysFor } from "@/lib/role-access";
 
 // Placeholder preview data — Notifications isn't a real, working feature
 // yet (there's no backend event stream behind it), so the dropdown shows
@@ -161,9 +162,14 @@ export default function Topbar({
       )}
 
       <nav className="hidden shrink-0 items-center gap-1 sm:flex">
-        {dashboardModules.map((m) => (
-          <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} />
-        ))}
+        {dashboardModules
+          .filter((m) => {
+            const visibleKeys = visibleModuleKeysFor(user?.role);
+            return !visibleKeys || visibleKeys.includes(m.key);
+          })
+          .map((m) => (
+            <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} />
+          ))}
       </nav>
 
       {activeModule ? (

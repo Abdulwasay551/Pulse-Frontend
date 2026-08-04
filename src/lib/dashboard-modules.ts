@@ -28,6 +28,7 @@ import {
   Layers,
   LifeBuoy,
   Map,
+  MessageSquareText,
   Network,
   PieChart,
   Receipt,
@@ -240,6 +241,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star, href: "/dashboard/appraisals?view=appraisals" },
           { label: "Competency Mapping of Employees", description: "Map skills against role expectations.", icon: Layers, href: "/dashboard/competency-mapping?view=employees" },
           { label: "Value-Addition / Performance Scoring", description: "Powered by EVO-AI.", icon: Sparkles, href: "/dashboard/appraisals?view=scores" },
+          { label: "Recruiter Feedback", description: "Notes a recruiter leaves on a placed employee.", icon: MessageSquareText, href: "/dashboard/recruiter-feedback" },
         ],
       },
       {

@@ -19,7 +19,9 @@ import {
   type EmployeeStatus,
 } from "@/lib/people-api";
 import { createEmployeeAccount, sendEmployeeInvite } from "@/lib/role-api";
-import { ApiError } from "@/lib/auth-api";
+import { ApiError, type UserRole } from "@/lib/auth-api";
+
+const HR_CREATABLE_ROLES: UserRole[] = ["Employee", "Department Head", "Recruiter"];
 
 type ViewMode = "employees" | "documents";
 
@@ -104,7 +106,13 @@ function EmployeeDatabasePage() {
 
   const [loginTarget, setLoginTarget] = useState<Employee | null>(null);
   const [loginMode, setLoginMode] = useState<"invite" | "create">("invite");
-  const [loginForm, setLoginForm] = useState({ email: "", username: "", password: "" });
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    username: "",
+    password: "",
+    role: "Employee" as UserRole,
+    department: "",
+  });
   const [loginSaving, setLoginSaving] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginResult, setLoginResult] = useState<string | null>(null);
@@ -259,7 +267,7 @@ function EmployeeDatabasePage() {
   function openLogin(e: Employee) {
     setLoginTarget(e);
     setLoginMode("invite");
-    setLoginForm({ email: e.email, username: "", password: "" });
+    setLoginForm({ email: e.email, username: "", password: "", role: "Employee", department: "" });
     setLoginError(null);
     setLoginResult(null);
   }
@@ -286,9 +294,17 @@ function EmployeeDatabasePage() {
     setLoginSaving(true);
     try {
       await withAuth((token) =>
-        createEmployeeAccount(token, { employee: loginTarget.id, username: loginForm.username, password: loginForm.password })
+        createEmployeeAccount(token, {
+          employee: loginTarget.id,
+          username: loginForm.username,
+          password: loginForm.password,
+          role: loginForm.role,
+          department: loginForm.role === "Department Head" ? loginForm.department : undefined,
+        })
       );
-      setLoginResult(`Account created — username "${loginForm.username}". Share the password with them directly.`);
+      setLoginResult(
+        `Account created — username "${loginForm.username}" (${loginForm.role}). Share the password with them directly.`
+      );
     } catch (err) {
       setLoginError(err instanceof ApiError ? err.message : "Couldn't create the account. Please try again.");
     } finally {
@@ -738,7 +754,7 @@ function EmployeeDatabasePage() {
                       className={inputClass}
                     />
                   </div>
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label className={labelClass}>Password</label>
                     <input
                       required
@@ -748,6 +764,32 @@ function EmployeeDatabasePage() {
                       className={inputClass}
                     />
                   </div>
+                  <div className="mb-4">
+                    <label className={labelClass}>Role</label>
+                    <select
+                      value={loginForm.role}
+                      onChange={(ev) => setLoginForm({ ...loginForm, role: ev.target.value as UserRole })}
+                      className={inputClass}
+                    >
+                      {HR_CREATABLE_ROLES.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {loginForm.role === "Department Head" && (
+                    <div className="mb-6">
+                      <label className={labelClass}>Department</label>
+                      <input
+                        required
+                        value={loginForm.department}
+                        onChange={(ev) => setLoginForm({ ...loginForm, department: ev.target.value })}
+                        placeholder="e.g. Engineering"
+                        className={inputClass}
+                      />
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={loginSaving}

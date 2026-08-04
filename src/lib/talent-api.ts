@@ -181,3 +181,20 @@ export interface TalentDashboardSummary {
 export function getTalentDashboardSummary(token: string) {
   return apiFetch<TalentDashboardSummary>("/talent/dashboard-summary/", { method: "GET" }, token);
 }
+
+export interface RecruiterFeedback {
+  id: number;
+  employee: number;
+  employee_detail: EmployeeLite;
+  given_by: string;
+  message: string;
+  created_at: string;
+}
+
+export interface RecruiterFeedbackWrite {
+  employee: number;
+  given_by?: string;
+  message: string;
+}
+
+export const recruiterFeedbackApi = resourceApi<RecruiterFeedback, RecruiterFeedbackWrite>("/talent/recruiter-feedback/");
