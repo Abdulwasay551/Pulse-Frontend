@@ -6,18 +6,24 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref } from "@/lib/dashboard-modules";
+import { filterSectionsForRole } from "@/lib/role-access";
 import { employeesApi, listEmployeeDocuments } from "@/lib/people-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "people")!;
 const section = moduleDef.sections.find((s) => s.label === "Employee Records")!;
 
 export default function EmployeeRecordsHubPage() {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [stats, setStats] = useState<{ employees: number; departments: number; documents: number } | null>(null);
 
   useEffect(() => {
-    withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)])).then(
-      ([employees, documents]) => {
+    // allSettled — Department Head has no EmployeeDocument access here
+    // (only employees, read-only, department-scoped), so one 403 shouldn't
+    // blank the employee/department counts too.
+    withAuth((token) => Promise.allSettled([employeesApi.list(token), listEmployeeDocuments(token)])).then(
+      ([employeesResult, documentsResult]) => {
+        const employees = employeesResult.status === "fulfilled" ? employeesResult.value : [];
+        const documents = documentsResult.status === "fulfilled" ? documentsResult.value : [];
         setStats({
           employees: employees.length,
           departments: new Set(employees.map((e) => e.department).filter(Boolean)).size,
@@ -27,6 +33,8 @@ export default function EmployeeRecordsHubPage() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visibleFeatures = filterSectionsForRole([section], user?.role)[0]?.features ?? [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -49,7 +57,7 @@ export default function EmployeeRecordsHubPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {section.features.map((feature) => (
+        {visibleFeatures.map((feature) => (
           <FeatureTile
             key={feature.label}
             icon={feature.icon}

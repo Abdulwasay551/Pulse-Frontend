@@ -8,9 +8,10 @@ import Logo from "@/components/site/Logo";
 import SidebarHoverLabel from "@/components/dashboard/SidebarHoverLabel";
 import { useAuth } from "@/lib/auth-context";
 import { featureHref, findActiveModuleForRoute, hrefPathname, type ModuleDef } from "@/lib/dashboard-modules";
+import { filterSectionsForRole, isPathAllowedForRole } from "@/lib/role-access";
 
-function sectionContainsPathname(moduleDef: ModuleDef, pathname: string) {
-  return moduleDef.sections.find((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))?.label ?? null;
+function sectionContainsPathname(sections: ModuleDef["sections"], pathname: string) {
+  return sections.find((s) => s.features.some((f) => f.href && hrefPathname(f.href) === pathname))?.label ?? null;
 }
 
 export default function Sidebar({
@@ -31,7 +32,8 @@ export default function Sidebar({
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const activeModule = findActiveModuleForRoute(pathname, searchParams);
-  const activeSectionLabel = activeModule ? sectionContainsPathname(activeModule, pathname) : null;
+  const visibleSections = activeModule ? filterSectionsForRole(activeModule.sections, user?.role) : [];
+  const activeSectionLabel = activeModule ? sectionContainsPathname(visibleSections, pathname) : null;
   // Only tracks the user's manual toggles ("pinned" open/closed) — the
   // section containing the current route is derived (and always shown
   // open by default) below, rather than synced here via an effect.
@@ -146,7 +148,7 @@ export default function Sidebar({
             onClick={onClose}
           />
 
-          {activeModule.extraLinks.map((link) => (
+          {activeModule.extraLinks.filter((link) => isPathAllowedForRole(link.href, user?.role)).map((link) => (
             <SidebarLink
               key={link.href}
               href={link.href}
@@ -158,7 +160,7 @@ export default function Sidebar({
             />
           ))}
 
-          {activeModule.sections.map((section) => {
+          {visibleSections.map((section) => {
             // A section with only one feature is just that feature — skip
             // the collapsible chrome and render it as a single flat link.
             if (section.features.length === 1) {

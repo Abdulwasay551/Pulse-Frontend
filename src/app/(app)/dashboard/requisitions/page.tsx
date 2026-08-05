@@ -68,9 +68,14 @@ export default function RequisitionsPage() {
 
   async function load() {
     try {
-      const [r, c] = await withAuth((token) => Promise.all([requisitionsApi.list(token), clientsApi.list(token)]));
-      setRequisitions(r);
-      setClients(c);
+      // allSettled — Department Head has read-only Client access here
+      // (just enough to populate this page's client picker), so treat a
+      // Client-list failure as "no clients" rather than blanking requisitions.
+      const [rResult, cResult] = await withAuth((token) =>
+        Promise.allSettled([requisitionsApi.list(token), clientsApi.list(token)])
+      );
+      setRequisitions(rResult.status === "fulfilled" ? rResult.value : []);
+      setClients(cResult.status === "fulfilled" ? cResult.value : []);
     } finally {
       setLoading(false);
     }

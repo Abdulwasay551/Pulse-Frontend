@@ -14,9 +14,11 @@ const moduleDef = dashboardModules.find((m) => m.key === "it-assets")!;
 export default function ItAssetManagementPage() {
   const { withAuth } = useAuth();
   const [summary, setSummary] = useState<ItAssetsDashboardSummary | null>(null);
+  const [summaryUnavailable, setSummaryUnavailable] = useState(false);
 
   useEffect(() => {
-    withAuth((token) => getItAssetsDashboardSummary(token)).then(setSummary);
+    withAuth((token) => getItAssetsDashboardSummary(token)).then(setSummary)
+      .catch(() => setSummaryUnavailable(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -24,7 +26,7 @@ export default function ItAssetManagementPage() {
     <div className="mx-auto max-w-6xl">
       <ModuleHeader icon={moduleDef.icon} title={moduleDef.label} description={moduleDef.description} />
 
-      {!summary ? (
+      {summaryUnavailable ? null : !summary ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
       ) : (
         <>

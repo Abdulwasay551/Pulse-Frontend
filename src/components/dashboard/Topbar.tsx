@@ -6,7 +6,8 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bell, ChevronDown, Lock, LogOut, Menu, Settings, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref, findActiveModuleForRoute, type ModuleDef } from "@/lib/dashboard-modules";
-import { visibleModuleKeysFor } from "@/lib/role-access";
+import { filterSectionsForRole, visibleModuleKeysFor } from "@/lib/role-access";
+import type { UserRole } from "@/lib/auth-api";
 
 // Placeholder preview data — Notifications isn't a real, working feature
 // yet (there's no backend event stream behind it), so the dropdown shows
@@ -25,10 +26,11 @@ const MOCK_NOTIFICATIONS = [
  * split used in Sidebar.tsx, so a single click target never has to both
  * navigate and toggle). Replaces the old single "Modules" mega-menu that
  * bundled all five modules behind one trigger. */
-function ModuleNavItem({ moduleDef, isActive }: { moduleDef: ModuleDef; isActive: boolean }) {
+function ModuleNavItem({ moduleDef, isActive, role }: { moduleDef: ModuleDef; isActive: boolean; role: UserRole | undefined }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const Icon = moduleDef.icon;
+  const visibleSections = filterSectionsForRole(moduleDef.sections, role);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -65,7 +67,7 @@ function ModuleNavItem({ moduleDef, isActive }: { moduleDef: ModuleDef; isActive
       {open && (
         <div className="absolute left-0 z-50 mt-2 max-h-[75vh] w-72 overflow-y-auto rounded-2xl border border-line bg-card p-3 shadow-xl">
           <div className="flex flex-col gap-3">
-            {moduleDef.sections.map((section) => (
+            {visibleSections.map((section) => (
               <div key={section.label}>
                 {section.href ? (
                   <Link
@@ -168,7 +170,7 @@ export default function Topbar({
             return !visibleKeys || visibleKeys.includes(m.key);
           })
           .map((m) => (
-            <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} />
+            <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} role={user?.role} />
           ))}
       </nav>
 

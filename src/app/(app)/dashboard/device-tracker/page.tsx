@@ -53,12 +53,14 @@ export default function DeviceTrackerPage() {
 
   async function load() {
     try {
-      const [i, a, e] = await withAuth((token) =>
-        Promise.all([assetIncidentsApi.list(token), assetsApi.list(token), employeesApi.list(token)])
+      // allSettled — Department Head has no Asset access here (only
+      // incidents, create-only), so that one 403 shouldn't blank the page.
+      const [iResult, aResult, eResult] = await withAuth((token) =>
+        Promise.allSettled([assetIncidentsApi.list(token), assetsApi.list(token), employeesApi.list(token)])
       );
-      setIncidents(i);
-      setAssets(a);
-      setEmployees(e);
+      setIncidents(iResult.status === "fulfilled" ? iResult.value : []);
+      setAssets(aResult.status === "fulfilled" ? aResult.value : []);
+      setEmployees(eResult.status === "fulfilled" ? eResult.value : []);
     } finally {
       setLoading(false);
     }

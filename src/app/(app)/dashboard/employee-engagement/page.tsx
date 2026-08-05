@@ -6,19 +6,25 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref } from "@/lib/dashboard-modules";
+import { filterSectionsForRole } from "@/lib/role-access";
 import { surveysApi, recognitionsApi, promotionRequestsApi } from "@/lib/people-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "people")!;
 const section = moduleDef.sections.find((s) => s.label === "Employee Engagement")!;
 
 export default function EmployeeEngagementHubPage() {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [stats, setStats] = useState<{ openSurveys: number; recognitions: number; pendingPromotions: number } | null>(null);
 
   useEffect(() => {
+    // allSettled — Department Head has no Survey access here (only
+    // recognitions/promotions), so one 403 shouldn't blank every stat.
     withAuth((token) =>
-      Promise.all([surveysApi.list(token), recognitionsApi.list(token), promotionRequestsApi.list(token)])
-    ).then(([surveys, recognitions, promotions]) => {
+      Promise.allSettled([surveysApi.list(token), recognitionsApi.list(token), promotionRequestsApi.list(token)])
+    ).then(([surveysResult, recognitionsResult, promotionsResult]) => {
+      const surveys = surveysResult.status === "fulfilled" ? surveysResult.value : [];
+      const recognitions = recognitionsResult.status === "fulfilled" ? recognitionsResult.value : [];
+      const promotions = promotionsResult.status === "fulfilled" ? promotionsResult.value : [];
       setStats({
         openSurveys: surveys.filter((s) => s.is_open).length,
         recognitions: recognitions.length,
@@ -27,6 +33,8 @@ export default function EmployeeEngagementHubPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visibleFeatures = filterSectionsForRole([section], user?.role)[0]?.features ?? [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -49,7 +57,7 @@ export default function EmployeeEngagementHubPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {section.features.map((feature) => (
+        {visibleFeatures.map((feature) => (
           <FeatureTile
             key={feature.label}
             icon={feature.icon}

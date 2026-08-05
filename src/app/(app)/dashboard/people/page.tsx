@@ -15,9 +15,11 @@ const moduleDef = dashboardModules.find((m) => m.key === "people")!;
 export default function PeopleManagementPage() {
   const { withAuth } = useAuth();
   const [summary, setSummary] = useState<PeopleDashboardSummary | null>(null);
+  const [summaryUnavailable, setSummaryUnavailable] = useState(false);
 
   useEffect(() => {
-    withAuth((token) => getPeopleDashboardSummary(token)).then(setSummary);
+    withAuth((token) => getPeopleDashboardSummary(token)).then(setSummary)
+      .catch(() => setSummaryUnavailable(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -33,7 +35,7 @@ export default function PeopleManagementPage() {
         </Link>
       </div>
 
-      {!summary ? (
+      {summaryUnavailable ? null : !summary ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
       ) : (
         <>

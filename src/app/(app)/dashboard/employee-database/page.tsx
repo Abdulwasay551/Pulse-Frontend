@@ -119,9 +119,15 @@ function EmployeeDatabasePage() {
 
   async function load() {
     try {
-      const [emps, docs] = await withAuth((token) => Promise.all([employeesApi.list(token), listEmployeeDocuments(token)]));
+      // allSettled, not all — a role with view-only Employee access but no
+      // EmployeeDocument access (e.g. Department Head) should still see the
+      // employee list rather than have one 403 blank out both.
+      const [empsResult, docsResult] = await withAuth((token) =>
+        Promise.allSettled([employeesApi.list(token), listEmployeeDocuments(token)])
+      );
+      const emps = empsResult.status === "fulfilled" ? empsResult.value : [];
       setEmployees(emps);
-      setDocuments(docs);
+      setDocuments(docsResult.status === "fulfilled" ? docsResult.value : []);
       const employeeParam = searchParams.get("employee");
       if (!autoOpenedRef.current && employeeParam) {
         autoOpenedRef.current = true;

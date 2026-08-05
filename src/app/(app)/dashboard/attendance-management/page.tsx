@@ -6,28 +6,36 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref } from "@/lib/dashboard-modules";
+import { filterSectionsForRole } from "@/lib/role-access";
 import { attendanceRecordsApi, leaveRequestsApi, shiftsApi } from "@/lib/people-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "people")!;
 const section = moduleDef.sections.find((s) => s.label === "Attendance Management")!;
 
 export default function AttendanceManagementHubPage() {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [stats, setStats] = useState<{ records: number; overtime: number; pendingLeave: number; shifts: number } | null>(null);
 
   useEffect(() => {
-    withAuth((token) => Promise.all([attendanceRecordsApi.list(token), leaveRequestsApi.list(token), shiftsApi.list(token)])).then(
-      ([records, leave, shifts]) => {
-        setStats({
-          records: records.length,
-          overtime: records.filter((r) => Number(r.overtime_hours) > 0).length,
-          pendingLeave: leave.filter((l) => l.status === "Pending").length,
-          shifts: shifts.length,
-        });
-      }
-    );
+    // allSettled — Finance Admin only has AttendanceRecord access here (no
+    // LeaveRequest/Shift), so one 403 shouldn't blank every stat.
+    withAuth((token) =>
+      Promise.allSettled([attendanceRecordsApi.list(token), leaveRequestsApi.list(token), shiftsApi.list(token)])
+    ).then(([recordsResult, leaveResult, shiftsResult]) => {
+      const records = recordsResult.status === "fulfilled" ? recordsResult.value : [];
+      const leave = leaveResult.status === "fulfilled" ? leaveResult.value : [];
+      const shifts = shiftsResult.status === "fulfilled" ? shiftsResult.value : [];
+      setStats({
+        records: records.length,
+        overtime: records.filter((r) => Number(r.overtime_hours) > 0).length,
+        pendingLeave: leave.filter((l) => l.status === "Pending").length,
+        shifts: shifts.length,
+      });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visibleFeatures = filterSectionsForRole([section], user?.role)[0]?.features ?? [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -51,7 +59,7 @@ export default function AttendanceManagementHubPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {section.features.map((feature) => (
+        {visibleFeatures.map((feature) => (
           <FeatureTile
             key={feature.label}
             icon={feature.icon}

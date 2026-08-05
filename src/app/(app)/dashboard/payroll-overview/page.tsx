@@ -6,13 +6,14 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref } from "@/lib/dashboard-modules";
+import { filterSectionsForRole } from "@/lib/role-access";
 import { payrollApi, taxProfilesApi, complianceEventsApi } from "@/lib/payroll-benefits-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "payroll-benefits")!;
 const section = moduleDef.sections.find((s) => s.label === "Payroll")!;
 
 export default function PayrollOverviewHubPage() {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [stats, setStats] = useState<{ runs: number; needsReview: number; actionRequired: number; overdue: number } | null>(null);
 
   useEffect(() => {
@@ -29,6 +30,8 @@ export default function PayrollOverviewHubPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visibleFeatures = filterSectionsForRole([section], user?.role)[0]?.features ?? [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -52,7 +55,7 @@ export default function PayrollOverviewHubPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {section.features.map((feature) => (
+        {visibleFeatures.map((feature) => (
           <FeatureTile
             key={feature.label}
             icon={feature.icon}

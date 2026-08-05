@@ -6,13 +6,14 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import FeatureTile from "@/components/dashboard/FeatureTile";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref } from "@/lib/dashboard-modules";
+import { filterSectionsForRole } from "@/lib/role-access";
 import { goalsApi, appraisalsApi, competencyRatingsApi } from "@/lib/talent-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "talent")!;
 const section = moduleDef.sections.find((s) => s.label === "Goals & Appraisal")!;
 
 export default function GoalsAppraisalHubPage() {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [stats, setStats] = useState<{ goalsInProgress: number; appraisals: number; competencies: number } | null>(null);
 
   useEffect(() => {
@@ -27,6 +28,8 @@ export default function GoalsAppraisalHubPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visibleFeatures = filterSectionsForRole([section], user?.role)[0]?.features ?? [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -49,7 +52,7 @@ export default function GoalsAppraisalHubPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {section.features.map((feature) => (
+        {visibleFeatures.map((feature) => (
           <FeatureTile
             key={feature.label}
             icon={feature.icon}

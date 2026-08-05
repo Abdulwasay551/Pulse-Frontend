@@ -46,12 +46,14 @@ export default function ClaimsPage() {
 
   async function load() {
     try {
-      const [c, e, p] = await withAuth((token) =>
-        Promise.all([benefitClaimsApi.list(token), employeesApi.list(token), benefitPlansApi.list(token)])
+      // allSettled — Department Head has no BenefitPlan access here (only
+      // claims, read-only), so that one 403 shouldn't blank the page.
+      const [cResult, eResult, pResult] = await withAuth((token) =>
+        Promise.allSettled([benefitClaimsApi.list(token), employeesApi.list(token), benefitPlansApi.list(token)])
       );
-      setClaims(c);
-      setEmployees(e);
-      setPlans(p);
+      setClaims(cResult.status === "fulfilled" ? cResult.value : []);
+      setEmployees(eResult.status === "fulfilled" ? eResult.value : []);
+      setPlans(pResult.status === "fulfilled" ? pResult.value : []);
     } finally {
       setLoading(false);
     }

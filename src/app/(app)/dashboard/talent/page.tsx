@@ -16,9 +16,11 @@ const RATINGS: NineBoxRating[] = ["High", "Medium", "Low"];
 export default function TalentManagementPage() {
   const { withAuth } = useAuth();
   const [summary, setSummary] = useState<TalentDashboardSummary | null>(null);
+  const [summaryUnavailable, setSummaryUnavailable] = useState(false);
 
   useEffect(() => {
-    withAuth((token) => getTalentDashboardSummary(token)).then(setSummary);
+    withAuth((token) => getTalentDashboardSummary(token)).then(setSummary)
+      .catch(() => setSummaryUnavailable(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -26,7 +28,7 @@ export default function TalentManagementPage() {
     <div className="mx-auto max-w-6xl">
       <ModuleHeader icon={moduleDef.icon} title={moduleDef.label} description={moduleDef.description} />
 
-      {!summary ? (
+      {summaryUnavailable ? null : !summary ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
       ) : (
         <>

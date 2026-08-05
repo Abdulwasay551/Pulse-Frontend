@@ -55,12 +55,14 @@ export default function ItSupportPage() {
 
   async function load() {
     try {
-      const [t, e, a] = await withAuth((token) =>
-        Promise.all([supportTicketsApi.list(token), employeesApi.list(token), assetsApi.list(token)])
+      // allSettled — Department Head has no Asset access here (only
+      // support tickets, create-only), so that one 403 shouldn't blank the page.
+      const [tResult, eResult, aResult] = await withAuth((token) =>
+        Promise.allSettled([supportTicketsApi.list(token), employeesApi.list(token), assetsApi.list(token)])
       );
-      setTickets(t);
-      setEmployees(e);
-      setAssets(a);
+      setTickets(tResult.status === "fulfilled" ? tResult.value : []);
+      setEmployees(eResult.status === "fulfilled" ? eResult.value : []);
+      setAssets(aResult.status === "fulfilled" ? aResult.value : []);
     } finally {
       setLoading(false);
     }

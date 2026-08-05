@@ -81,12 +81,14 @@ export default function BenefitsEnrollmentPage() {
 
   async function load() {
     try {
-      const [p, en, e] = await withAuth((token) =>
-        Promise.all([benefitPlansApi.list(token), benefitEnrollmentsApi.list(token), employeesApi.list(token)])
+      // allSettled — Department Head has no BenefitPlan access here (only
+      // enrollments, read-only), so that one 403 shouldn't blank the page.
+      const [pResult, enResult, eResult] = await withAuth((token) =>
+        Promise.allSettled([benefitPlansApi.list(token), benefitEnrollmentsApi.list(token), employeesApi.list(token)])
       );
-      setPlans(p);
-      setEnrollments(en);
-      setEmployees(e);
+      setPlans(pResult.status === "fulfilled" ? pResult.value : []);
+      setEnrollments(enResult.status === "fulfilled" ? enResult.value : []);
+      setEmployees(eResult.status === "fulfilled" ? eResult.value : []);
     } finally {
       setLoading(false);
     }
