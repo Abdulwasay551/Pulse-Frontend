@@ -139,8 +139,25 @@ export function login(data: { identifier: string; password: string }) {
   return apiFetch<AuthSession>("/auth/login/", { method: "POST", body: JSON.stringify(data) });
 }
 
+// Single-flight guard: refresh tokens are rotated + blacklisted on every
+// use (see backend SIMPLE_JWT settings), so two concurrent calls to this
+// function — e.g. React Strict Mode's double-invoked mount effect in dev,
+// or two API calls 401ing around the same moment and each independently
+// triggering withAuth's retry-after-refresh — would race to consume the
+// same cookie. Whichever request the server processes second sees an
+// already-blacklisted token and fails, and if that failure response is
+// what the browser applies last, it wipes the cookie a working session
+// had just been issued moments earlier. Coalescing concurrent callers onto
+// one in-flight request removes the race entirely.
+let refreshInFlight: Promise<{ access: string }> | null = null;
+
 export function refresh() {
-  return apiFetch<{ access: string }>("/auth/refresh/", { method: "POST" });
+  if (!refreshInFlight) {
+    refreshInFlight = apiFetch<{ access: string }>("/auth/refresh/", { method: "POST" }).finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 export function logout() {
