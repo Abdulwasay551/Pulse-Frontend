@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import { useAuth } from "@/lib/auth-context";
-import { payrollApi, type PayrollRun, type PayrollStatus } from "@/lib/payroll-benefits-api";
+import { payrollApi, payrollCsv, type PayrollRun, type PayrollStatus } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const PAYROLL_RUN_REQUIRED_FIELDS = ["period"];
 
 const statusTone: Record<PayrollStatus, string> = {
   Reconciled: "bg-primary/15 text-primary",
@@ -121,12 +124,20 @@ export default function PayrollPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Payroll</h1>
           <p className="mt-1 text-sm text-ink-soft">Contractor and placement payouts, run by run.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> Run payroll
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={payrollCsv}
+            resourceLabel="payroll runs"
+            requiredFields={PAYROLL_RUN_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> Run payroll
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -4,13 +4,17 @@ import { useEffect, useState } from "react";
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import {
   complianceEventsApi,
+  complianceEventsCsv,
   type ComplianceEvent,
   type ComplianceCategory,
   type CalendarStatus,
 } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const COMPLIANCE_EVENT_REQUIRED_FIELDS = ["country", "title", "due_date"];
 
 const categoryOptions: ComplianceCategory[] = ["Tax Filing", "Currency Update", "Regulatory"];
 
@@ -114,12 +118,20 @@ export default function ComplianceCalendarPage() {
             currency field on the Payroll page).
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New event
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={complianceEventsCsv}
+            resourceLabel="compliance events"
+            requiredFields={COMPLIANCE_EVENT_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New event
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

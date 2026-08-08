@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
-import { successionPlansApi, type NineBoxRating, type SuccessionPlan } from "@/lib/talent-api";
+import { successionPlansApi, successionPlansCsv, type NineBoxRating, type SuccessionPlan } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
+
+const SUCCESSION_PLAN_REQUIRED_FIELDS = ["employee"];
 
 const ratingOptions: NineBoxRating[] = ["Low", "Medium", "High"];
 // Rendered top-to-bottom as High/Medium/Low potential (rows), left-to-right
@@ -86,9 +89,17 @@ export default function SuccessionPlanningPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Succession Planning / 9-Box Grid</h1>
           <p className="mt-1 text-sm text-ink-soft">Potential × performance, and succession candidates.</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
-          <Plus className="h-4 w-4" /> Add to grid
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={successionPlansCsv}
+            resourceLabel="succession plans"
+            requiredFields={SUCCESSION_PLAN_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
+            <Plus className="h-4 w-4" /> Add to grid
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 overflow-hidden rounded-2xl border border-line bg-card p-6">

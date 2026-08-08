@@ -125,6 +125,7 @@ export interface AttendanceRecordWrite {
 }
 
 export const attendanceRecordsApi = resourceApi<AttendanceRecord, AttendanceRecordWrite>("/people/attendance-records/");
+export const attendanceRecordsCsv = csvApi("/people/attendance-records/", "attendance-records.csv");
 
 export interface Shift {
   id: number;
@@ -146,6 +147,7 @@ export interface ShiftWrite {
 }
 
 export const shiftsApi = resourceApi<Shift, ShiftWrite>("/people/shifts/");
+export const shiftsCsv = csvApi("/people/shifts/", "shifts.csv");
 
 export type LeaveType = "Vacation" | "Sick" | "Personal" | "Unpaid" | "Other";
 export type LeaveStatus = "Pending" | "Approved" | "Rejected";
@@ -174,6 +176,7 @@ export interface LeaveRequestWrite {
 }
 
 export const leaveRequestsApi = resourceApi<LeaveRequest, LeaveRequestWrite>("/people/leave-requests/");
+export const leaveRequestsCsv = csvApi("/people/leave-requests/", "time-off.csv");
 
 // --- Employee Engagement ---
 
@@ -222,6 +225,7 @@ export interface SurveyWrite {
 }
 
 export const surveysApi = resourceApi<Survey, SurveyWrite>("/people/surveys/");
+export const surveysCsv = csvApi("/people/surveys/", "surveys.csv");
 
 export const RECOGNITION_TYPES = [
   "Employee of the Month",
@@ -251,6 +255,7 @@ export interface RecognitionWrite {
 }
 
 export const recognitionsApi = resourceApi<Recognition, RecognitionWrite>("/people/recognitions/");
+export const recognitionsCsv = csvApi("/people/recognitions/", "recognitions.csv");
 
 export function downloadRecognitionCertificate(token: string, id: number, employeeName: string) {
   const filename = `${employeeName.replace(/\s+/g, "-")}-recognition-certificate.pdf`;
@@ -285,3 +290,4 @@ export interface PromotionRequestWrite {
 }
 
 export const promotionRequestsApi = resourceApi<PromotionRequest, PromotionRequestWrite>("/people/promotion-requests/");
+export const promotionRequestsCsv = csvApi("/people/promotion-requests/", "promotion-requests.csv");

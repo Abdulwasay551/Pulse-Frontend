@@ -1,5 +1,5 @@
 import { apiFetch } from "./auth-api";
-import { resourceApi } from "./api-resource";
+import { csvApi, resourceApi } from "./api-resource";
 import type { EmployeeLite } from "./people-api";
 
 export type GoalStatus = "Not Started" | "In Progress" | "Completed";
@@ -27,6 +27,7 @@ export interface GoalWrite {
 }
 
 export const goalsApi = resourceApi<Goal, GoalWrite>("/talent/goals/");
+export const goalsCsv = csvApi("/talent/goals/", "goals.csv");
 
 export type AppraisalStatus = "Draft" | "Submitted" | "Finalized";
 
@@ -54,6 +55,7 @@ export interface AppraisalWrite {
 }
 
 export const appraisalsApi = resourceApi<Appraisal, AppraisalWrite>("/talent/appraisals/");
+export const appraisalsCsv = csvApi("/talent/appraisals/", "appraisals.csv");
 
 export interface CompetencyRating {
   id: number;
@@ -73,6 +75,7 @@ export interface CompetencyRatingWrite {
 }
 
 export const competencyRatingsApi = resourceApi<CompetencyRating, CompetencyRatingWrite>("/talent/competency-ratings/");
+export const competencyRatingsCsv = csvApi("/talent/competency-ratings/", "competency-ratings.csv");
 
 export interface Course {
   id: number;
@@ -92,6 +95,7 @@ export interface CourseWrite {
 }
 
 export const coursesApi = resourceApi<Course, CourseWrite>("/talent/courses/");
+export const coursesCsv = csvApi("/talent/courses/", "courses.csv");
 
 export type EnrollmentStatus = "Not Started" | "In Progress" | "Completed";
 
@@ -137,6 +141,7 @@ export interface CareerPathWrite {
 }
 
 export const careerPathsApi = resourceApi<CareerPath, CareerPathWrite>("/talent/career-paths/");
+export const careerPathsCsv = csvApi("/talent/career-paths/", "career-paths.csv");
 
 export type NineBoxRating = "Low" | "Medium" | "High";
 
@@ -161,6 +166,7 @@ export interface SuccessionPlanWrite {
 }
 
 export const successionPlansApi = resourceApi<SuccessionPlan, SuccessionPlanWrite>("/talent/succession-plans/");
+export const successionPlansCsv = csvApi("/talent/succession-plans/", "succession-plans.csv");
 
 export interface EmployeeScore {
   employee: number;
@@ -198,3 +204,4 @@ export interface RecruiterFeedbackWrite {
 }
 
 export const recruiterFeedbackApi = resourceApi<RecruiterFeedback, RecruiterFeedbackWrite>("/talent/recruiter-feedback/");
+export const recruiterFeedbackCsv = csvApi("/talent/recruiter-feedback/", "recruiter-feedback.csv");

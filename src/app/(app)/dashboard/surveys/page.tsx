@@ -5,16 +5,20 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import {
   employeesApi,
   surveyResponsesApi,
   surveysApi,
+  surveysCsv,
   type Employee,
   type Survey,
   type SurveyFrequency,
   type SurveyKind,
 } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const SURVEY_REQUIRED_FIELDS = ["title", "questions"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -289,12 +293,15 @@ function SurveysPage() {
                 : "Read the room across every team."}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New {activeKind === "Pulse Check" ? "pulse check" : "survey"}
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar csv={surveysCsv} resourceLabel="surveys" requiredFields={SURVEY_REQUIRED_FIELDS} onImported={load} />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New {activeKind === "Pulse Check" ? "pulse check" : "survey"}
+          </button>
+        </div>
       </div>
 
       {loading ? (

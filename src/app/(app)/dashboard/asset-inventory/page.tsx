@@ -5,10 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
-import { assetsApi, type Asset, type AssetCategory, type AssetStatus } from "@/lib/it-assets-api";
+import { assetsApi, assetsCsv, type Asset, type AssetCategory, type AssetStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
+
+const ASSET_REQUIRED_FIELDS = ["asset_tag", "name"];
 
 const categoryOptions: AssetCategory[] = ["Laptop", "Monitor", "Phone", "Tablet", "Peripheral", "Other"];
 const statusOptions: AssetStatus[] = ["In Stock", "Assigned", "In Repair", "Retired"];
@@ -162,12 +165,15 @@ function AssetInventoryPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Asset Inventory Tracking</h1>
           <p className="mt-1 text-sm text-ink-soft">Laptops, monitors, and every assigned device.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New asset
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar csv={assetsCsv} resourceLabel="assets" requiredFields={ASSET_REQUIRED_FIELDS} onImported={load} />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New asset
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

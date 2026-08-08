@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { BadgeCheck, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
-import { bankAccountsApi, type BankAccount, type BankAccountType } from "@/lib/payroll-benefits-api";
+import { bankAccountsApi, bankAccountsCsv, type BankAccount, type BankAccountType } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const BANK_ACCOUNT_REQUIRED_FIELDS = ["employee", "bank_name", "account_holder_name", "account_number"];
 
 const accountTypeOptions: BankAccountType[] = ["Checking", "Savings"];
 
@@ -132,12 +135,20 @@ export default function DirectDepositPage() {
             Bank details used for payouts. Only the last 4 digits are ever stored or shown.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> Add bank account
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={bankAccountsCsv}
+            resourceLabel="bank accounts"
+            requiredFields={BANK_ACCOUNT_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> Add bank account
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

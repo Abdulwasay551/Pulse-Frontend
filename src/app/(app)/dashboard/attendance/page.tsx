@@ -5,9 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
-import { attendanceRecordsApi, employeesApi, type AttendanceRecord, type Employee } from "@/lib/people-api";
+import {
+  attendanceRecordsApi,
+  attendanceRecordsCsv,
+  employeesApi,
+  type AttendanceRecord,
+  type Employee,
+} from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const ATTENDANCE_REQUIRED_FIELDS = ["employee"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -154,6 +163,12 @@ function AttendancePage() {
           >
             {isOvertime ? "Viewing overtime" : "View overtime"}
           </button>
+          <CsvToolbar
+            csv={attendanceRecordsCsv}
+            resourceLabel="attendance records"
+            requiredFields={ATTENDANCE_REQUIRED_FIELDS}
+            onImported={load}
+          />
           <button
             onClick={openCreate}
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"

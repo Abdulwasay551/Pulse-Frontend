@@ -5,9 +5,19 @@ import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
-import { assetsApi, byodComplianceApi, type Asset, type BYODCompliance, type BYODComplianceStatus } from "@/lib/it-assets-api";
+import {
+  assetsApi,
+  byodComplianceApi,
+  byodComplianceCsv,
+  type Asset,
+  type BYODCompliance,
+  type BYODComplianceStatus,
+} from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
+
+const BYOD_COMPLIANCE_REQUIRED_FIELDS = ["employee", "asset"];
 
 const complianceOptions: BYODComplianceStatus[] = ["Compliant", "Non-Compliant", "Pending Review"];
 
@@ -117,13 +127,21 @@ export default function ByodPolicyPage() {
           <h1 className="font-display text-2xl font-bold text-ink">BYOD Security Policy</h1>
           <p className="mt-1 text-sm text-ink-soft">Track policy compliance per personal device.</p>
         </div>
-        <button
-          onClick={openCreate}
-          disabled={byodAssets.length === 0}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-        >
-          <Plus className="h-4 w-4" /> New compliance check
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={byodComplianceCsv}
+            resourceLabel="BYOD compliance checks"
+            requiredFields={BYOD_COMPLIANCE_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            disabled={byodAssets.length === 0}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" /> New compliance check
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

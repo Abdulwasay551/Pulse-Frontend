@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import CandidateLink from "@/components/dashboard/CandidateLink";
 import {
   candidatesApi,
   offerLettersApi,
+  offerLettersCsv,
   type Candidate,
   type OfferLetter,
   type OfferLetterStatus,
 } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
+
+const OFFER_LETTER_REQUIRED_FIELDS = ["candidate", "job_title", "body"];
 
 const statusTone: Record<OfferLetterStatus, string> = {
   Draft: "bg-cream-dim text-ink-soft",
@@ -146,12 +150,20 @@ export default function OfferLettersPage() {
             e-signature vendor can slot in here later.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New offer
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={offerLettersCsv}
+            resourceLabel="offer letters"
+            requiredFields={OFFER_LETTER_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New offer
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

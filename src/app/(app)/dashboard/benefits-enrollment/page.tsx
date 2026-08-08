@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   benefitPlansApi,
+  benefitPlansCsv,
   benefitEnrollmentsApi,
+  benefitEnrollmentsCsv,
   type BenefitPlan,
   type BenefitPlanType,
   type BenefitEnrollment,
@@ -16,6 +19,9 @@ import {
   type EnrollmentStatus,
 } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const BENEFIT_PLAN_REQUIRED_FIELDS = ["name"];
+const BENEFIT_ENROLLMENT_REQUIRED_FIELDS = ["employee", "plan"];
 
 const planTypeOptions: BenefitPlanType[] = ["Health", "Dental", "Vision", "Retirement", "Life Insurance", "Other"];
 const coverageOptions: CoverageLevel[] = ["Employee Only", "Employee + Spouse", "Employee + Children", "Family"];
@@ -199,12 +205,20 @@ export default function BenefitsEnrollmentPage() {
       <div className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold text-ink">Plan catalog</h2>
-          <button
-            onClick={openCreatePlan}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-          >
-            <Plus className="h-4 w-4" /> New plan
-          </button>
+          <div className="flex items-center gap-2">
+            <CsvToolbar
+              csv={benefitPlansCsv}
+              resourceLabel="benefit plans"
+              requiredFields={BENEFIT_PLAN_REQUIRED_FIELDS}
+              onImported={load}
+            />
+            <button
+              onClick={openCreatePlan}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+            >
+              <Plus className="h-4 w-4" /> New plan
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((p) => (
@@ -250,13 +264,21 @@ export default function BenefitsEnrollmentPage() {
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold text-ink">Enrollments</h2>
-          <button
-            onClick={openCreateEnrollment}
-            disabled={plans.length === 0}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-          >
-            <Plus className="h-4 w-4" /> New enrollment
-          </button>
+          <div className="flex items-center gap-2">
+            <CsvToolbar
+              csv={benefitEnrollmentsCsv}
+              resourceLabel="benefit enrollments"
+              requiredFields={BENEFIT_ENROLLMENT_REQUIRED_FIELDS}
+              onImported={load}
+            />
+            <button
+              onClick={openCreateEnrollment}
+              disabled={plans.length === 0}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" /> New enrollment
+            </button>
+          </div>
         </div>
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
           <table className="eh-table w-full text-left text-sm">

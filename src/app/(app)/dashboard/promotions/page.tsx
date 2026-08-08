@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import {
   employeesApi,
   promotionRequestsApi,
+  promotionRequestsCsv,
   type Employee,
   type PromotionRequest,
   type PromotionStatus,
 } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const PROMOTION_REQUEST_REQUIRED_FIELDS = ["employee"];
 
 const statusTone: Record<PromotionStatus, string> = {
   Pending: "bg-amber-soft text-amber",
@@ -118,12 +122,20 @@ export default function PromotionsPage() {
             Structured internal moves — approving updates the employee&apos;s title/department automatically.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New request
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={promotionRequestsCsv}
+            resourceLabel="promotion requests"
+            requiredFields={PROMOTION_REQUEST_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New request
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

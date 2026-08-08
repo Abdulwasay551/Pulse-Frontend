@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   taxProfilesApi,
+  taxProfilesCsv,
   type TaxProfile,
   type FilingStatus,
   type ComplianceStatus,
 } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const TAX_PROFILE_REQUIRED_FIELDS = ["employee", "country"];
 
 const filingOptions: FilingStatus[] = ["Single", "Married", "Head of Household", "Not Applicable"];
 const complianceOptions: ComplianceStatus[] = ["Compliant", "Pending Review", "Action Required"];
@@ -137,12 +141,20 @@ export default function TaxCompliancePage() {
           <h1 className="font-display text-2xl font-bold text-ink">Multi-Country Tax Compliance</h1>
           <p className="mt-1 text-sm text-ink-soft">Stay compliant across every jurisdiction you employ people in.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New tax profile
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={taxProfilesCsv}
+            resourceLabel="tax profiles"
+            requiredFields={TAX_PROFILE_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New tax profile
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

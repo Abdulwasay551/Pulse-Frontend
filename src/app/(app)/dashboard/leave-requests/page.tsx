@@ -4,9 +4,20 @@ import { useEffect, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
-import { employeesApi, leaveRequestsApi, type Employee, type LeaveRequest, type LeaveStatus, type LeaveType } from "@/lib/people-api";
+import {
+  employeesApi,
+  leaveRequestsApi,
+  leaveRequestsCsv,
+  type Employee,
+  type LeaveRequest,
+  type LeaveStatus,
+  type LeaveType,
+} from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const TIME_OFF_REQUIRED_FIELDS = ["employee", "start_date", "end_date"];
 
 const statusTone: Record<LeaveStatus, string> = {
   Pending: "bg-amber-soft text-amber",
@@ -101,12 +112,20 @@ export default function LeaveRequestsPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Time Off</h1>
           <p className="mt-1 text-sm text-ink-soft">Requests, approvals, and balances.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New request
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={leaveRequestsCsv}
+            resourceLabel="time off requests"
+            requiredFields={TIME_OFF_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New request
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

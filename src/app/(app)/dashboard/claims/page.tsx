@@ -4,10 +4,20 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
-import { benefitPlansApi, benefitClaimsApi, type BenefitPlan, type BenefitClaim, type ClaimStatus } from "@/lib/payroll-benefits-api";
+import {
+  benefitPlansApi,
+  benefitClaimsApi,
+  benefitClaimsCsv,
+  type BenefitPlan,
+  type BenefitClaim,
+  type ClaimStatus,
+} from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+const BENEFIT_CLAIM_REQUIRED_FIELDS = ["employee", "claim_type", "amount"];
 
 const statusOptions: ClaimStatus[] = ["Submitted", "Under Review", "Approved", "Rejected", "Paid"];
 
@@ -111,12 +121,20 @@ export default function ClaimsPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Claims &amp; Reimbursement Workflows</h1>
           <p className="mt-1 text-sm text-ink-soft">Submission and approval workflow, per claim.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New claim
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={benefitClaimsCsv}
+            resourceLabel="benefit claims"
+            requiredFields={BENEFIT_CLAIM_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New claim
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

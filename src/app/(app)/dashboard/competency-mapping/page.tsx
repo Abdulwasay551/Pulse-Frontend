@@ -5,8 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { competencyRatingsApi, type CompetencyRating } from "@/lib/talent-api";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { competencyRatingsApi, competencyRatingsCsv, type CompetencyRating } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
+
+const COMPETENCY_RATING_REQUIRED_FIELDS = ["employee", "competency"];
 
 type ViewMode = "employees" | "skills";
 
@@ -100,12 +103,20 @@ function CompetencyMappingPage() {
             {view === "skills" ? "A living map of who can do what." : "Map skills against role expectations, per employee."}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> New rating
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={competencyRatingsCsv}
+            resourceLabel="competency ratings"
+            requiredFields={COMPETENCY_RATING_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> New rating
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-2">

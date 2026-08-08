@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { coursesApi, enrollmentsApi, type Course, type Enrollment, type EnrollmentStatus } from "@/lib/talent-api";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { coursesApi, coursesCsv, enrollmentsApi, type Course, type Enrollment, type EnrollmentStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
+
+const COURSE_REQUIRED_FIELDS = ["title"];
 
 const statusTone: Record<EnrollmentStatus, string> = {
   "Not Started": "bg-cream-dim text-ink-soft",
@@ -183,9 +186,12 @@ export default function LearningPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Training & Learning Management System</h1>
           <p className="mt-1 text-sm text-ink-soft">Course delivery and enrollment tracking.</p>
         </div>
-        <button onClick={openCreateCourse} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
-          <Plus className="h-4 w-4" /> New course
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar csv={coursesCsv} resourceLabel="courses" requiredFields={COURSE_REQUIRED_FIELDS} onImported={load} />
+          <button onClick={openCreateCourse} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
+            <Plus className="h-4 w-4" /> New course
+          </button>
+        </div>
       </div>
 
       {loading ? (

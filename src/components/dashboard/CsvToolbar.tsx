@@ -176,7 +176,9 @@ function ImportWizard({
             disabled={downloadingTemplate}
             className="mb-4 text-xs font-semibold text-primary hover:text-primary-dark disabled:opacity-60"
           >
-            {downloadingTemplate ? "Downloading…" : "Not sure what columns to use? Download a blank template →"}
+            {downloadingTemplate
+              ? "Downloading…"
+              : "Not sure what columns to use? Download a template with an example row →"}
           </button>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line bg-cream px-6 py-10 text-center transition-colors hover:border-primary/50">
             <Upload className="h-6 w-6 text-ink-soft" />
@@ -201,10 +203,24 @@ function ImportWizard({
 
       {step === "mapping" && preview && (
         <div>
-          <p className="mb-4 text-sm text-ink-soft">
+          <p className="mb-2 text-sm text-ink-soft">
             {preview.row_count} row{preview.row_count === 1 ? "" : "s"} found. Match each CSV column to a field —
-            unmapped columns are ignored.
+            unmapped columns are ignored. Fields marked <span className="font-semibold text-ink">*</span> are
+            required.
           </p>
+          <details className="mb-4 rounded-lg border border-line bg-cream px-3.5 py-2.5">
+            <summary className="cursor-pointer text-xs font-semibold text-ink-soft">
+              What does each field expect? (column guide)
+            </summary>
+            <ul className="mt-2 space-y-1 border-t border-line pt-2 text-xs text-ink-soft">
+              {Object.entries(preview.fields).map(([key, label]) => (
+                <li key={key}>
+                  <span className="font-semibold text-ink">{label}</span>
+                  {requiredFields.includes(key) && <span className="text-maroon"> *</span>}
+                </li>
+              ))}
+            </ul>
+          </details>
           <div className="mb-5 max-h-72 overflow-y-auto rounded-lg border border-line">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-cream-dim">

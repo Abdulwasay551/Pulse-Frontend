@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { careerPathsApi, type CareerPath } from "@/lib/talent-api";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { careerPathsApi, careerPathsCsv, type CareerPath } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
+
+const CAREER_PATH_REQUIRED_FIELDS = ["employee"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -105,9 +108,17 @@ export default function CareerPathsPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Career Development Paths</h1>
           <p className="mt-1 text-sm text-ink-soft">Mapped per department hierarchy.</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
-          <Plus className="h-4 w-4" /> New path
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={careerPathsCsv}
+            resourceLabel="career paths"
+            requiredFields={CAREER_PATH_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark">
+            <Plus className="h-4 w-4" /> New path
+          </button>
+        </div>
       </div>
 
       {loading ? (

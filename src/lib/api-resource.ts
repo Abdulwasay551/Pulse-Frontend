@@ -37,9 +37,9 @@ export function csvApi(path: string, exportFilename: string) {
   const templateFilename = exportFilename.replace(/\.csv$/, "-import-template.csv");
   return {
     exportCsv: (token: string) => downloadFile(`${path}export/`, token, exportFilename),
-    // A blank CSV with just the header row, so the expected columns are
-    // visible before uploading a real file — separate from exportCsv,
-    // which dumps actual data.
+    // The header row plus one filled-in example row, so the expected
+    // columns and their format are visible before uploading a real file —
+    // separate from exportCsv, which dumps actual data.
     downloadTemplate: (token: string) => downloadFile(`${path}import/template/`, token, templateFilename),
     importPreview: (token: string, file: File) => {
       const formData = new FormData();

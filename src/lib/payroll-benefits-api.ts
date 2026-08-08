@@ -1,5 +1,5 @@
 import { apiFetch } from "./auth-api";
-import { resourceApi } from "./api-resource";
+import { csvApi, resourceApi } from "./api-resource";
 import type { EmployeeLite } from "./people-api";
 
 export type PayrollStatus = "Reconciled" | "Needs review" | "Processing";
@@ -28,6 +28,7 @@ export interface PayrollRunWrite {
 }
 
 export const payrollApi = resourceApi<PayrollRun, PayrollRunWrite>("/payroll-benefits/payroll-runs/");
+export const payrollCsv = csvApi("/payroll-benefits/payroll-runs/", "payroll-runs.csv");
 
 export type FilingStatus = "Single" | "Married" | "Head of Household" | "Not Applicable";
 export type ComplianceStatus = "Compliant" | "Pending Review" | "Action Required";
@@ -57,6 +58,7 @@ export interface TaxProfileWrite {
 }
 
 export const taxProfilesApi = resourceApi<TaxProfile, TaxProfileWrite>("/payroll-benefits/tax-profiles/");
+export const taxProfilesCsv = csvApi("/payroll-benefits/tax-profiles/", "tax-profiles.csv");
 
 export type ComplianceCategory = "Tax Filing" | "Currency Update" | "Regulatory";
 export type CalendarStatus = "Upcoming" | "Due soon" | "Overdue" | "Completed";
@@ -84,6 +86,7 @@ export interface ComplianceEventWrite {
 }
 
 export const complianceEventsApi = resourceApi<ComplianceEvent, ComplianceEventWrite>("/payroll-benefits/compliance-events/");
+export const complianceEventsCsv = csvApi("/payroll-benefits/compliance-events/", "compliance-events.csv");
 
 export type BankAccountType = "Checking" | "Savings";
 
@@ -114,6 +117,7 @@ export interface BankAccountWrite {
 }
 
 export const bankAccountsApi = resourceApi<BankAccount, BankAccountWrite>("/payroll-benefits/bank-accounts/");
+export const bankAccountsCsv = csvApi("/payroll-benefits/bank-accounts/", "bank-accounts.csv");
 
 export type BenefitPlanType = "Health" | "Dental" | "Vision" | "Retirement" | "Life Insurance" | "Other";
 
@@ -142,6 +146,7 @@ export interface BenefitPlanWrite {
 }
 
 export const benefitPlansApi = resourceApi<BenefitPlan, BenefitPlanWrite>("/payroll-benefits/benefit-plans/");
+export const benefitPlansCsv = csvApi("/payroll-benefits/benefit-plans/", "benefit-plans.csv");
 
 export type CoverageLevel = "Employee Only" | "Employee + Spouse" | "Employee + Children" | "Family";
 export type EnrollmentStatus = "Enrolled" | "Pending" | "Waived" | "Terminated";
@@ -170,6 +175,7 @@ export interface BenefitEnrollmentWrite {
 export const benefitEnrollmentsApi = resourceApi<BenefitEnrollment, BenefitEnrollmentWrite>(
   "/payroll-benefits/benefit-enrollments/"
 );
+export const benefitEnrollmentsCsv = csvApi("/payroll-benefits/benefit-enrollments/", "benefit-enrollments.csv");
 
 export type ClaimStatus = "Submitted" | "Under Review" | "Approved" | "Rejected" | "Paid";
 
@@ -197,6 +203,7 @@ export interface BenefitClaimWrite {
 }
 
 export const benefitClaimsApi = resourceApi<BenefitClaim, BenefitClaimWrite>("/payroll-benefits/benefit-claims/");
+export const benefitClaimsCsv = csvApi("/payroll-benefits/benefit-claims/", "benefit-claims.csv");
 
 export interface PayrollBenefitsDashboardSummary {
   overview_stats: { label: string; value: string; change: string; href: string }[];

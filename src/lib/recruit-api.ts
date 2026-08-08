@@ -120,6 +120,7 @@ export const requisitionsApi = resourceApi<Requisition, RequisitionWrite>("/recr
 export const candidatesApi = resourceApi<Candidate, CandidateWrite>("/recruit/candidates/");
 export const clientsCsv = csvApi("/recruit/clients/", "clients.csv");
 export const candidatesCsv = csvApi("/recruit/candidates/", "candidates.csv");
+export const requisitionsCsv = csvApi("/recruit/requisitions/", "job-openings.csv");
 
 export function getDashboardSummary(token: string) {
   return apiFetch<DashboardSummary>("/recruit/dashboard-summary/", { method: "GET" }, token);
@@ -164,6 +165,7 @@ export interface OfferLetterWrite {
 }
 
 export const offerLettersApi = resourceApi<OfferLetter, OfferLetterWrite>("/recruit/offer-letters/");
+export const offerLettersCsv = csvApi("/recruit/offer-letters/", "offer-letters.csv");
 
 // --- Background checks ---
 
@@ -191,6 +193,7 @@ export interface BackgroundCheckWrite {
 }
 
 export const backgroundChecksApi = resourceApi<BackgroundCheck, BackgroundCheckWrite>("/recruit/background-checks/");
+export const backgroundChecksCsv = csvApi("/recruit/background-checks/", "background-checks.csv");
 
 // --- Onboarding ---
 

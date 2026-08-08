@@ -4,16 +4,20 @@ import { useEffect, useState } from "react";
 import { Award, Download, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import {
   RECOGNITION_TYPES,
   downloadRecognitionCertificate,
   employeesApi,
   recognitionsApi,
+  recognitionsCsv,
   type Employee,
   type Recognition,
   type RecognitionType,
 } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const RECOGNITION_REQUIRED_FIELDS = ["employee"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -108,12 +112,20 @@ export default function RecognitionPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Recognition Programs</h1>
           <p className="mt-1 text-sm text-ink-soft">Celebrate wins, department by department.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> Give recognition
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={recognitionsCsv}
+            resourceLabel="recognitions"
+            requiredFields={RECOGNITION_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> Give recognition
+          </button>
+        </div>
       </div>
 
       {loading ? (

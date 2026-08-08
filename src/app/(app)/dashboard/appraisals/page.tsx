@@ -5,10 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
-import { appraisalsApi, getEmployeeScore, type Appraisal, type AppraisalStatus } from "@/lib/talent-api";
+import { appraisalsApi, appraisalsCsv, getEmployeeScore, type Appraisal, type AppraisalStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const APPRAISAL_REQUIRED_FIELDS = ["employee", "period", "overall_rating"];
 
 type ViewMode = "appraisals" | "scores";
 
@@ -179,12 +182,20 @@ function AppraisalsPage() {
           </p>
         </div>
         {view === "appraisals" && (
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-          >
-            <Plus className="h-4 w-4" /> New appraisal
-          </button>
+          <div className="flex items-center gap-2">
+            <CsvToolbar
+              csv={appraisalsCsv}
+              resourceLabel="appraisals"
+              requiredFields={APPRAISAL_REQUIRED_FIELDS}
+              onImported={load}
+            />
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+            >
+              <Plus className="h-4 w-4" /> New appraisal
+            </button>
+          </div>
         )}
       </div>
 

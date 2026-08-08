@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { MessageSquareText, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
-import { recruiterFeedbackApi, type RecruiterFeedback } from "@/lib/talent-api";
+import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { recruiterFeedbackApi, recruiterFeedbackCsv, type RecruiterFeedback } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
+
+const RECRUITER_FEEDBACK_REQUIRED_FIELDS = ["employee", "message"];
 
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
@@ -68,12 +71,20 @@ export default function RecruiterFeedbackPage() {
           <h1 className="font-display text-2xl font-bold text-ink">Recruiter Feedback</h1>
           <p className="mt-1 text-sm text-ink-soft">Notes a recruiter leaves on a placed/hired employee — visible to HR.</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
-        >
-          <Plus className="h-4 w-4" /> Add feedback
-        </button>
+        <div className="flex items-center gap-2">
+          <CsvToolbar
+            csv={recruiterFeedbackCsv}
+            resourceLabel="feedback notes"
+            requiredFields={RECRUITER_FEEDBACK_REQUIRED_FIELDS}
+            onImported={load}
+          />
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark"
+          >
+            <Plus className="h-4 w-4" /> Add feedback
+          </button>
+        </div>
       </div>
 
       {loading ? (
