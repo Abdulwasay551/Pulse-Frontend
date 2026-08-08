@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import {
@@ -11,6 +11,7 @@ import {
   surveysApi,
   type Employee,
   type Survey,
+  type SurveyFrequency,
   type SurveyKind,
 } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -19,6 +20,9 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 const kindOptions: SurveyKind[] = ["Survey", "Pulse Check"];
+const frequencyOptions: SurveyFrequency[] = ["Yearly", "Bi-yearly"];
+const PULSE_MIN_QUESTIONS = 3;
+const PULSE_MAX_QUESTIONS = 5;
 
 export default function SurveysPageWrapper() {
   return (
@@ -39,7 +43,12 @@ function SurveysPage() {
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ kind: (activeKind ?? "Survey") as SurveyKind, title: "", question: "" });
+  const [form, setForm] = useState({
+    kind: (activeKind ?? "Survey") as SurveyKind,
+    title: "",
+    questions: [""] as string[],
+    frequency: "" as SurveyFrequency | "",
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,17 +75,45 @@ function SurveysPage() {
   const visible = activeKind ? surveys.filter((s) => s.kind === activeKind) : surveys;
 
   function openCreate() {
-    setForm({ kind: activeKind ?? "Survey", title: "", question: "" });
+    setForm({ kind: activeKind ?? "Survey", title: "", questions: [""], frequency: "" });
     setError(null);
     setShowForm(true);
   }
 
+  function updateQuestion(index: number, value: string) {
+    setForm((f) => ({ ...f, questions: f.questions.map((q, i) => (i === index ? value : q)) }));
+  }
+
+  function addQuestion() {
+    setForm((f) => (f.questions.length >= PULSE_MAX_QUESTIONS ? f : { ...f, questions: [...f.questions, ""] }));
+  }
+
+  function removeQuestion(index: number) {
+    setForm((f) => ({ ...f, questions: f.questions.filter((_, i) => i !== index) }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const questions = form.questions.map((q) => q.trim()).filter(Boolean);
+    if (questions.length === 0) {
+      setError("Add at least one question.");
+      return;
+    }
+    if (form.kind === "Pulse Check" && (questions.length < PULSE_MIN_QUESTIONS || questions.length > PULSE_MAX_QUESTIONS)) {
+      setError(`Pulse Checks need ${PULSE_MIN_QUESTIONS}–${PULSE_MAX_QUESTIONS} questions.`);
+      return;
+    }
     setError(null);
     setSaving(true);
     try {
-      await withAuth((token) => surveysApi.create(token, form));
+      await withAuth((token) =>
+        surveysApi.create(token, {
+          kind: form.kind,
+          title: form.title,
+          questions,
+          frequency: form.kind === "Pulse Check" && form.frequency ? form.frequency : null,
+        })
+      );
       setShowForm(false);
       await load();
     } catch (err) {
@@ -138,7 +175,12 @@ function SurveysPage() {
             </span>
           </div>
           <h1 className="font-display text-xl font-bold text-ink">{active.title}</h1>
-          <p className="mt-1 text-sm text-ink-soft">{active.question}</p>
+          {active.frequency && <p className="mt-1 text-xs text-ink-soft">Frequency: {active.frequency}</p>}
+          <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-ink-soft">
+            {active.questions.map((q, i) => (
+              <li key={i}>{q}</li>
+            ))}
+          </ol>
           <div className="mt-4 flex items-center gap-4 text-xs text-ink-soft">
             <span>{active.response_count} response{active.response_count === 1 ? "" : "s"}</span>
             {active.average_rating !== null && <span>Average rating: {active.average_rating}/5</span>}
@@ -280,7 +322,7 @@ function SurveysPage() {
                 )}
               </div>
               <h3 className="font-display text-base font-bold text-ink">{s.title}</h3>
-              <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.question}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.questions.join(" · ")}</p>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
                 <span className="text-ink-soft">{s.response_count} responses</span>
                 {s.average_rating !== null && <span className="font-semibold text-ink">{s.average_rating}/5</span>}
@@ -321,15 +363,66 @@ function SurveysPage() {
                 className={inputClass}
               />
             </div>
+            {form.kind === "Pulse Check" && (
+              <div className="mb-4">
+                <label className={labelClass}>Frequency</label>
+                <select
+                  value={form.frequency}
+                  onChange={(e) => setForm({ ...form, frequency: e.target.value as SurveyFrequency })}
+                  className={inputClass}
+                >
+                  <option value="">Not set</option>
+                  {frequencyOptions.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="mb-6">
-              <label className={labelClass}>Question</label>
-              <textarea
-                required
-                rows={3}
-                value={form.question}
-                onChange={(e) => setForm({ ...form, question: e.target.value })}
-                className={inputClass}
-              />
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className={labelClass}>
+                  Question{form.questions.length === 1 ? "" : "s"}
+                  {form.kind === "Pulse Check" && (
+                    <span className="ml-1 normal-case text-ink-soft/70">
+                      ({PULSE_MIN_QUESTIONS}–{PULSE_MAX_QUESTIONS} required)
+                    </span>
+                  )}
+                </label>
+              </div>
+              <div className="space-y-2">
+                {form.questions.map((q, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <textarea
+                      required
+                      rows={2}
+                      value={q}
+                      onChange={(e) => updateQuestion(i, e.target.value)}
+                      className={inputClass}
+                    />
+                    {form.questions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeQuestion(i)}
+                        aria-label={`Remove question ${i + 1}`}
+                        className="shrink-0 rounded-lg p-2 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {form.questions.length < PULSE_MAX_QUESTIONS && (
+                <button
+                  type="button"
+                  onClick={addQuestion}
+                  className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-dark"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add question
+                </button>
+              )}
             </div>
             <button
               type="submit"

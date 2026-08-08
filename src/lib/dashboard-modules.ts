@@ -33,7 +33,6 @@ import {
   PieChart,
   Receipt,
   Repeat,
-  ScanSearch,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -41,7 +40,6 @@ import {
   Target,
   Timer,
   TrendingUp,
-  UserCheck,
   UserMinus,
   UserSquare,
   Users,
@@ -134,7 +132,6 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Digital Offer Letters", description: "Draft, send, and track offers to signature.", icon: FileSignature, href: "/dashboard/offer-letters" },
           { label: "Background Check Integration", description: "Screening status before an offer is final.", icon: ShieldCheck, href: "/dashboard/background-checks" },
           { label: "AI Resume Screening", description: "Resume-to-requirements fit scoring.", icon: Sparkles, href: "/dashboard/ai-resume-screening" },
-          { label: "Candidate Portal", description: "Self-service status tracking for applicants.", icon: ScanSearch, href: "/dashboard/candidate-portal" },
         ],
       },
       {
@@ -183,7 +180,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Clock-in/Clock-out Tracking", description: "Time tracking per employee.", icon: Clock, href: "/dashboard/attendance?view=clock" },
           { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance?view=overtime" },
           { label: "Shift Scheduling per Department", description: "Per-department shift planning.", icon: CalendarClock, href: "/dashboard/shift-scheduling" },
-          { label: "Leave & Absence Management", description: "Requests, approvals, and balances.", icon: CalendarCheck, href: "/dashboard/leave-requests" },
+          { label: "Time Off", description: "Requests, approvals, and balances.", icon: CalendarCheck, href: "/dashboard/leave-requests" },
         ],
       },
       {
@@ -206,8 +203,6 @@ export const dashboardModules: ModuleDef[] = [
         features: [
           { label: "Employee Database / 360° Profiles", description: "Every employee, one place.", icon: UserSquare, href: "/dashboard/employee-database?view=employees" },
           { label: "Organizational Chart & Reporting Hierarchy", description: "Reporting lines across the company.", icon: Network, href: "/dashboard/org-chart" },
-          { label: "Employee Self-Service", description: "Update personal info, view payslips.", icon: UserCheck, href: "/dashboard/employee-self-service" },
-          { label: "Document Management", description: "Contracts, certifications, ID proofs.", icon: FileText, href: "/dashboard/employee-database?view=documents" },
         ],
       },
       {

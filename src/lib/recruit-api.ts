@@ -49,6 +49,7 @@ export interface Candidate {
   requisition_title: string | null;
   stage: CandidateStage;
   source: CandidateSource;
+  current_salary: string | null;
   applied_at: string;
   placed_at: string | null;
   resume_file: string | null;
@@ -108,6 +109,7 @@ export interface CandidateWrite {
   requisition?: number | null;
   stage?: CandidateStage;
   source?: CandidateSource;
+  current_salary?: number | string | null;
   applied_at?: string;
   resume_text?: string;
   resume_file?: string | null;
@@ -165,7 +167,7 @@ export const offerLettersApi = resourceApi<OfferLetter, OfferLetterWrite>("/recr
 
 // --- Background checks ---
 
-export type BackgroundCheckType = "Criminal" | "Employment" | "Education" | "Credit" | "Reference";
+export type BackgroundCheckType = "Education" | "Employment" | "Criminal" | "EEC";
 export type BackgroundCheckStatus = "Pending" | "In Progress" | "Cleared" | "Flagged";
 
 export interface BackgroundCheck {

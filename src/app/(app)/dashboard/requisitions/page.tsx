@@ -148,7 +148,7 @@ export default function RequisitionsPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Requisitions</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">Job Openings</h1>
           <p className="mt-1 text-sm text-ink-soft">Every open job order, across every client.</p>
         </div>
         <button
@@ -221,7 +221,7 @@ export default function RequisitionsPage() {
           </tbody>
         </table>
         {!loading && requisitions.length === 0 && (
-          <div className="p-10 text-center text-sm text-ink-soft">No requisitions yet.</div>
+          <div className="p-10 text-center text-sm text-ink-soft">No job openings yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
       </div>

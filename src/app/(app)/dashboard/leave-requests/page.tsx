@@ -27,7 +27,7 @@ export default function LeaveRequestsPage() {
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ employee: "", leave_type: "Vacation" as LeaveType, start_date: "", end_date: "", reason: "" });
+  const [form, setForm] = useState({ employee: "", leave_type: "Vacation" as LeaveType, start_date: "", end_date: "", hours: "", reason: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +52,7 @@ export default function LeaveRequestsPage() {
       leave_type: "Vacation",
       start_date: new Date().toISOString().slice(0, 10),
       end_date: new Date().toISOString().slice(0, 10),
+      hours: "",
       reason: "",
     });
     setError(null);
@@ -69,6 +70,7 @@ export default function LeaveRequestsPage() {
           leave_type: form.leave_type,
           start_date: form.start_date,
           end_date: form.end_date,
+          hours: form.hours === "" ? null : form.hours,
           reason: form.reason,
         })
       );
@@ -96,7 +98,7 @@ export default function LeaveRequestsPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Leave & Absence Management</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">Time Off</h1>
           <p className="mt-1 text-sm text-ink-soft">Requests, approvals, and balances.</p>
         </div>
         <button
@@ -114,6 +116,7 @@ export default function LeaveRequestsPage() {
               <th className="px-5 py-3 font-medium">Employee</th>
               <th className="px-5 py-3 font-medium">Type</th>
               <th className="px-5 py-3 font-medium">Dates</th>
+              <th className="px-5 py-3 font-medium">Hours</th>
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
@@ -128,6 +131,7 @@ export default function LeaveRequestsPage() {
                 <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Dates">
                   {r.start_date} → {r.end_date}
                 </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Hours">{r.hours ?? "—"}</td>
                 <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[r.status]}`}
@@ -233,6 +237,18 @@ export default function LeaveRequestsPage() {
                   className={inputClass}
                 />
               </div>
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Hours</label>
+              <input
+                type="number"
+                step="0.25"
+                min="0"
+                value={form.hours}
+                onChange={(e) => setForm({ ...form, hours: e.target.value })}
+                placeholder="Not known"
+                className={inputClass}
+              />
             </div>
             <div className="mb-6">
               <label className={labelClass}>Reason</label>

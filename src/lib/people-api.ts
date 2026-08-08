@@ -1,7 +1,8 @@
-import { apiFetch } from "./auth-api";
+import { apiFetch, downloadFile } from "./auth-api";
 import { csvApi, resourceApi } from "./api-resource";
 
 export type EmployeeStatus = "Active" | "On Leave" | "Terminated";
+export type SalaryType = "Hourly" | "Salaried" | "Contract";
 
 export interface EmployeeDocument {
   id: number;
@@ -21,10 +22,14 @@ export interface Employee {
   phone: string;
   job_title: string;
   department: string;
+  client_name: string;
   manager: number | null;
   manager_name: string | null;
   direct_reports_count: number;
+  salary_type: SalaryType | "";
+  location: string;
   hire_date: string;
+  permanent_date: string | null;
   status: EmployeeStatus;
   monthly_salary: string | null;
   source_candidate: number | null;
@@ -40,8 +45,12 @@ export interface EmployeeWrite {
   phone?: string;
   job_title?: string;
   department?: string;
+  client_name?: string;
   manager?: number | null;
+  salary_type?: SalaryType | "";
+  location?: string;
   hire_date?: string;
+  permanent_date?: string | null;
   status?: EmployeeStatus;
   monthly_salary?: number | string | null;
 }
@@ -148,6 +157,7 @@ export interface LeaveRequest {
   leave_type: LeaveType;
   start_date: string;
   end_date: string;
+  hours: string | null;
   status: LeaveStatus;
   reason: string;
   created_at: string;
@@ -158,6 +168,7 @@ export interface LeaveRequestWrite {
   leave_type?: LeaveType;
   start_date: string;
   end_date: string;
+  hours?: number | string | null;
   status?: LeaveStatus;
   reason?: string;
 }
@@ -187,11 +198,14 @@ export interface SurveyResponseWrite {
 
 export const surveyResponsesApi = resourceApi<SurveyResponse, SurveyResponseWrite>("/people/survey-responses/");
 
+export type SurveyFrequency = "Yearly" | "Bi-yearly";
+
 export interface Survey {
   id: number;
   kind: SurveyKind;
   title: string;
-  question: string;
+  questions: string[];
+  frequency: SurveyFrequency | null;
   is_open: boolean;
   responses: SurveyResponse[];
   response_count: number;
@@ -202,16 +216,28 @@ export interface Survey {
 export interface SurveyWrite {
   kind?: SurveyKind;
   title: string;
-  question: string;
+  questions: string[];
+  frequency?: SurveyFrequency | null;
   is_open?: boolean;
 }
 
 export const surveysApi = resourceApi<Survey, SurveyWrite>("/people/surveys/");
 
+export const RECOGNITION_TYPES = [
+  "Employee of the Month",
+  "Work Anniversary",
+  "Above & Beyond",
+  "Team Player",
+  "Innovation Award",
+  "Milestone Achievement",
+] as const;
+export type RecognitionType = (typeof RECOGNITION_TYPES)[number];
+
 export interface Recognition {
   id: number;
   employee: number;
   employee_detail: EmployeeLite;
+  recognition_type: RecognitionType;
   given_by: string;
   message: string;
   created_at: string;
@@ -219,11 +245,17 @@ export interface Recognition {
 
 export interface RecognitionWrite {
   employee: number;
+  recognition_type?: RecognitionType;
   given_by?: string;
-  message: string;
+  message?: string;
 }
 
 export const recognitionsApi = resourceApi<Recognition, RecognitionWrite>("/people/recognitions/");
+
+export function downloadRecognitionCertificate(token: string, id: number, employeeName: string) {
+  const filename = `${employeeName.replace(/\s+/g, "-")}-recognition-certificate.pdf`;
+  return downloadFile(`/people/recognitions/${id}/certificate/`, token, filename);
+}
 
 export type PromotionStatus = "Pending" | "Approved" | "Rejected";
 

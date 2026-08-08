@@ -22,7 +22,13 @@ const statusTone: Record<BackgroundCheckStatus, string> = {
   Flagged: "bg-maroon-soft text-maroon",
 };
 
-const typeOptions: BackgroundCheckType[] = ["Criminal", "Employment", "Education", "Credit", "Reference"];
+const typeOptions: BackgroundCheckType[] = ["Education", "Employment", "Criminal", "EEC"];
+const typeLabels: Record<BackgroundCheckType, string> = {
+  Education: "Education",
+  Employment: "Employment",
+  Criminal: "Criminal",
+  EEC: "Education + Employment + Criminal (EEC)",
+};
 const statusOptions: BackgroundCheckStatus[] = ["Pending", "In Progress", "Cleared", "Flagged"];
 
 const inputClass =
@@ -36,7 +42,7 @@ interface FormState {
   notes: string;
 }
 
-const emptyForm: FormState = { candidate: "", check_type: "Criminal", status: "Pending", notes: "" };
+const emptyForm: FormState = { candidate: "", check_type: "Education", status: "Pending", notes: "" };
 
 export default function BackgroundChecksPage() {
   const { withAuth } = useAuth();
@@ -139,7 +145,7 @@ export default function BackgroundChecksPage() {
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Check type</th>
+              <th className="px-5 py-3 font-medium">Screening Type</th>
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium">Initiated</th>
               <th className="px-5 py-3 font-medium">Completed</th>
@@ -152,7 +158,7 @@ export default function BackgroundChecksPage() {
                 <td className="px-5 py-3.5" data-label="Candidate">
                   <CandidateLink candidate={b.candidate_detail} />
                 </td>
-                <td className="px-5 py-3.5 text-ink-soft" data-label="Check type">{b.check_type}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Screening Type">{typeLabels[b.check_type]}</td>
                 <td className="px-5 py-3.5" data-label="Status">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[b.status]}`}
@@ -221,7 +227,7 @@ export default function BackgroundChecksPage() {
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Check type</label>
+                <label className={labelClass}>Screening Type</label>
                 <select
                   value={form.check_type}
                   onChange={(e) => setForm({ ...form, check_type: e.target.value as BackgroundCheckType })}
@@ -229,7 +235,7 @@ export default function BackgroundChecksPage() {
                 >
                   {typeOptions.map((t) => (
                     <option key={t} value={t}>
-                      {t}
+                      {typeLabels[t]}
                     </option>
                   ))}
                 </select>

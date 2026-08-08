@@ -109,7 +109,6 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/offer-letters",
     "/dashboard/background-checks",
     "/dashboard/ai-resume-screening",
-    "/dashboard/candidate-portal",
     "/dashboard/onboarding",
     "/dashboard/offboarding",
     "/dashboard/rehire-pool",

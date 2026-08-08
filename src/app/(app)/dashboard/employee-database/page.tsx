@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { FileText, KeyRound, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Check, Copy, ExternalLink, FileText, KeyRound, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -12,12 +12,18 @@ import {
   deleteEmployeeDocument,
   employeesApi,
   employeesCsv,
+  leaveRequestsApi,
   listEmployeeDocuments,
   uploadEmployeeDocument,
   type Employee,
   type EmployeeDocument,
   type EmployeeStatus,
+  type LeaveRequest,
+  type SalaryType,
 } from "@/lib/people-api";
+import { assetsApi, type Asset } from "@/lib/it-assets-api";
+import { goalsApi, type Goal } from "@/lib/talent-api";
+import { benefitClaimsApi, benefitEnrollmentsApi, type BenefitClaim, type BenefitEnrollment } from "@/lib/payroll-benefits-api";
 import { createEmployeeAccount, sendEmployeeInvite } from "@/lib/role-api";
 import { ApiError, type UserRole } from "@/lib/auth-api";
 
@@ -34,6 +40,7 @@ const statusTone: Record<EmployeeStatus, string> = {
 };
 
 const statusOptions: EmployeeStatus[] = ["Active", "On Leave", "Terminated"];
+const salaryTypeOptions: SalaryType[] = ["Hourly", "Salaried", "Contract"];
 const docTypeOptions: EmployeeDocument["doc_type"][] = ["Contract", "Certification", "ID Proof", "Other"];
 
 const inputClass =
@@ -46,8 +53,12 @@ interface FormState {
   phone: string;
   job_title: string;
   department: string;
+  client_name: string;
   manager: string;
+  salary_type: SalaryType | "";
+  location: string;
   hire_date: string;
+  permanent_date: string;
   status: EmployeeStatus;
   monthly_salary: string;
 }
@@ -58,11 +69,46 @@ const emptyForm: FormState = {
   phone: "",
   job_title: "",
   department: "",
+  client_name: "",
   manager: "",
+  salary_type: "",
+  location: "",
   hire_date: new Date().toISOString().slice(0, 10),
+  permanent_date: "",
   status: "Active",
   monthly_salary: "",
 };
+
+const TABS = [
+  { id: "details", label: "Details" },
+  { id: "employment", label: "Employment" },
+  { id: "property", label: "Company Property" },
+  { id: "tasklists", label: "Tasklists" },
+  { id: "timeoff", label: "Time Off" },
+  { id: "benefits", label: "Benefits" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
+
+function portalUrl(token: string) {
+  if (typeof window === "undefined") return `/employee-portal/${token}`;
+  return `${window.location.origin}/employee-portal/${token}`;
+}
+
+function formatTenure(hireDate: string): string {
+  if (!hireDate) return "—";
+  const start = new Date(hireDate);
+  if (Number.isNaN(start.getTime())) return "—";
+  const now = new Date();
+  let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  if (now.getDate() < start.getDate()) months -= 1;
+  if (months < 0) months = 0;
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} year${years === 1 ? "" : "s"}`);
+  if (remMonths > 0 || years === 0) parts.push(`${remMonths} month${remMonths === 1 ? "" : "s"}`);
+  return parts.join(", ");
+}
 
 export default function EmployeeDatabasePageWrapper() {
   return (
@@ -82,9 +128,21 @@ function EmployeeDatabasePage() {
 
   const [editing, setEditing] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("details");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedProfileLink, setCopiedProfileLink] = useState(false);
+
+  // Cross-module read-only summaries, fetched per employee when the edit
+  // modal opens — allSettled so a role without e.g. IT-Assets access still
+  // sees the other tabs instead of the whole modal erroring out.
+  const [crossModuleLoading, setCrossModuleLoading] = useState(false);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [timeOff, setTimeOff] = useState<LeaveRequest[]>([]);
+  const [enrollments, setEnrollments] = useState<BenefitEnrollment[]>([]);
+  const [claims, setClaims] = useState<BenefitClaim[]>([]);
 
   const [docForm, setDocForm] = useState<{ title: string; doc_type: EmployeeDocument["doc_type"]; file: File | null }>({
     title: "",
@@ -147,6 +205,28 @@ function EmployeeDatabasePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function loadCrossModuleData() {
+    setCrossModuleLoading(true);
+    try {
+      const [a, g, t, en, cl] = await withAuth((token) =>
+        Promise.allSettled([
+          assetsApi.list(token),
+          goalsApi.list(token),
+          leaveRequestsApi.list(token),
+          benefitEnrollmentsApi.list(token),
+          benefitClaimsApi.list(token),
+        ])
+      );
+      setAssets(a.status === "fulfilled" ? a.value : []);
+      setGoals(g.status === "fulfilled" ? g.value : []);
+      setTimeOff(t.status === "fulfilled" ? t.value : []);
+      setEnrollments(en.status === "fulfilled" ? en.value : []);
+      setClaims(cl.status === "fulfilled" ? cl.value : []);
+    } finally {
+      setCrossModuleLoading(false);
+    }
+  }
+
   function openUploadFromDocsTab() {
     setUploadForm({ employee: employees[0] ? String(employees[0].id) : "", title: "", doc_type: "Other", file: null });
     setShowUploadForm(true);
@@ -180,6 +260,7 @@ function EmployeeDatabasePage() {
   function openCreate() {
     setEditing(null);
     setForm(emptyForm);
+    setActiveTab("details");
     setError(null);
     setShowForm(true);
   }
@@ -192,13 +273,27 @@ function EmployeeDatabasePage() {
       phone: e.phone,
       job_title: e.job_title,
       department: e.department,
+      client_name: e.client_name,
       manager: e.manager ? String(e.manager) : "",
+      salary_type: e.salary_type,
+      location: e.location,
       hire_date: e.hire_date,
+      permanent_date: e.permanent_date ?? "",
       status: e.status,
       monthly_salary: e.monthly_salary ?? "",
     });
+    setActiveTab("details");
+    setCopiedProfileLink(false);
     setError(null);
     setShowForm(true);
+    loadCrossModuleData();
+  }
+
+  async function handleCopyProfileLink() {
+    if (!editing) return;
+    await navigator.clipboard.writeText(portalUrl(editing.portal_token));
+    setCopiedProfileLink(true);
+    setTimeout(() => setCopiedProfileLink(false), 1800);
   }
 
   async function handleSubmit(ev: React.FormEvent) {
@@ -211,8 +306,12 @@ function EmployeeDatabasePage() {
       phone: form.phone,
       job_title: form.job_title,
       department: form.department,
+      client_name: form.client_name,
       manager: form.manager ? Number(form.manager) : null,
+      salary_type: form.salary_type || undefined,
+      location: form.location,
       hire_date: form.hire_date,
+      permanent_date: form.permanent_date === "" ? null : form.permanent_date,
       status: form.status,
       monthly_salary: form.monthly_salary === "" ? null : Number(form.monthly_salary),
     };
@@ -317,6 +416,13 @@ function EmployeeDatabasePage() {
       setLoginSaving(false);
     }
   }
+
+  const visibleTabs = editing ? TABS : TABS.filter((t) => t.id === "details" || t.id === "employment");
+  const employeeAssets = editing ? assets.filter((a) => a.assigned_to === editing.id) : [];
+  const employeeGoals = editing ? goals.filter((g) => g.employee === editing.id) : [];
+  const employeeTimeOff = editing ? timeOff.filter((t) => t.employee === editing.id) : [];
+  const employeeEnrollments = editing ? enrollments.filter((en) => en.employee === editing.id) : [];
+  const employeeClaims = editing ? claims.filter((c) => c.employee === editing.id) : [];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -508,124 +614,338 @@ function EmployeeDatabasePage() {
 
       {showForm && (
         <Modal title={editing ? editing.name : "New employee"} onClose={() => setShowForm(false)} wide>
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
-                {error}
-              </div>
-            )}
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Name</label>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(ev) => setForm({ ...form, name: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Job title</label>
-                <input
-                  value={form.job_title}
-                  onChange={(ev) => setForm({ ...form, job_title: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
+          {error && (
+            <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+              {error}
             </div>
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Email</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(ev) => setForm({ ...form, email: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Phone</label>
-                <input
-                  value={form.phone}
-                  onChange={(ev) => setForm({ ...form, phone: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Department</label>
-                <input
-                  value={form.department}
-                  onChange={(ev) => setForm({ ...form, department: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Manager</label>
-                <select
-                  value={form.manager}
-                  onChange={(ev) => setForm({ ...form, manager: ev.target.value })}
-                  className={inputClass}
-                >
-                  <option value="">—</option>
-                  {employees
-                    .filter((e) => !editing || e.id !== editing.id)
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-            <div className="mb-6 grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Hire date</label>
-                <input
-                  type="date"
-                  value={form.hire_date}
-                  onChange={(ev) => setForm({ ...form, hire_date: ev.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Status</label>
-                <select
-                  value={form.status}
-                  onChange={(ev) => setForm({ ...form, status: ev.target.value as EmployeeStatus })}
-                  className={inputClass}
-                >
-                  {statusOptions.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="mb-6">
-              <label className={labelClass}>Monthly salary (USD)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.monthly_salary}
-                onChange={(ev) => setForm({ ...form, monthly_salary: ev.target.value })}
-                placeholder="e.g. 5500"
-                className={inputClass}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-            >
-              {saving ? "Saving…" : editing ? "Save changes" : "Add employee"}
-            </button>
-          </form>
+          )}
 
           {editing && (
+            <div className="mb-5 flex items-center justify-end gap-2">
+              <button
+                onClick={handleCopyProfileLink}
+                title="Copy self-service profile link"
+                className="flex items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
+              >
+                {copiedProfileLink ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedProfileLink ? "Copied" : "Copy profile link"}
+              </button>
+              <a
+                href={portalUrl(editing.portal_token)}
+                target="_blank"
+                rel="noreferrer"
+                title="Open self-service profile"
+                aria-label={`Open profile for ${editing.name}`}
+                className="rounded-lg border border-line bg-cream p-2.5 text-ink-soft hover:bg-cream-dim"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          )}
+
+          <div className="mb-5 flex flex-wrap gap-2 border-b border-line pb-4">
+            {visibleTabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id)}
+                className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${activeTab === t.id ? "bg-primary text-cream" : "bg-cream text-ink-soft hover:bg-cream-dim"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {(activeTab === "details" || activeTab === "employment") && (
+            <form onSubmit={handleSubmit}>
+              {activeTab === "details" && (
+                <>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Client name</label>
+                      <input
+                        value={form.client_name}
+                        onChange={(ev) => setForm({ ...form, client_name: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Name</label>
+                      <input
+                        required
+                        value={form.name}
+                        onChange={(ev) => setForm({ ...form, name: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Role title</label>
+                      <input
+                        value={form.job_title}
+                        onChange={(ev) => setForm({ ...form, job_title: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Supervisor</label>
+                      <select
+                        value={form.manager}
+                        onChange={(ev) => setForm({ ...form, manager: ev.target.value })}
+                        className={inputClass}
+                      >
+                        <option value="">—</option>
+                        {employees
+                          .filter((e) => !editing || e.id !== editing.id)
+                          .map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Department</label>
+                      <input
+                        value={form.department}
+                        onChange={(ev) => setForm({ ...form, department: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Salary type</label>
+                      <select
+                        value={form.salary_type}
+                        onChange={(ev) => setForm({ ...form, salary_type: ev.target.value as SalaryType | "" })}
+                        className={inputClass}
+                      >
+                        <option value="">—</option>
+                        {salaryTypeOptions.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Location</label>
+                      <input
+                        value={form.location}
+                        onChange={(ev) => setForm({ ...form, location: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Email</label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={(ev) => setForm({ ...form, email: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <label className={labelClass}>Phone</label>
+                    <input
+                      value={form.phone}
+                      onChange={(ev) => setForm({ ...form, phone: ev.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                </>
+              )}
+
+              {activeTab === "employment" && (
+                <>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Hire date</label>
+                      <input
+                        type="date"
+                        value={form.hire_date}
+                        onChange={(ev) => setForm({ ...form, hire_date: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Permanent date</label>
+                      <input
+                        type="date"
+                        value={form.permanent_date}
+                        onChange={(ev) => setForm({ ...form, permanent_date: ev.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className={labelClass}>Time in current position</label>
+                    <div className={`${inputClass} bg-cream-dim text-ink-soft`}>{formatTenure(form.hire_date)}</div>
+                  </div>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Status</label>
+                      <select
+                        value={form.status}
+                        onChange={(ev) => setForm({ ...form, status: ev.target.value as EmployeeStatus })}
+                        className={inputClass}
+                      >
+                        {statusOptions.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Monthly salary (USD)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.monthly_salary}
+                        onChange={(ev) => setForm({ ...form, monthly_salary: ev.target.value })}
+                        placeholder="e.g. 5500"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-2" />
+                </>
+              )}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              >
+                {saving ? "Saving…" : editing ? "Save changes" : "Add employee"}
+              </button>
+            </form>
+          )}
+
+          {activeTab === "property" && editing && (
+            <div>
+              {crossModuleLoading ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">Loading…</div>
+              ) : employeeAssets.length === 0 ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">
+                  No company property assigned.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {employeeAssets.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between rounded-lg border border-line bg-cream px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-ink">{a.name}</div>
+                        <div className="text-xs text-ink-soft">{a.asset_tag} · {a.category}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[11px] font-semibold text-ink-soft">{a.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Link href="/dashboard/asset-inventory" className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-dark">
+                Manage assets →
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "tasklists" && editing && (
+            <div>
+              {crossModuleLoading ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">Loading…</div>
+              ) : employeeGoals.length === 0 ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">No goals set.</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {employeeGoals.map((g) => (
+                    <div key={g.id} className="flex items-center justify-between rounded-lg border border-line bg-cream px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-ink">{g.title}</div>
+                        <div className="text-xs text-ink-soft">{g.progress}% complete{g.target_date ? ` · due ${g.target_date}` : ""}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[11px] font-semibold text-ink-soft">{g.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Link href="/dashboard/goals" className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-dark">
+                Manage goals →
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "timeoff" && editing && (
+            <div>
+              {crossModuleLoading ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">Loading…</div>
+              ) : employeeTimeOff.length === 0 ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">No time off on record.</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {employeeTimeOff.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between rounded-lg border border-line bg-cream px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-ink">{t.leave_type}</div>
+                        <div className="text-xs text-ink-soft">{t.start_date} → {t.end_date}{t.hours ? ` · ${t.hours}h` : ""}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[11px] font-semibold text-ink-soft">{t.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Link href="/dashboard/leave-requests" className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-dark">
+                Manage time off →
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "benefits" && editing && (
+            <div>
+              {crossModuleLoading ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">Loading…</div>
+              ) : employeeEnrollments.length === 0 && employeeClaims.length === 0 ? (
+                <div className="rounded-xl border border-line bg-cream p-8 text-center text-sm text-ink-soft">No benefits on record.</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {employeeEnrollments.map((en) => (
+                    <div key={`en-${en.id}`} className="flex items-center justify-between rounded-lg border border-line bg-cream px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-ink">{en.plan_detail.name}</div>
+                        <div className="text-xs text-ink-soft">{en.coverage_level}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[11px] font-semibold text-ink-soft">{en.status}</span>
+                    </div>
+                  ))}
+                  {employeeClaims.map((c) => (
+                    <div key={`cl-${c.id}`} className="flex items-center justify-between rounded-lg border border-line bg-cream px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-ink">{c.claim_type} — ${c.amount}</div>
+                        <div className="text-xs text-ink-soft">Submitted {c.submitted_at.slice(0, 10)}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-cream-dim px-2.5 py-1 text-[11px] font-semibold text-ink-soft">{c.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-4 flex gap-4">
+                <Link href="/dashboard/benefits-enrollment" className="text-xs font-semibold text-primary hover:text-primary-dark">
+                  Manage enrollments →
+                </Link>
+                <Link href="/dashboard/claims" className="text-xs font-semibold text-primary hover:text-primary-dark">
+                  Manage claims →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {editing && activeTab === "details" && (
             <div className="mt-6 border-t border-line pt-5">
               <h3 className="mb-3 font-display text-sm font-bold text-ink">Documents</h3>
               {editing.documents.length > 0 && (

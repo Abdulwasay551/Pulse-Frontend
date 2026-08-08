@@ -9,6 +9,7 @@ import type { ImportPreview, ImportResult } from "@/lib/api-resource";
 
 interface CsvIO {
   exportCsv: (token: string) => Promise<void>;
+  downloadTemplate: (token: string) => Promise<void>;
   importPreview: (token: string, file: File) => Promise<ImportPreview>;
   importCommit: (
     token: string,
@@ -99,6 +100,18 @@ function ImportWizard({
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+
+  async function handleDownloadTemplate() {
+    setDownloadingTemplate(true);
+    try {
+      await withAuth((token) => csv.downloadTemplate(token));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't download the template. Please try again.");
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  }
 
   async function handleFile(file: File) {
     setError(null);
@@ -153,10 +166,18 @@ function ImportWizard({
 
       {step === "upload" && (
         <div>
-          <p className="mb-4 text-sm text-ink-soft">
+          <p className="mb-2 text-sm text-ink-soft">
             Upload a CSV file. On the next step you&apos;ll map its columns to {resourceLabel} fields before anything
             is imported.
           </p>
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            disabled={downloadingTemplate}
+            className="mb-4 text-xs font-semibold text-primary hover:text-primary-dark disabled:opacity-60"
+          >
+            {downloadingTemplate ? "Downloading…" : "Not sure what columns to use? Download a blank template →"}
+          </button>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line bg-cream px-6 py-10 text-center transition-colors hover:border-primary/50">
             <Upload className="h-6 w-6 text-ink-soft" />
             <span className="text-sm font-semibold text-ink">
