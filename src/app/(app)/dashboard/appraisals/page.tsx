@@ -8,7 +8,7 @@ import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { appraisalsApi, appraisalsCsv, getEmployeeScore, type Appraisal, type AppraisalStatus } from "@/lib/talent-api";
-import { employeesApi, type Employee } from "@/lib/people-api";
+import { employeesApi, type Employee, type EmployeeLite } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
 const APPRAISAL_REQUIRED_FIELDS = ["employee", "period", "overall_rating"];
@@ -69,6 +69,7 @@ function AppraisalsPage() {
   const [scoreRows, setScoreRows] = useState<ScoreRow[] | null>(null);
   const [scoresLoading, setScoresLoading] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeDetail, setEmployeeDetail] = useState<EmployeeLite | null>(null);
 
   async function loadScoresFor(emps: Employee[]) {
     if (emps.length === 0) return;
@@ -179,6 +180,16 @@ function AppraisalsPage() {
     searchTerm ? a.employee_detail.name.toLowerCase().includes(searchTerm) : true
   );
 
+  const employeeAppraisals = employeeDetail ? appraisals.filter((a) => a.employee === employeeDetail.id) : [];
+  const employeeFinalized = employeeAppraisals.filter((a) => a.status === "Finalized").length;
+  const employeeAvgRating = employeeAppraisals.length
+    ? Math.round((employeeAppraisals.reduce((sum, a) => sum + a.overall_rating, 0) / employeeAppraisals.length) * 10) / 10
+    : 0;
+
+  function openEmployeeDetail(a: Appraisal) {
+    setEmployeeDetail(a.employee_detail);
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -280,8 +291,12 @@ function AppraisalsPage() {
           </thead>
           <tbody>
             {visibleAppraisals.map((a) => (
-              <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5" data-label="Employee">
+              <tr
+                key={a.id}
+                onClick={() => openEmployeeDetail(a)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
+                <td className="px-5 py-3.5" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                   <EmployeeLink employee={a.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Period">{a.period}</td>
@@ -291,7 +306,7 @@ function AppraisalsPage() {
                 <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[a.status]}`}>{a.status}</span>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleViewScore(a)}
@@ -383,6 +398,57 @@ function AppraisalsPage() {
           <p className="mt-4 text-xs text-ink-soft">
             Value-addition score powered by EVO-AI — blends goal completion with appraisal ratings.
           </p>
+        </Modal>
+      )}
+
+      {employeeDetail && (
+        <Modal title={employeeDetail.name} onClose={() => setEmployeeDetail(null)}>
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+              {employeeDetail.initials}
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-ink">{employeeDetail.job_title || "—"}</div>
+              <div className="text-xs text-ink-soft">{employeeDetail.department || "—"}</div>
+            </div>
+          </div>
+
+          <div className="mb-5 grid grid-cols-3 gap-3">
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-ink">{employeeAppraisals.length}</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Appraisals</div>
+            </div>
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-primary">{employeeFinalized}</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Finalized</div>
+            </div>
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-ink">{employeeAvgRating}/5</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Avg rating</div>
+            </div>
+          </div>
+
+          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+            {employeeAppraisals.map((a) => (
+              <div key={a.id} className="rounded-lg border border-line p-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-ink">{a.period}</span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[a.status]}`}>
+                    {a.status}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center gap-3 text-xs text-ink-soft">
+                  <span>Reviewer: {a.reviewer || "—"}</span>
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary">{a.overall_rating}/5</span>
+                </div>
+                {a.strengths && <p className="mb-1 text-xs text-ink-soft"><span className="font-semibold text-ink">Strengths: </span>{a.strengths}</p>}
+                {a.areas_for_improvement && <p className="text-xs text-ink-soft"><span className="font-semibold text-ink">Areas for improvement: </span>{a.areas_for_improvement}</p>}
+              </div>
+            ))}
+            {employeeAppraisals.length === 0 && (
+              <p className="py-6 text-center text-sm text-ink-soft">No appraisals for this employee yet.</p>
+            )}
+          </div>
         </Modal>
       )}
     </div>

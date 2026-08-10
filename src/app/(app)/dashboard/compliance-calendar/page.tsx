@@ -8,9 +8,11 @@ import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import {
   complianceEventsApi,
   complianceEventsCsv,
+  payrollApi,
   type ComplianceEvent,
   type ComplianceCategory,
   type CalendarStatus,
+  type PayrollRun,
 } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -34,14 +36,29 @@ interface FormState {
   title: string;
   category: ComplianceCategory;
   due_date: string;
+  amount: string;
+  currency: string;
+  responsible_party: string;
+  linked_payroll_run: string;
   notes: string;
 }
 
-const emptyForm: FormState = { country: "", title: "", category: "Tax Filing", due_date: "", notes: "" };
+const emptyForm: FormState = {
+  country: "",
+  title: "",
+  category: "Tax Filing",
+  due_date: "",
+  amount: "",
+  currency: "",
+  responsible_party: "",
+  linked_payroll_run: "",
+  notes: "",
+};
 
 export default function ComplianceCalendarPage() {
   const { withAuth } = useAuth();
   const [events, setEvents] = useState<ComplianceEvent[]>([]);
+  const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState<ComplianceEvent | null>(null);
@@ -52,8 +69,13 @@ export default function ComplianceCalendarPage() {
 
   async function load() {
     try {
-      const data = await withAuth((token) => complianceEventsApi.list(token));
-      setEvents(data);
+      // allSettled — Finance Admin/HR both have PayrollRun access here, but
+      // keep this resilient in case that ever narrows for another role.
+      const [eResult, rResult] = await withAuth((token) =>
+        Promise.allSettled([complianceEventsApi.list(token), payrollApi.list(token)])
+      );
+      setEvents(eResult.status === "fulfilled" ? eResult.value : []);
+      setPayrollRuns(rResult.status === "fulfilled" ? rResult.value : []);
     } finally {
       setLoading(false);
     }
@@ -73,7 +95,17 @@ export default function ComplianceCalendarPage() {
 
   function openEdit(ev: ComplianceEvent) {
     setEditing(ev);
-    setForm({ country: ev.country, title: ev.title, category: ev.category, due_date: ev.due_date, notes: ev.notes });
+    setForm({
+      country: ev.country,
+      title: ev.title,
+      category: ev.category,
+      due_date: ev.due_date,
+      amount: ev.amount ?? "",
+      currency: ev.currency,
+      responsible_party: ev.responsible_party,
+      linked_payroll_run: ev.linked_payroll_run ? String(ev.linked_payroll_run) : "",
+      notes: ev.notes,
+    });
     setError(null);
     setShowForm(true);
   }
@@ -82,11 +114,22 @@ export default function ComplianceCalendarPage() {
     e.preventDefault();
     setError(null);
     setSaving(true);
+    const payload = {
+      country: form.country,
+      title: form.title,
+      category: form.category,
+      due_date: form.due_date,
+      amount: form.amount === "" ? null : form.amount,
+      currency: form.currency,
+      responsible_party: form.responsible_party,
+      linked_payroll_run: form.linked_payroll_run ? Number(form.linked_payroll_run) : null,
+      notes: form.notes,
+    };
     try {
       if (editing) {
-        await withAuth((token) => complianceEventsApi.update(token, editing.id, form));
+        await withAuth((token) => complianceEventsApi.update(token, editing.id, payload));
       } else {
-        await withAuth((token) => complianceEventsApi.create(token, form));
+        await withAuth((token) => complianceEventsApi.create(token, payload));
       }
       setShowForm(false);
       await load();
@@ -142,6 +185,9 @@ export default function ComplianceCalendarPage() {
               <th className="px-5 py-3 font-medium">Country</th>
               <th className="px-5 py-3 font-medium">Category</th>
               <th className="px-5 py-3 font-medium">Due date</th>
+              <th className="px-5 py-3 font-medium">Amount</th>
+              <th className="px-5 py-3 font-medium">Responsible party</th>
+              <th className="px-5 py-3 font-medium">Linked payroll run</th>
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
@@ -153,6 +199,11 @@ export default function ComplianceCalendarPage() {
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Country">{ev.country}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Category">{ev.category}</td>
                 <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Due date">{ev.due_date}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Amount">
+                  {ev.amount ? `${ev.currency} ${ev.amount}` : "—"}
+                </td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Responsible party">{ev.responsible_party || "—"}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Linked payroll run">{ev.linked_payroll_run_period || "—"}</td>
                 <td className="px-5 py-3.5" data-label="Status">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[ev.calendar_status]}`}>
                     {ev.calendar_status}
@@ -247,6 +298,53 @@ export default function ComplianceCalendarPage() {
                 onChange={(e) => setForm({ ...form, due_date: e.target.value })}
                 className={inputClass}
               />
+            </div>
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Amount (optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Currency</label>
+                <input
+                  value={form.currency}
+                  onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
+                  placeholder="USD"
+                  maxLength={3}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Responsible party</label>
+              <input
+                value={form.responsible_party}
+                onChange={(e) => setForm({ ...form, responsible_party: e.target.value })}
+                placeholder="e.g. Finance Admin"
+                className={inputClass}
+              />
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Linked payroll run (optional)</label>
+              <select
+                value={form.linked_payroll_run}
+                onChange={(e) => setForm({ ...form, linked_payroll_run: e.target.value })}
+                className={inputClass}
+              >
+                <option value="">None</option>
+                {payrollRuns.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.period}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-6">
               <label className={labelClass}>Notes</label>

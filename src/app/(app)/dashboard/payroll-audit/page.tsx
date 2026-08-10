@@ -1,10 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Flag } from "lucide-react";
+import { AlertTriangle, Flag, History } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { useAuth } from "@/lib/auth-context";
-import { payrollApi, type PayrollRun } from "@/lib/payroll-benefits-api";
+import { getPayrollAuditTrail, payrollApi, type PayrollAuditEntry, type PayrollRun } from "@/lib/payroll-benefits-api";
+
+const toneDot: Record<PayrollAuditEntry["tone"], string> = {
+  primary: "bg-primary",
+  amber: "bg-amber",
+  maroon: "bg-maroon",
+  neutral: "bg-ink-soft",
+};
+
+function relativeTime(iso: string) {
+  const seconds = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
 
 const statusTone: Record<PayrollRun["status"], string> = {
   Reconciled: "bg-primary/15 text-primary",
@@ -23,15 +38,20 @@ function formatCurrency(amount: number, currency = "USD") {
 export default function PayrollAuditPage() {
   const { withAuth } = useAuth();
   const [runs, setRuns] = useState<PayrollRun[]>([]);
+  const [trail, setTrail] = useState<PayrollAuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [notesDraft, setNotesDraft] = useState<Record<number, string>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
 
   async function load() {
     try {
-      const data = await withAuth((token) => payrollApi.list(token));
+      const [runsResult, trailResult] = await withAuth((token) =>
+        Promise.allSettled([payrollApi.list(token), getPayrollAuditTrail(token)])
+      );
+      const data = runsResult.status === "fulfilled" ? runsResult.value : [];
       setRuns(data);
       setNotesDraft(Object.fromEntries(data.map((r) => [r.id, r.audit_notes])));
+      setTrail(trailResult.status === "fulfilled" ? trailResult.value : []);
     } finally {
       setLoading(false);
     }
@@ -126,6 +146,29 @@ export default function PayrollAuditPage() {
           </div>
         )}
         {loading && <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-1.5 font-display text-sm font-bold text-ink">
+          <History className="h-4 w-4" /> Audit trail
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-line bg-card">
+          {trail.length === 0 ? (
+            <div className="p-10 text-center text-sm text-ink-soft">
+              No payroll activity logged yet — reconciling, flagging, or processing a run will show up here.
+            </div>
+          ) : (
+            <ul className="divide-y divide-line">
+              {trail.map((entry) => (
+                <li key={entry.id} className="flex items-center gap-3 px-5 py-3.5">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${toneDot[entry.tone]}`} />
+                  <span className="flex-1 text-sm text-ink">{entry.message}</span>
+                  <span className="shrink-0 text-xs text-ink-soft">{relativeTime(entry.created_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

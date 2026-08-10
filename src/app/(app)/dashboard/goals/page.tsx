@@ -7,7 +7,7 @@ import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { goalsApi, goalsCsv, type Goal, type GoalStatus } from "@/lib/talent-api";
-import { employeesApi, type Employee } from "@/lib/people-api";
+import { employeesApi, type Employee, type EmployeeLite } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
 const GOAL_REQUIRED_FIELDS = ["employee", "title"];
@@ -46,6 +46,7 @@ export default function GoalsPage() {
   const [form, setForm] = useState<FormState>({ employee: "", title: "", section: "", description: "", target_date: "", status: "Not Started", progress: "0" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [employeeDetail, setEmployeeDetail] = useState<EmployeeLite | null>(null);
 
   async function load() {
     try {
@@ -64,6 +65,17 @@ export default function GoalsPage() {
 
   const sections = ["All", ...Array.from(new Set(goals.map((g) => g.section).filter(Boolean)))];
   const visibleGoals = sectionFilter === "All" ? goals : goals.filter((g) => g.section === sectionFilter);
+
+  const employeeGoals = employeeDetail ? goals.filter((g) => g.employee === employeeDetail.id) : [];
+  const employeeCompleted = employeeGoals.filter((g) => g.status === "Completed").length;
+  const employeeInProgress = employeeGoals.filter((g) => g.status === "In Progress").length;
+  const employeeAvgProgress = employeeGoals.length
+    ? Math.round(employeeGoals.reduce((sum, g) => sum + g.progress, 0) / employeeGoals.length)
+    : 0;
+
+  function openEmployeeDetail(g: Goal) {
+    setEmployeeDetail(g.employee_detail);
+  }
 
   function openCreate() {
     setEditing(null);
@@ -170,8 +182,12 @@ export default function GoalsPage() {
           </thead>
           <tbody>
             {visibleGoals.map((g) => (
-              <tr key={g.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5" data-label="Employee">
+              <tr
+                key={g.id}
+                onClick={() => openEmployeeDetail(g)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
+                <td className="px-5 py-3.5" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                   <EmployeeLink employee={g.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink" data-label="Goal">{g.title}</td>
@@ -190,7 +206,7 @@ export default function GoalsPage() {
                     {g.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button onClick={() => openEdit(g)} aria-label={`Edit ${g.title}`} className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink">
                       <Pencil className="h-3.5 w-3.5" />
@@ -270,6 +286,65 @@ export default function GoalsPage() {
               {saving ? "Saving…" : editing ? "Save changes" : "Add goal"}
             </button>
           </form>
+        </Modal>
+      )}
+
+      {employeeDetail && (
+        <Modal title={employeeDetail.name} onClose={() => setEmployeeDetail(null)}>
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+              {employeeDetail.initials}
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-ink">{employeeDetail.job_title || "—"}</div>
+              <div className="text-xs text-ink-soft">{employeeDetail.department || "—"}</div>
+            </div>
+          </div>
+
+          <div className="mb-5 grid grid-cols-3 gap-3">
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-ink">{employeeGoals.length}</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Goals</div>
+            </div>
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-primary">{employeeCompleted}</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Completed</div>
+            </div>
+            <div className="rounded-lg border border-line bg-cream/60 p-3 text-center">
+              <div className="text-lg font-bold text-ink">{employeeAvgProgress}%</div>
+              <div className="text-[11px] uppercase tracking-wide text-ink-soft">Avg progress</div>
+            </div>
+          </div>
+
+          <div className="mb-2 text-xs uppercase tracking-wide text-ink-soft">
+            {employeeInProgress} in progress
+          </div>
+
+          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+            {employeeGoals.map((g) => (
+              <div key={g.id} className="rounded-lg border border-line p-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-ink">{g.title}</span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${statusTone[g.status]}`}>
+                    {g.status}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center gap-3 text-xs text-ink-soft">
+                  <span>{g.section || "No section"}</span>
+                  <span>Target: {g.target_date ?? "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${g.progress}%` }} />
+                  </div>
+                  <span className="shrink-0 text-xs text-ink-soft">{g.progress}%</span>
+                </div>
+              </div>
+            ))}
+            {employeeGoals.length === 0 && (
+              <p className="py-6 text-center text-sm text-ink-soft">No goals for this employee yet.</p>
+            )}
+          </div>
         </Modal>
       )}
     </div>

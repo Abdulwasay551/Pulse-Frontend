@@ -5,6 +5,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import StatCard from "@/components/dashboard/StatCard";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
@@ -134,6 +135,11 @@ export default function TaxCompliancePage() {
     await load();
   }
 
+  const compliantCount = profiles.filter((p) => p.compliance_status === "Compliant").length;
+  const pendingCount = profiles.filter((p) => p.compliance_status === "Pending Review").length;
+  const actionRequiredCount = profiles.filter((p) => p.compliance_status === "Action Required").length;
+  const countryCount = new Set(profiles.map((p) => p.country)).size;
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -155,6 +161,13 @@ export default function TaxCompliancePage() {
             <Plus className="h-4 w-4" /> New tax profile
           </button>
         </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard label="Countries" value={String(countryCount)} />
+        <StatCard label="Compliant" value={String(compliantCount)} />
+        <StatCard label="Pending review" value={String(pendingCount)} />
+        <StatCard label="Action required" value={String(actionRequiredCount)} valueTone={actionRequiredCount > 0 ? "maroon" : "ink"} />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-card">

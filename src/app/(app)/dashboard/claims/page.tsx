@@ -118,8 +118,8 @@ export default function ClaimsPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Claims &amp; Reimbursement Workflows</h1>
-          <p className="mt-1 text-sm text-ink-soft">Submission and approval workflow, per claim.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">Claims, Reimbursement &amp; Bonus Workflows</h1>
+          <p className="mt-1 text-sm text-ink-soft">Submission and approval workflow, per claim — including employee bonuses.</p>
         </div>
         <div className="flex items-center gap-2">
           <CsvToolbar
@@ -237,9 +237,16 @@ export default function ClaimsPage() {
                 required
                 value={form.claim_type}
                 onChange={(e) => setForm({ ...form, claim_type: e.target.value })}
-                placeholder="Specialist visit copay"
+                placeholder="Specialist visit copay, or Bonus"
                 className={inputClass}
+                list="claim-types"
               />
+              <datalist id="claim-types">
+                <option value="Bonus" />
+                <option value="Specialist visit copay" />
+                <option value="Prescription reimbursement" />
+                <option value="Dental cleaning" />
+              </datalist>
             </div>
             <div className="mb-4">
               <label className={labelClass}>Amount</label>

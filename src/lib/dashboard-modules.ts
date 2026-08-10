@@ -282,7 +282,7 @@ export const dashboardModules: ModuleDef[] = [
         href: "/dashboard/benefits-overview",
         features: [
           { label: "Benefits Enrollment", description: "Health insurance, yearly bonuses.", icon: HeartPulse, href: "/dashboard/benefits-enrollment" },
-          { label: "Claims & Reimbursement Workflows", description: "Submission and approval workflows.", icon: Receipt, href: "/dashboard/claims" },
+          { label: "Claims, Reimbursement & Bonus Workflows", description: "Submission and approval workflows, including bonuses.", icon: Receipt, href: "/dashboard/claims" },
           { label: "Benefit Cost Analysis", description: "See what benefits actually cost.", icon: PieChart, href: "/dashboard/benefit-cost-analysis" },
         ],
       },

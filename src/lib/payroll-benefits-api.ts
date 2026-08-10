@@ -30,6 +30,17 @@ export interface PayrollRunWrite {
 export const payrollApi = resourceApi<PayrollRun, PayrollRunWrite>("/payroll-benefits/payroll-runs/");
 export const payrollCsv = csvApi("/payroll-benefits/payroll-runs/", "payroll-runs.csv");
 
+export interface PayrollAuditEntry {
+  id: number;
+  message: string;
+  tone: "primary" | "amber" | "maroon" | "neutral";
+  created_at: string;
+}
+
+export function getPayrollAuditTrail(token: string) {
+  return apiFetch<PayrollAuditEntry[]>("/payroll-benefits/payroll-runs/audit_trail/", { method: "GET" }, token);
+}
+
 export type FilingStatus = "Single" | "Married" | "Head of Household" | "Not Applicable";
 export type ComplianceStatus = "Compliant" | "Pending Review" | "Action Required";
 
@@ -69,6 +80,11 @@ export interface ComplianceEvent {
   title: string;
   category: ComplianceCategory;
   due_date: string;
+  amount: string | null;
+  currency: string;
+  responsible_party: string;
+  linked_payroll_run: number | null;
+  linked_payroll_run_period: string | null;
   completed: boolean;
   notes: string;
   calendar_status: CalendarStatus;
@@ -81,6 +97,10 @@ export interface ComplianceEventWrite {
   title: string;
   category?: ComplianceCategory;
   due_date: string;
+  amount?: number | string | null;
+  currency?: string;
+  responsible_party?: string;
+  linked_payroll_run?: number | null;
   completed?: boolean;
   notes?: string;
 }
@@ -95,6 +115,7 @@ export interface BankAccount {
   employee: number;
   employee_detail: EmployeeLite;
   bank_name: string;
+  bank_country: string;
   account_holder_name: string;
   account_number_last4: string;
   routing_number: string;
@@ -108,6 +129,7 @@ export interface BankAccount {
 export interface BankAccountWrite {
   employee: number;
   bank_name: string;
+  bank_country?: string;
   account_holder_name: string;
   account_number: string;
   routing_number?: string;
@@ -209,6 +231,9 @@ export interface PayrollBenefitsDashboardSummary {
   overview_stats: { label: string; value: string; change: string; href: string }[];
   kpis: { label: string; value: string; href: string }[];
   benefit_cost_by_type: { label: string; value: number }[];
+  benefit_cost_by_department: { label: string; value: number }[];
+  benefit_cost_by_location: { label: string; value: number }[];
+  benefit_cost_by_employee: { label: string; value: number }[];
   total_monthly_benefit_cost: number;
 }
 

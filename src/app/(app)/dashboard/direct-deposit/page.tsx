@@ -21,6 +21,7 @@ const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 interface FormState {
   employee: string;
   bank_name: string;
+  bank_country: string;
   account_holder_name: string;
   account_number: string;
   routing_number: string;
@@ -32,6 +33,7 @@ interface FormState {
 const emptyForm: FormState = {
   employee: "",
   bank_name: "",
+  bank_country: "",
   account_holder_name: "",
   account_number: "",
   routing_number: "",
@@ -79,6 +81,7 @@ export default function DirectDepositPage() {
     setForm({
       employee: String(a.employee),
       bank_name: a.bank_name,
+      bank_country: a.bank_country,
       account_holder_name: a.account_holder_name,
       account_number: "",
       routing_number: a.routing_number,
@@ -97,6 +100,7 @@ export default function DirectDepositPage() {
     const payload: Record<string, unknown> = {
       employee: Number(form.employee),
       bank_name: form.bank_name,
+      bank_country: form.bank_country,
       account_holder_name: form.account_holder_name,
       routing_number: form.routing_number,
       account_type: form.account_type,
@@ -157,6 +161,7 @@ export default function DirectDepositPage() {
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
               <th className="px-5 py-3 font-medium">Bank</th>
+              <th className="px-5 py-3 font-medium">Bank country</th>
               <th className="px-5 py-3 font-medium">Account</th>
               <th className="px-5 py-3 font-medium">Type</th>
               <th className="px-5 py-3 font-medium">Status</th>
@@ -170,6 +175,7 @@ export default function DirectDepositPage() {
                   <EmployeeLink employee={a.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Bank">{a.bank_name}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Bank country">{a.bank_country || "—"}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Account">•••• {a.account_number_last4}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Type">
                   {a.account_type}
@@ -238,14 +244,25 @@ export default function DirectDepositPage() {
                 ))}
               </select>
             </div>
-            <div className="mb-4">
-              <label className={labelClass}>Bank name</label>
-              <input
-                required
-                value={form.bank_name}
-                onChange={(e) => setForm({ ...form, bank_name: e.target.value })}
-                className={inputClass}
-              />
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Bank name</label>
+                <input
+                  required
+                  value={form.bank_name}
+                  onChange={(e) => setForm({ ...form, bank_name: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Bank country</label>
+                <input
+                  value={form.bank_country}
+                  onChange={(e) => setForm({ ...form, bank_country: e.target.value })}
+                  placeholder="United States"
+                  className={inputClass}
+                />
+              </div>
             </div>
             <div className="mb-4">
               <label className={labelClass}>Account holder name</label>
