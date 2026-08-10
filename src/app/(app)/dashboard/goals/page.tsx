@@ -27,6 +27,7 @@ const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 interface FormState {
   employee: string;
   title: string;
+  section: string;
   description: string;
   target_date: string;
   status: GoalStatus;
@@ -38,10 +39,11 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sectionFilter, setSectionFilter] = useState("All");
 
   const [editing, setEditing] = useState<Goal | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<FormState>({ employee: "", title: "", description: "", target_date: "", status: "Not Started", progress: "0" });
+  const [form, setForm] = useState<FormState>({ employee: "", title: "", section: "", description: "", target_date: "", status: "Not Started", progress: "0" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,9 +62,12 @@ export default function GoalsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const sections = ["All", ...Array.from(new Set(goals.map((g) => g.section).filter(Boolean)))];
+  const visibleGoals = sectionFilter === "All" ? goals : goals.filter((g) => g.section === sectionFilter);
+
   function openCreate() {
     setEditing(null);
-    setForm({ employee: employees[0] ? String(employees[0].id) : "", title: "", description: "", target_date: "", status: "Not Started", progress: "0" });
+    setForm({ employee: employees[0] ? String(employees[0].id) : "", title: "", section: "", description: "", target_date: "", status: "Not Started", progress: "0" });
     setError(null);
     setShowForm(true);
   }
@@ -72,6 +77,7 @@ export default function GoalsPage() {
     setForm({
       employee: String(g.employee),
       title: g.title,
+      section: g.section,
       description: g.description,
       target_date: g.target_date ?? "",
       status: g.status,
@@ -88,6 +94,7 @@ export default function GoalsPage() {
     const payload = {
       employee: Number(form.employee),
       title: form.title,
+      section: form.section,
       description: form.description,
       target_date: form.target_date || null,
       status: form.status,
@@ -132,12 +139,29 @@ export default function GoalsPage() {
         </div>
       </div>
 
+      {sections.length > 1 && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {sections.map((s) => (
+            <button
+              key={s}
+              onClick={() => setSectionFilter(s)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                sectionFilter === s ? "bg-primary text-cream" : "bg-card text-ink-soft hover:bg-cream-dim"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Employee</th>
               <th className="px-5 py-3 font-medium">Goal</th>
+              <th className="px-5 py-3 font-medium">Section</th>
               <th className="px-5 py-3 font-medium">Target date</th>
               <th className="px-5 py-3 font-medium">Progress</th>
               <th className="px-5 py-3 font-medium">Status</th>
@@ -145,12 +169,13 @@ export default function GoalsPage() {
             </tr>
           </thead>
           <tbody>
-            {goals.map((g) => (
+            {visibleGoals.map((g) => (
               <tr key={g.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Employee">
                   <EmployeeLink employee={g.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink" data-label="Goal">{g.title}</td>
+                <td className="px-5 py-3.5 text-ink-soft" data-label="Section">{g.section || "—"}</td>
                 <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Target date">{g.target_date ?? "—"}</td>
                 <td className="px-5 py-3.5" data-label="Progress">
                   <div className="flex items-center gap-2">
@@ -179,7 +204,7 @@ export default function GoalsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && goals.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No goals yet.</div>}
+        {!loading && visibleGoals.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No goals yet.</div>}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
       </div>
 
@@ -198,9 +223,26 @@ export default function GoalsPage() {
                 ))}
               </select>
             </div>
-            <div className="mb-4">
-              <label className={labelClass}>Title</label>
-              <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} />
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Title</label>
+                <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Section</label>
+                <input
+                  value={form.section}
+                  onChange={(e) => setForm({ ...form, section: e.target.value })}
+                  placeholder="e.g. Q3 OKRs"
+                  className={inputClass}
+                  list="goal-sections"
+                />
+                <datalist id="goal-sections">
+                  {sections.filter((s) => s !== "All").map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+              </div>
             </div>
             <div className="mb-4">
               <label className={labelClass}>Description</label>

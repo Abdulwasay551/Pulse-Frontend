@@ -50,3 +50,5 @@ next-env.d.ts
 *.apk
 *.aab
 *.ipa
+
+.vercel

@@ -9,6 +9,7 @@ export interface Goal {
   employee: number;
   employee_detail: EmployeeLite;
   title: string;
+  section: string;
   description: string;
   target_date: string | null;
   status: GoalStatus;
@@ -20,6 +21,7 @@ export interface Goal {
 export interface GoalWrite {
   employee: number;
   title: string;
+  section?: string;
   description?: string;
   target_date?: string | null;
   status?: GoalStatus;
@@ -82,6 +84,7 @@ export interface Course {
   title: string;
   description: string;
   duration_hours: number;
+  link: string;
   is_active: boolean;
   enrolled_count: number;
   created_at: string;
@@ -91,6 +94,7 @@ export interface CourseWrite {
   title: string;
   description?: string;
   duration_hours?: number;
+  link?: string;
   is_active?: boolean;
 }
 

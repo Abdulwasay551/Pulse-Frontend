@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -29,7 +29,7 @@ export default function LearningPage() {
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const [showCourseForm, setShowCourseForm] = useState(false);
-  const [courseForm, setCourseForm] = useState({ title: "", description: "", duration_hours: "4" });
+  const [courseForm, setCourseForm] = useState({ title: "", description: "", duration_hours: "4", link: "" });
   const [showEnrollForm, setShowEnrollForm] = useState(false);
   const [enrollForm, setEnrollForm] = useState({ employee: "" });
   const [saving, setSaving] = useState(false);
@@ -56,7 +56,7 @@ export default function LearningPage() {
   const activeEnrollments = enrollments.filter((e) => e.course === activeId);
 
   function openCreateCourse() {
-    setCourseForm({ title: "", description: "", duration_hours: "4" });
+    setCourseForm({ title: "", description: "", duration_hours: "4", link: "" });
     setShowCourseForm(true);
   }
 
@@ -65,7 +65,12 @@ export default function LearningPage() {
     setSaving(true);
     try {
       await withAuth((token) =>
-        coursesApi.create(token, { title: courseForm.title, description: courseForm.description, duration_hours: Number(courseForm.duration_hours) })
+        coursesApi.create(token, {
+          title: courseForm.title,
+          description: courseForm.description,
+          duration_hours: Number(courseForm.duration_hours),
+          link: courseForm.link,
+        })
       );
       setShowCourseForm(false);
       await load();
@@ -124,7 +129,19 @@ export default function LearningPage() {
         <div className="mb-6 rounded-2xl border border-line bg-card p-6">
           <h1 className="font-display text-xl font-bold text-ink">{active.title}</h1>
           <p className="mt-1 text-sm text-ink-soft">{active.description || "No description."}</p>
-          <p className="mt-2 text-xs text-ink-soft">{active.duration_hours}h · {active.enrolled_count} enrolled</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-ink-soft">
+            <span>{active.duration_hours}h · {active.enrolled_count} enrolled</span>
+            {active.link && (
+              <a
+                href={active.link}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-primary-dark"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> Join course
+              </a>
+            )}
+          </div>
         </div>
 
         <div className="mb-4 flex items-center justify-between">
@@ -209,7 +226,10 @@ export default function LearningPage() {
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
-              <h3 className="font-display text-base font-bold text-ink">{c.title}</h3>
+              <h3 className="flex items-center gap-1.5 font-display text-base font-bold text-ink">
+                {c.title}
+                {c.link && <ExternalLink className="h-3.5 w-3.5 shrink-0 text-primary" />}
+              </h3>
               <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{c.description || "No description."}</p>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs text-ink-soft">
                 <span>{c.duration_hours}h</span>
@@ -231,9 +251,19 @@ export default function LearningPage() {
               <label className={labelClass}>Description</label>
               <textarea rows={2} value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} className={inputClass} />
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <label className={labelClass}>Duration (hours)</label>
               <input type="number" min="1" value={courseForm.duration_hours} onChange={(e) => setCourseForm({ ...courseForm, duration_hours: e.target.value })} className={inputClass} />
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Course link</label>
+              <input
+                type="url"
+                value={courseForm.link}
+                onChange={(e) => setCourseForm({ ...courseForm, link: e.target.value })}
+                placeholder="Google Meet, Udemy Business, LinkedIn Learning…"
+                className={inputClass}
+              />
             </div>
             <button type="submit" disabled={saving} className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60">
               {saving ? "Creating…" : "Create course"}

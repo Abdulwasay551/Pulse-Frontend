@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Sparkles, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -68,6 +68,7 @@ function AppraisalsPage() {
   const [scoreInfo, setScoreInfo] = useState<{ name: string; score: number | null; notes: string } | null>(null);
   const [scoreRows, setScoreRows] = useState<ScoreRow[] | null>(null);
   const [scoresLoading, setScoresLoading] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
   async function loadScoresFor(emps: Employee[]) {
     if (emps.length === 0) return;
@@ -170,6 +171,14 @@ function AppraisalsPage() {
     setScoreInfo({ name: a.employee_detail.name, score: result.score, notes: result.notes });
   }
 
+  const searchTerm = employeeSearch.trim().toLowerCase();
+  const visibleScoreRows = (scoreRows ?? []).filter((row) =>
+    searchTerm ? row.employee.name.toLowerCase().includes(searchTerm) : true
+  );
+  const visibleAppraisals = appraisals.filter((a) =>
+    searchTerm ? a.employee_detail.name.toLowerCase().includes(searchTerm) : true
+  );
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -214,6 +223,16 @@ function AppraisalsPage() {
         </button>
       </div>
 
+      <div className="mb-5 relative max-w-xs">
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+        <input
+          value={employeeSearch}
+          onChange={(e) => setEmployeeSearch(e.target.value)}
+          placeholder="Search by employee name…"
+          className={`${inputClass} pl-9`}
+        />
+      </div>
+
       {view === "scores" ? (
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
           <table className="eh-table w-full text-left text-sm">
@@ -225,7 +244,7 @@ function AppraisalsPage() {
               </tr>
             </thead>
             <tbody>
-              {(scoreRows ?? []).map((row) => (
+              {visibleScoreRows.map((row) => (
                 <tr key={row.employee.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Employee">
                     <EmployeeLink employee={row.employee} />
@@ -240,8 +259,10 @@ function AppraisalsPage() {
               ))}
             </tbody>
           </table>
-          {!scoresLoading && (scoreRows ?? []).length === 0 && (
-            <div className="p-10 text-center text-sm text-ink-soft">Add employees to see their scores here.</div>
+          {!scoresLoading && visibleScoreRows.length === 0 && (
+            <div className="p-10 text-center text-sm text-ink-soft">
+              {searchTerm ? `No employees matching "${employeeSearch}".` : "Add employees to see their scores here."}
+            </div>
           )}
           {scoresLoading && <div className="p-10 text-center text-sm text-ink-soft">Computing scores…</div>}
         </div>
@@ -258,7 +279,7 @@ function AppraisalsPage() {
             </tr>
           </thead>
           <tbody>
-            {appraisals.map((a) => (
+            {visibleAppraisals.map((a) => (
               <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Employee">
                   <EmployeeLink employee={a.employee_detail} />
@@ -292,7 +313,11 @@ function AppraisalsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && appraisals.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No appraisals yet.</div>}
+        {!loading && visibleAppraisals.length === 0 && (
+          <div className="p-10 text-center text-sm text-ink-soft">
+            {searchTerm ? `No employees matching "${employeeSearch}".` : "No appraisals yet."}
+          </div>
+        )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
       </div>
       )}
