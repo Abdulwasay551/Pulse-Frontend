@@ -71,6 +71,32 @@ export interface TaxProfileWrite {
 export const taxProfilesApi = resourceApi<TaxProfile, TaxProfileWrite>("/payroll-benefits/tax-profiles/");
 export const taxProfilesCsv = csvApi("/payroll-benefits/tax-profiles/", "tax-profiles.csv");
 
+export interface ExchangeRate {
+  id: number;
+  currency: string;
+  rate_to_usd: string;
+  updated_at: string;
+}
+
+export interface ExchangeRateWrite {
+  currency: string;
+  rate_to_usd: number | string;
+}
+
+export const exchangeRatesApi = resourceApi<ExchangeRate, ExchangeRateWrite>("/payroll-benefits/exchange-rates/");
+
+export interface CurrencyConversion {
+  amount: number;
+  from: string;
+  to: string;
+  result: number;
+}
+
+export function convertCurrency(token: string, amount: string, from: string, to: string) {
+  const params = new URLSearchParams({ amount, from, to });
+  return apiFetch<CurrencyConversion>(`/payroll-benefits/exchange-rates/convert/?${params}`, { method: "GET" }, token);
+}
+
 export type ComplianceCategory = "Tax Filing" | "Currency Update" | "Regulatory";
 export type CalendarStatus = "Upcoming" | "Due soon" | "Overdue" | "Completed";
 
@@ -229,12 +255,12 @@ export const benefitClaimsCsv = csvApi("/payroll-benefits/benefit-claims/", "ben
 
 export interface PayrollBenefitsDashboardSummary {
   overview_stats: { label: string; value: string; change: string; href: string }[];
-  kpis: { label: string; value: string; href: string }[];
   benefit_cost_by_type: { label: string; value: number }[];
   benefit_cost_by_department: { label: string; value: number }[];
   benefit_cost_by_location: { label: string; value: number }[];
   benefit_cost_by_employee: { label: string; value: number }[];
   total_monthly_benefit_cost: number;
+  payroll_trend: { label: string; value: number; currency: string }[];
 }
 
 export function getPayrollBenefitsDashboardSummary(token: string) {

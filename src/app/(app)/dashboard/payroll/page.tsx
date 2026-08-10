@@ -164,7 +164,11 @@ export default function PayrollPage() {
           </thead>
           <tbody>
             {payrollRuns.map((p) => (
-              <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
+              <tr
+                key={p.id}
+                onClick={() => openEdit(p)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
                 <td className="px-5 py-3.5 font-semibold text-ink" data-label="Run">{p.period}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Contractors">{p.contractors}</td>
                 <td className="px-5 py-3.5 font-semibold text-ink" data-label="Amount">{formatCurrency(Number(p.amount), p.currency)}</td>
@@ -175,7 +179,7 @@ export default function PayrollPage() {
                     {p.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(p)}

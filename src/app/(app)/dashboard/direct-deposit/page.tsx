@@ -170,8 +170,12 @@ export default function DirectDepositPage() {
           </thead>
           <tbody>
             {accounts.map((a) => (
-              <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+              <tr
+                key={a.id}
+                onClick={() => openEdit(a)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                   <EmployeeLink employee={a.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Bank">{a.bank_name}</td>
@@ -192,7 +196,7 @@ export default function DirectDepositPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(a)}

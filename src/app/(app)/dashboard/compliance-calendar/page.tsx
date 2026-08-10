@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -9,12 +9,24 @@ import {
   complianceEventsApi,
   complianceEventsCsv,
   payrollApi,
+  exchangeRatesApi,
+  convertCurrency,
   type ComplianceEvent,
   type ComplianceCategory,
   type CalendarStatus,
   type PayrollRun,
+  type ExchangeRate,
+  type CurrencyConversion,
 } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
+
+function relativeTime(iso: string) {
+  const seconds = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (seconds < 3600) return "just now";
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 86400 * 30) return `${Math.floor(seconds / 86400)}d ago`;
+  return `${Math.floor(seconds / (86400 * 30))}mo ago`;
+}
 
 const COMPLIANCE_EVENT_REQUIRED_FIELDS = ["country", "title", "due_date"];
 
@@ -59,6 +71,7 @@ export default function ComplianceCalendarPage() {
   const { withAuth } = useAuth();
   const [events, setEvents] = useState<ComplianceEvent[]>([]);
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
+  const [rates, setRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState<ComplianceEvent | null>(null);
@@ -67,17 +80,81 @@ export default function ComplianceCalendarPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [showRateForm, setShowRateForm] = useState(false);
+  const [rateForm, setRateForm] = useState({ currency: "", rate_to_usd: "1" });
+  const [rateError, setRateError] = useState<string | null>(null);
+  const [savingRate, setSavingRate] = useState(false);
+
+  const [convertAmount, setConvertAmount] = useState("100");
+  const [convertFrom, setConvertFrom] = useState("USD");
+  const [convertTo, setConvertTo] = useState("USD");
+  const [conversion, setConversion] = useState<CurrencyConversion | null>(null);
+  const [converting, setConverting] = useState(false);
+  const [convertError, setConvertError] = useState<string | null>(null);
+
   async function load() {
     try {
       // allSettled — Finance Admin/HR both have PayrollRun access here, but
       // keep this resilient in case that ever narrows for another role.
-      const [eResult, rResult] = await withAuth((token) =>
-        Promise.allSettled([complianceEventsApi.list(token), payrollApi.list(token)])
+      const [eResult, rResult, xResult] = await withAuth((token) =>
+        Promise.allSettled([complianceEventsApi.list(token), payrollApi.list(token), exchangeRatesApi.list(token)])
       );
       setEvents(eResult.status === "fulfilled" ? eResult.value : []);
       setPayrollRuns(rResult.status === "fulfilled" ? rResult.value : []);
+      setRates(xResult.status === "fulfilled" ? xResult.value : []);
     } finally {
       setLoading(false);
+    }
+  }
+
+  const currencyOptions = Array.from(new Set(["USD", ...rates.map((r) => r.currency)]));
+
+  function openAddRate() {
+    setRateForm({ currency: "", rate_to_usd: "1" });
+    setRateError(null);
+    setShowRateForm(true);
+  }
+
+  async function handleRateSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setRateError(null);
+    setSavingRate(true);
+    try {
+      const existing = rates.find((r) => r.currency === rateForm.currency.toUpperCase());
+      if (existing) {
+        await withAuth((token) => exchangeRatesApi.update(token, existing.id, { rate_to_usd: rateForm.rate_to_usd }));
+      } else {
+        await withAuth((token) =>
+          exchangeRatesApi.create(token, { currency: rateForm.currency.toUpperCase(), rate_to_usd: rateForm.rate_to_usd })
+        );
+      }
+      setShowRateForm(false);
+      await load();
+    } catch (err) {
+      setRateError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSavingRate(false);
+    }
+  }
+
+  async function handleDeleteRate(r: ExchangeRate) {
+    if (!confirm(`Remove the ${r.currency} rate?`)) return;
+    await withAuth((token) => exchangeRatesApi.remove(token, r.id));
+    await load();
+  }
+
+  async function handleConvert(e: React.FormEvent) {
+    e.preventDefault();
+    setConvertError(null);
+    setConverting(true);
+    try {
+      const result = await withAuth((token) => convertCurrency(token, convertAmount, convertFrom, convertTo));
+      setConversion(result);
+    } catch (err) {
+      setConversion(null);
+      setConvertError(err instanceof ApiError ? err.message : "Couldn't convert that amount. Please try again.");
+    } finally {
+      setConverting(false);
     }
   }
 
@@ -177,6 +254,90 @@ export default function ComplianceCalendarPage() {
         </div>
       </div>
 
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-1 flex items-center gap-1.5 font-display text-lg font-bold text-ink">
+            <ArrowLeftRight className="h-4 w-4" /> Currency converter
+          </h2>
+          <p className="mb-4 text-xs text-ink-soft">Rates are HR/Finance Admin-maintained, not a live feed — check &quot;last updated&quot; below.</p>
+          <form onSubmit={handleConvert} className="flex flex-wrap items-end gap-3">
+            <div className="w-28">
+              <label className={labelClass}>Amount</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={convertAmount}
+                onChange={(e) => setConvertAmount(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>From</label>
+              <select value={convertFrom} onChange={(e) => setConvertFrom(e.target.value)} className={inputClass}>
+                {currencyOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>To</label>
+              <select value={convertTo} onChange={(e) => setConvertTo(e.target.value)} className={inputClass}>
+                {currencyOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={converting}
+              className="rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              {converting ? "Converting…" : "Convert"}
+            </button>
+          </form>
+          {convertError && <p className="mt-3 text-sm text-maroon">{convertError}</p>}
+          {conversion && (
+            <p className="mt-4 text-lg font-semibold text-ink">
+              {conversion.amount} {conversion.from} = <span className="text-primary">{conversion.result} {conversion.to}</span>
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-ink">Exchange rates</h2>
+            <button
+              onClick={openAddRate}
+              className="flex items-center gap-1.5 rounded-lg bg-cream-dim px-3 py-1.5 text-xs font-semibold text-ink hover:bg-cream"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add rate
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between rounded-lg border border-line bg-cream/60 px-3.5 py-2.5 text-sm">
+              <span className="font-semibold text-ink">USD</span>
+              <span className="text-ink-soft">Base currency</span>
+            </div>
+            {rates.map((r) => (
+              <div key={r.id} className="group flex items-center justify-between rounded-lg border border-line px-3.5 py-2.5 text-sm">
+                <span className="font-semibold text-ink">{r.currency}</span>
+                <span className="text-ink-soft">1 {r.currency} = {r.rate_to_usd} USD</span>
+                <span className="text-xs text-ink-soft">{relativeTime(r.updated_at)}</span>
+                <button
+                  onClick={() => handleDeleteRate(r)}
+                  aria-label={`Remove ${r.currency} rate`}
+                  className="rounded-lg p-1 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+            {rates.length === 0 && <p className="text-sm text-ink-soft">Add a rate to convert other currencies.</p>}
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="eh-table w-full text-left text-sm">
           <thead>
@@ -194,7 +355,11 @@ export default function ComplianceCalendarPage() {
           </thead>
           <tbody>
             {events.map((ev) => (
-              <tr key={ev.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
+              <tr
+                key={ev.id}
+                onClick={() => openEdit(ev)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
                 <td className="px-5 py-3.5 font-semibold text-ink" data-label="Event">{ev.title}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Country">{ev.country}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Category">{ev.category}</td>
@@ -209,7 +374,7 @@ export default function ComplianceCalendarPage() {
                     {ev.calendar_status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     {!ev.completed && (
                       <button
@@ -361,6 +526,48 @@ export default function ComplianceCalendarPage() {
               className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
               {saving ? "Saving…" : editing ? "Save changes" : "Add event"}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showRateForm && (
+        <Modal title="Add / update exchange rate" onClose={() => setShowRateForm(false)}>
+          <form onSubmit={handleRateSubmit}>
+            {rateError && (
+              <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+                {rateError}
+              </div>
+            )}
+            <div className="mb-4">
+              <label className={labelClass}>Currency code</label>
+              <input
+                required
+                value={rateForm.currency}
+                onChange={(e) => setRateForm({ ...rateForm, currency: e.target.value.toUpperCase() })}
+                placeholder="EUR"
+                maxLength={3}
+                className={inputClass}
+              />
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Rate to USD (1 unit = ? USD)</label>
+              <input
+                required
+                type="number"
+                min="0"
+                step="0.000001"
+                value={rateForm.rate_to_usd}
+                onChange={(e) => setRateForm({ ...rateForm, rate_to_usd: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={savingRate}
+              className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              {savingRate ? "Saving…" : "Save rate"}
             </button>
           </form>
         </Modal>

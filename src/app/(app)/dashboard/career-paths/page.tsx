@@ -128,8 +128,12 @@ export default function CareerPathsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paths.map((p) => (
-            <div key={p.id} className="group relative rounded-2xl border border-line bg-card p-5">
-              <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div
+              key={p.id}
+              onClick={() => openEdit(p)}
+              className="group relative cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+            >
+              <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
                 <button onClick={() => openEdit(p)} aria-label={`Edit path for ${p.employee_detail.name}`} className="rounded-lg p-1.5 text-ink-soft hover:bg-cream-dim hover:text-ink">
                   <Pencil className="h-3.5 w-3.5" />
                 </button>

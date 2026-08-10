@@ -27,6 +27,7 @@ export default function SuccessionPlanningPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [editing, setEditing] = useState<SuccessionPlan | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employee: "", potential_rating: "Medium" as NineBoxRating, performance_rating: "Medium" as NineBoxRating, successor_notes: "", ready_now: false });
   const [saving, setSaving] = useState(false);
@@ -47,23 +48,39 @@ export default function SuccessionPlanningPage() {
   }, []);
 
   function openCreate() {
+    setEditing(null);
     setForm({ employee: employees[0] ? String(employees[0].id) : "", potential_rating: "Medium", performance_rating: "Medium", successor_notes: "", ready_now: false });
+    setShowForm(true);
+  }
+
+  function openEdit(p: SuccessionPlan) {
+    setEditing(p);
+    setForm({
+      employee: String(p.employee),
+      potential_rating: p.potential_rating,
+      performance_rating: p.performance_rating,
+      successor_notes: p.successor_notes,
+      ready_now: p.ready_now,
+    });
     setShowForm(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    const payload = {
+      employee: Number(form.employee),
+      potential_rating: form.potential_rating,
+      performance_rating: form.performance_rating,
+      successor_notes: form.successor_notes,
+      ready_now: form.ready_now,
+    };
     try {
-      await withAuth((token) =>
-        successionPlansApi.create(token, {
-          employee: Number(form.employee),
-          potential_rating: form.potential_rating,
-          performance_rating: form.performance_rating,
-          successor_notes: form.successor_notes,
-          ready_now: form.ready_now,
-        })
-      );
+      if (editing) {
+        await withAuth((token) => successionPlansApi.update(token, editing.id, payload));
+      } else {
+        await withAuth((token) => successionPlansApi.create(token, payload));
+      }
       setShowForm(false);
       await load();
     } finally {
@@ -145,13 +162,17 @@ export default function SuccessionPlanningPage() {
           </thead>
           <tbody>
             {plans.map((p) => (
-              <tr key={p.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5" data-label="Employee">
+              <tr
+                key={p.id}
+                onClick={() => openEdit(p)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
+                <td className="px-5 py-3.5" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                   <EmployeeLink employee={p.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Potential">{p.potential_rating}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Performance">{p.performance_rating}</td>
-                <td className="px-5 py-3.5" data-label="Ready now">
+                <td className="px-5 py-3.5" data-label="Ready now" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => toggleReady(p)}
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${p.ready_now ? "bg-primary/15 text-primary" : "bg-cream-dim text-ink-soft"}`}
@@ -159,7 +180,7 @@ export default function SuccessionPlanningPage() {
                     {p.ready_now ? "Ready now" : "Not yet"}
                   </button>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <button onClick={() => handleDelete(p)} aria-label={`Remove ${p.employee_detail.name}`} className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -173,11 +194,11 @@ export default function SuccessionPlanningPage() {
       </div>
 
       {showForm && (
-        <Modal title="Add to succession grid" onClose={() => setShowForm(false)}>
+        <Modal title={editing ? "Edit succession plan" : "Add to succession grid"} onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className={labelClass}>Employee</label>
-              <select required value={form.employee} onChange={(e) => setForm({ ...form, employee: e.target.value })} className={inputClass}>
+              <select required disabled={!!editing} value={form.employee} onChange={(e) => setForm({ ...form, employee: e.target.value })} className={`${inputClass} disabled:opacity-60`}>
                 <option value="">Choose an employee</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -211,7 +232,7 @@ export default function SuccessionPlanningPage() {
               Ready for succession now
             </label>
             <button type="submit" disabled={saving} className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60">
-              {saving ? "Saving…" : "Add to grid"}
+              {saving ? "Saving…" : editing ? "Save changes" : "Add to grid"}
             </button>
           </form>
         </Modal>

@@ -49,6 +49,7 @@ export default function ClaimsPage() {
   const [plans, setPlans] = useState<BenefitPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [editing, setEditing] = useState<BenefitClaim | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -75,7 +76,21 @@ export default function ClaimsPage() {
   }, []);
 
   function openCreate() {
+    setEditing(null);
     setForm({ ...emptyForm, employee: employees[0] ? String(employees[0].id) : "" });
+    setError(null);
+    setShowForm(true);
+  }
+
+  function openEdit(c: BenefitClaim) {
+    setEditing(c);
+    setForm({
+      employee: String(c.employee),
+      plan: c.plan ? String(c.plan) : "",
+      claim_type: c.claim_type,
+      amount: c.amount,
+      description: c.description,
+    });
     setError(null);
     setShowForm(true);
   }
@@ -84,16 +99,19 @@ export default function ClaimsPage() {
     e.preventDefault();
     setError(null);
     setSaving(true);
+    const payload = {
+      employee: Number(form.employee),
+      plan: form.plan ? Number(form.plan) : null,
+      claim_type: form.claim_type,
+      amount: form.amount,
+      description: form.description,
+    };
     try {
-      await withAuth((token) =>
-        benefitClaimsApi.create(token, {
-          employee: Number(form.employee),
-          plan: form.plan ? Number(form.plan) : null,
-          claim_type: form.claim_type,
-          amount: form.amount,
-          description: form.description,
-        })
-      );
+      if (editing) {
+        await withAuth((token) => benefitClaimsApi.update(token, editing.id, payload));
+      } else {
+        await withAuth((token) => benefitClaimsApi.create(token, payload));
+      }
       setShowForm(false);
       await load();
     } catch (err) {
@@ -151,14 +169,18 @@ export default function ClaimsPage() {
           </thead>
           <tbody>
             {claims.map((c) => (
-              <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+              <tr
+                key={c.id}
+                onClick={() => openEdit(c)}
+                className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+              >
+                <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                   <EmployeeLink employee={c.employee_detail} />
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Claim">{c.claim_type}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Plan">{c.plan_name || "—"}</td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Amount">${c.amount}</td>
-                <td className="px-5 py-3.5" data-label="Status">
+                <td className="px-5 py-3.5" data-label="Status" onClick={(e) => e.stopPropagation()}>
                   <select
                     value={c.status}
                     onChange={(e) => updateStatus(c, e.target.value as ClaimStatus)}
@@ -171,7 +193,7 @@ export default function ClaimsPage() {
                     ))}
                   </select>
                 </td>
-                <td className="px-5 py-3.5">
+                <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleDelete(c)}
@@ -193,7 +215,7 @@ export default function ClaimsPage() {
       </div>
 
       {showForm && (
-        <Modal title="New claim" onClose={() => setShowForm(false)}>
+        <Modal title={editing ? "Edit claim" : "New claim"} onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit}>
             {error && (
               <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
@@ -204,9 +226,10 @@ export default function ClaimsPage() {
               <label className={labelClass}>Employee</label>
               <select
                 required
+                disabled={!!editing}
                 value={form.employee}
                 onChange={(e) => setForm({ ...form, employee: e.target.value })}
-                className={inputClass}
+                className={`${inputClass} disabled:opacity-60`}
               >
                 <option value="">Choose an employee</option>
                 {employees.map((emp) => (
@@ -273,7 +296,7 @@ export default function ClaimsPage() {
               disabled={saving}
               className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
-              {saving ? "Submitting…" : "Submit claim"}
+              {saving ? "Saving…" : editing ? "Save changes" : "Submit claim"}
             </button>
           </form>
         </Modal>

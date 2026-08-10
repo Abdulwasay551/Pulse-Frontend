@@ -79,6 +79,7 @@ export default function BenefitsEnrollmentPage() {
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [planForm, setPlanForm] = useState<PlanFormState>(emptyPlanForm);
 
+  const [editingEnrollment, setEditingEnrollment] = useState<BenefitEnrollment | null>(null);
   const [showEnrollForm, setShowEnrollForm] = useState(false);
   const [enrollForm, setEnrollForm] = useState<EnrollmentFormState>(emptyEnrollmentForm);
 
@@ -152,6 +153,7 @@ export default function BenefitsEnrollmentPage() {
   }
 
   function openCreateEnrollment() {
+    setEditingEnrollment(null);
     setEnrollForm({
       employee: employees[0] ? String(employees[0].id) : "",
       plan: plans[0] ? String(plans[0].id) : "",
@@ -162,19 +164,34 @@ export default function BenefitsEnrollmentPage() {
     setShowEnrollForm(true);
   }
 
+  function openEditEnrollment(en: BenefitEnrollment) {
+    setEditingEnrollment(en);
+    setEnrollForm({
+      employee: String(en.employee),
+      plan: String(en.plan),
+      coverage_level: en.coverage_level,
+      status: en.status,
+    });
+    setError(null);
+    setShowEnrollForm(true);
+  }
+
   async function handleEnrollSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSaving(true);
+    const payload = {
+      employee: Number(enrollForm.employee),
+      plan: Number(enrollForm.plan),
+      coverage_level: enrollForm.coverage_level,
+      status: enrollForm.status,
+    };
     try {
-      await withAuth((token) =>
-        benefitEnrollmentsApi.create(token, {
-          employee: Number(enrollForm.employee),
-          plan: Number(enrollForm.plan),
-          coverage_level: enrollForm.coverage_level,
-          status: enrollForm.status,
-        })
-      );
+      if (editingEnrollment) {
+        await withAuth((token) => benefitEnrollmentsApi.update(token, editingEnrollment.id, payload));
+      } else {
+        await withAuth((token) => benefitEnrollmentsApi.create(token, payload));
+      }
       setShowEnrollForm(false);
       await load();
     } catch (err) {
@@ -222,13 +239,17 @@ export default function BenefitsEnrollmentPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((p) => (
-            <div key={p.id} className="group rounded-2xl border border-line bg-card p-5">
+            <div
+              key={p.id}
+              onClick={() => openEditPlan(p)}
+              className="group cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-ink-soft">{p.plan_type}</div>
                   <div className="mt-0.5 font-display font-bold text-ink">{p.name}</div>
                 </div>
-                <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => openEditPlan(p)}
                     aria-label={`Edit ${p.name}`}
@@ -293,13 +314,17 @@ export default function BenefitsEnrollmentPage() {
             </thead>
             <tbody>
               {enrollments.map((en) => (
-                <tr key={en.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                  <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
+                <tr
+                  key={en.id}
+                  onClick={() => openEditEnrollment(en)}
+                  className="group cursor-pointer border-b border-line last:border-0 hover:bg-cream/60"
+                >
+                  <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee" onClick={(e) => e.stopPropagation()}>
                     <EmployeeLink employee={en.employee_detail} />
                   </td>
                   <td className="px-5 py-3.5 text-ink-soft" data-label="Plan">{en.plan_detail.name}</td>
                   <td className="px-5 py-3.5 text-ink-soft" data-label="Coverage">{en.coverage_level}</td>
-                  <td className="px-5 py-3.5" data-label="Status">
+                  <td className="px-5 py-3.5" data-label="Status" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={en.status}
                       onChange={(ev) => updateEnrollmentStatus(en, ev.target.value as EnrollmentStatus)}
@@ -312,7 +337,7 @@ export default function BenefitsEnrollmentPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                     <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => handleDeleteEnrollment(en)}
@@ -420,7 +445,7 @@ export default function BenefitsEnrollmentPage() {
       )}
 
       {showEnrollForm && (
-        <Modal title="New enrollment" onClose={() => setShowEnrollForm(false)}>
+        <Modal title={editingEnrollment ? "Edit enrollment" : "New enrollment"} onClose={() => setShowEnrollForm(false)}>
           <form onSubmit={handleEnrollSubmit}>
             {error && (
               <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
@@ -431,9 +456,10 @@ export default function BenefitsEnrollmentPage() {
               <label className={labelClass}>Employee</label>
               <select
                 required
+                disabled={!!editingEnrollment}
                 value={enrollForm.employee}
                 onChange={(e) => setEnrollForm({ ...enrollForm, employee: e.target.value })}
-                className={inputClass}
+                className={`${inputClass} disabled:opacity-60`}
               >
                 <option value="">Choose an employee</option>
                 {employees.map((emp) => (
@@ -447,9 +473,10 @@ export default function BenefitsEnrollmentPage() {
               <label className={labelClass}>Plan</label>
               <select
                 required
+                disabled={!!editingEnrollment}
                 value={enrollForm.plan}
                 onChange={(e) => setEnrollForm({ ...enrollForm, plan: e.target.value })}
-                className={inputClass}
+                className={`${inputClass} disabled:opacity-60`}
               >
                 <option value="">Choose a plan</option>
                 {plans.map((p) => (
@@ -492,7 +519,7 @@ export default function BenefitsEnrollmentPage() {
               disabled={saving}
               className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
             >
-              {saving ? "Saving…" : "Add enrollment"}
+              {saving ? "Saving…" : editingEnrollment ? "Save changes" : "Add enrollment"}
             </button>
           </form>
         </Modal>

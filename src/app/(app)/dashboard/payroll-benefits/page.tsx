@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import StatCard from "@/components/dashboard/StatCard";
 import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import ModuleFeatureSections from "@/components/dashboard/ModuleFeatureSections";
+import PlacementsChart from "@/components/dashboard/PlacementsChart";
+import DonutChart from "@/components/dashboard/DonutChart";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules } from "@/lib/dashboard-modules";
 import { getPayrollBenefitsDashboardSummary, type PayrollBenefitsDashboardSummary } from "@/lib/payroll-benefits-api";
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+}
 
 const moduleDef = dashboardModules.find((m) => m.key === "payroll-benefits")!;
 
@@ -36,19 +41,39 @@ export default function PayrollBenefitsPage() {
             ))}
           </div>
 
-          <div className="mt-6 rounded-2xl border border-line bg-card p-6">
-            <h2 className="mb-5 font-display text-lg font-bold text-ink">Compliance &amp; audit KPIs</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {summary.kpis.map((k) => (
-                <Link
-                  key={k.label}
-                  href={k.href}
-                  className="group rounded-xl border border-line bg-cream p-4 transition-colors hover:border-primary/40"
-                >
-                  <div className="text-2xl font-bold text-ink">{k.value}</div>
-                  <div className="mt-1 text-xs text-ink-soft">{k.label}</div>
-                </Link>
-              ))}
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-card p-6">
+              <h2 className="mb-1 font-display text-lg font-bold text-ink">Payroll cost trend</h2>
+              <p className="mb-5 text-xs text-ink-soft">Gross amount per run, most recent {summary.payroll_trend.length || 0} periods.</p>
+              {summary.payroll_trend.length === 0 ? (
+                <p className="text-sm text-ink-soft">Run payroll to see the trend build up here.</p>
+              ) : (
+                <>
+                  <PlacementsChart data={summary.payroll_trend.map((p) => ({ month: p.label, value: p.value }))} />
+                  <div className="mt-4 text-right text-xs text-ink-soft">
+                    Latest: <span className="font-semibold text-ink">
+                      {formatCurrency(summary.payroll_trend[summary.payroll_trend.length - 1].value)}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-line bg-card p-6">
+              <h2 className="mb-1 font-display text-lg font-bold text-ink">Benefit cost by type</h2>
+              <p className="mb-5 text-xs text-ink-soft">Monthly employer cost, {formatCurrency(summary.total_monthly_benefit_cost)} total.</p>
+              {summary.benefit_cost_by_type.length === 0 ? (
+                <p className="text-sm text-ink-soft">Add benefit plans and enrollments to see this breakdown.</p>
+              ) : (
+                <DonutChart
+                  data={summary.benefit_cost_by_type.map((b) => ({
+                    label: b.label,
+                    percent: summary.total_monthly_benefit_cost
+                      ? Math.round((b.value / summary.total_monthly_benefit_cost) * 100)
+                      : 0,
+                  }))}
+                />
+              )}
             </div>
           </div>
         </>
