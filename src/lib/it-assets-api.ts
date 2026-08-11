@@ -14,6 +14,9 @@ export interface Asset {
   serial_number: string;
   purchase_date: string | null;
   warranty_expiry: string | null;
+  warranty_provider: string;
+  warranty_notes: string;
+  warranty_document: string | null;
   status: AssetStatus;
   assigned_to: number | null;
   assigned_to_detail: EmployeeLite | null;
@@ -33,6 +36,8 @@ export interface AssetWrite {
   serial_number?: string;
   purchase_date?: string | null;
   warranty_expiry?: string | null;
+  warranty_provider?: string;
+  warranty_notes?: string;
   status?: AssetStatus;
   assigned_to?: number | null;
   assigned_at?: string | null;
@@ -42,6 +47,23 @@ export interface AssetWrite {
 
 export const assetsApi = resourceApi<Asset, AssetWrite>("/it-assets/assets/");
 export const assetsCsv = csvApi("/it-assets/assets/", "assets.csv");
+
+/** Logging warranty details can include a real file, so this goes over
+ * multipart rather than assetsApi.update's plain JSON PATCH — kept separate
+ * the same way uploadEmployeeDocument sits apart from the plain resourceApi
+ * in people-api.ts. */
+export function updateWarrantyDetails(
+  token: string,
+  assetId: number,
+  data: { warranty_expiry?: string; warranty_provider?: string; warranty_notes?: string; document?: File | null }
+) {
+  const formData = new FormData();
+  if (data.warranty_expiry !== undefined) formData.append("warranty_expiry", data.warranty_expiry);
+  if (data.warranty_provider !== undefined) formData.append("warranty_provider", data.warranty_provider);
+  if (data.warranty_notes !== undefined) formData.append("warranty_notes", data.warranty_notes);
+  if (data.document) formData.append("warranty_document", data.document);
+  return apiFetch<Asset>(`/it-assets/assets/${assetId}/`, { method: "PATCH", body: formData }, token);
+}
 
 export type TicketCategory = "Repair Request" | "Device Query" | "Access Request" | "Other";
 export type TicketPriority = "Low" | "Medium" | "High";
@@ -60,6 +82,7 @@ export interface SupportTicket {
   status: TicketStatus;
   created_at: string;
   resolved_at: string | null;
+  resolution_time: string | null;
 }
 
 export interface SupportTicketWrite {
@@ -76,6 +99,8 @@ export const supportTicketsApi = resourceApi<SupportTicket, SupportTicketWrite>(
 export const supportTicketsCsv = csvApi("/it-assets/support-tickets/", "support-tickets.csv");
 
 export type IncidentType = "Damage" | "Repair" | "Loss" | "Malfunction" | "Other";
+export const INCIDENT_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR"] as const;
+export type IncidentCurrency = (typeof INCIDENT_CURRENCIES)[number];
 
 export interface AssetIncident {
   id: number;
@@ -90,6 +115,7 @@ export interface AssetIncident {
   resolved: boolean;
   resolution_notes: string;
   cost: string;
+  currency: string;
   created_at: string;
 }
 
@@ -102,10 +128,48 @@ export interface AssetIncidentWrite {
   resolved?: boolean;
   resolution_notes?: string;
   cost?: number | string;
+  currency?: string;
 }
 
 export const assetIncidentsApi = resourceApi<AssetIncident, AssetIncidentWrite>("/it-assets/asset-incidents/");
 export const assetIncidentsCsv = csvApi("/it-assets/asset-incidents/", "device-incidents.csv");
+
+export function formatIncidentCost(cost: string | number, currency: string) {
+  const amount = Number(cost);
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  }
+}
+
+export type RecoveryStatus = "Pending" | "Recovered" | "Not Returned";
+
+export interface AssetRecovery {
+  id: number;
+  asset: number;
+  asset_tag: string;
+  asset_name: string;
+  employee: number;
+  employee_detail: EmployeeLite;
+  last_working_day: string | null;
+  status: RecoveryStatus;
+  recovered_at: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssetRecoveryWrite {
+  asset: number;
+  employee: number;
+  last_working_day?: string | null;
+  status?: RecoveryStatus;
+  notes?: string;
+}
+
+export const assetRecoveriesApi = resourceApi<AssetRecovery, AssetRecoveryWrite>("/it-assets/asset-recoveries/");
+export const assetRecoveriesCsv = csvApi("/it-assets/asset-recoveries/", "asset-recoveries.csv");
 
 export type BYODComplianceStatus = "Compliant" | "Non-Compliant" | "Pending Review";
 

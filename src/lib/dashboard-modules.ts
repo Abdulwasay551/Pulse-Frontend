@@ -43,6 +43,7 @@ import {
   UserMinus,
   UserSquare,
   Users,
+  UserX,
   Wallet,
 } from "lucide-react";
 
@@ -299,14 +300,22 @@ export const dashboardModules: ModuleDef[] = [
     sections: [
       {
         label: "Assets Management",
-        description: "Device lifecycle, warranty, support, and compliance.",
+        description: "Device lifecycle, warranty, and cost tracking.",
         icon: Boxes,
         features: [
           { label: "Device Provisioning", description: "Tied to onboarding and offboarding.", icon: Boxes, href: "/dashboard/device-provisioning" },
           { label: "Asset Inventory Tracking", description: "Laptops, monitors, and every assigned device.", icon: Boxes, href: "/dashboard/asset-inventory" },
           { label: "Warranty Tracking", description: "Know what's covered, and until when.", icon: BadgeCheck, href: "/dashboard/warranty-tracking" },
-          { label: "IT Support Requests Management", description: "Device queries and repair requests.", icon: LifeBuoy, href: "/dashboard/it-support" },
           { label: "Device Tracker", description: "Issue history, repairs, and damage records.", icon: Smartphone, href: "/dashboard/device-tracker" },
+        ],
+      },
+      {
+        label: "IT Management",
+        description: "Support workflow, recovery, and compliance.",
+        icon: LifeBuoy,
+        features: [
+          { label: "Support Ticket Management", description: "Device queries and repair requests, kanban workflow.", icon: LifeBuoy, href: "/dashboard/it-support" },
+          { label: "Offboarding Recovery", description: "Reclaim IT assets from departing employees.", icon: UserX, href: "/dashboard/asset-recovery" },
           { label: "BYOD Security Policy", description: "Track policy compliance per device.", icon: ShieldCheck, href: "/dashboard/byod-policy" },
         ],
       },

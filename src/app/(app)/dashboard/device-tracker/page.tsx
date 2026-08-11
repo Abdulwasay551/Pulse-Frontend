@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -10,6 +11,8 @@ import {
   assetsApi,
   assetIncidentsApi,
   assetIncidentsCsv,
+  formatIncidentCost,
+  INCIDENT_CURRENCIES,
   type Asset,
   type AssetIncident,
   type IncidentType,
@@ -39,6 +42,7 @@ interface FormState {
   description: string;
   incident_date: string;
   cost: string;
+  currency: string;
 }
 const emptyForm: FormState = {
   asset: "",
@@ -47,6 +51,7 @@ const emptyForm: FormState = {
   description: "",
   incident_date: new Date().toISOString().slice(0, 10),
   cost: "0",
+  currency: "USD",
 };
 
 export default function DeviceTrackerPage() {
@@ -82,9 +87,19 @@ export default function DeviceTrackerPage() {
   }, []);
 
   function openCreate() {
-    setForm({ ...emptyForm, asset: assets[0] ? String(assets[0].id) : "" });
+    const firstAsset = assets[0];
+    setForm({
+      ...emptyForm,
+      asset: firstAsset ? String(firstAsset.id) : "",
+      employee: firstAsset?.assigned_to ? String(firstAsset.assigned_to) : "",
+    });
     setError(null);
     setShowForm(true);
+  }
+
+  function selectAsset(assetId: string) {
+    const asset = assets.find((a) => String(a.id) === assetId);
+    setForm({ ...form, asset: assetId, employee: asset?.assigned_to ? String(asset.assigned_to) : form.employee });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -100,6 +115,7 @@ export default function DeviceTrackerPage() {
           description: form.description,
           incident_date: form.incident_date,
           cost: form.cost,
+          currency: form.currency,
         })
       );
       setShowForm(false);
@@ -159,11 +175,21 @@ export default function DeviceTrackerPage() {
                   {i.resolved && <span className="text-[11px] font-semibold text-primary">Resolved</span>}
                 </div>
                 {i.description && <p className="mt-1.5 text-sm text-ink-soft">{i.description}</p>}
-                <p className="mt-1 text-xs text-ink-soft">
-                  {i.incident_date}
-                  {i.employee_detail && ` · Reported by ${i.employee_detail.name}`}
-                  {Number(i.cost) > 0 && ` · $${i.cost}`}
-                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-soft">
+                  <span>{i.incident_date}</span>
+                  {i.employee_detail && (
+                    <>
+                      <span>· Reported by</span>
+                      <Link
+                        href={`/dashboard/employee-database?employee=${i.employee_detail.id}`}
+                        className="font-semibold text-ink-soft hover:text-primary hover:underline"
+                      >
+                        {i.employee_detail.name}
+                      </Link>
+                    </>
+                  )}
+                  {Number(i.cost) > 0 && <span>· {formatIncidentCost(i.cost, i.currency)}</span>}
+                </div>
               </div>
               <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                 {!i.resolved && (
@@ -204,7 +230,7 @@ export default function DeviceTrackerPage() {
             )}
             <div className="mb-4">
               <label className={labelClass}>Asset</label>
-              <select required value={form.asset} onChange={(e) => setForm({ ...form, asset: e.target.value })} className={inputClass}>
+              <select required value={form.asset} onChange={(e) => selectAsset(e.target.value)} className={inputClass}>
                 <option value="">Choose an asset</option>
                 {assets.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -212,6 +238,7 @@ export default function DeviceTrackerPage() {
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-[11px] text-ink-soft">Linked to the employee record it&apos;s currently assigned to, if any.</p>
             </div>
             <div className="mb-4">
               <label className={labelClass}>Reported by (optional)</label>
@@ -249,16 +276,32 @@ export default function DeviceTrackerPage() {
                 />
               </div>
             </div>
-            <div className="mb-4">
-              <label className={labelClass}>Estimated / repair cost</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.cost}
-                onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                className={inputClass}
-              />
+            <div className="mb-4 grid grid-cols-[1fr_auto] gap-3">
+              <div>
+                <label className={labelClass}>Estimated / repair cost</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.cost}
+                  onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Currency</label>
+                <select
+                  value={form.currency}
+                  onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                  className={inputClass}
+                >
+                  {INCIDENT_CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="mb-6">
               <label className={labelClass}>Description</label>

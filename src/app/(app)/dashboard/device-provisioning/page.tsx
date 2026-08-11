@@ -6,6 +6,7 @@ import { Laptop, UserCheck, UserX } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import AssetLink from "@/components/dashboard/AssetLink";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import StatCard from "@/components/dashboard/StatCard";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, type Asset } from "@/lib/it-assets-api";
 
@@ -36,6 +37,8 @@ export default function DeviceProvisioningPage() {
 
   const available = assets.filter((a) => !a.assigned_to && a.status !== "Retired");
   const assigned = assets.filter((a) => a.assigned_to);
+  const inRepair = assets.filter((a) => a.status === "In Repair").length;
+  const retired = assets.filter((a) => a.status === "Retired").length;
 
   async function assign(asset: Asset) {
     const employeeId = assignTarget[asset.id];
@@ -67,6 +70,13 @@ export default function DeviceProvisioningPage() {
           </Link>
           .
         </p>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard label="Available to provision" value={String(available.length)} />
+        <StatCard label="Currently provisioned" value={String(assigned.length)} />
+        <StatCard label="In repair" value={String(inRepair)} />
+        <StatCard label="Retired" value={String(retired)} />
       </div>
 
       <div className="mb-8">

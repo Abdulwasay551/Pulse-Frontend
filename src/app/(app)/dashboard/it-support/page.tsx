@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -59,6 +59,7 @@ export default function ItSupportPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"board" | "list">("board");
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -130,10 +131,30 @@ export default function ItSupportPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">IT Support Requests Management</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">Support Ticket Management</h1>
           <p className="mt-1 text-sm text-ink-soft">Device queries and repair requests.</p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border border-line bg-card p-1">
+            <button
+              onClick={() => setView("board")}
+              aria-label="Board view"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                view === "board" ? "bg-primary text-cream" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" /> Board
+            </button>
+            <button
+              onClick={() => setView("list")}
+              aria-label="List view"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                view === "list" ? "bg-primary text-cream" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" /> List
+            </button>
+          </div>
           <CsvToolbar
             csv={supportTicketsCsv}
             resourceLabel="support tickets"
@@ -149,71 +170,77 @@ export default function ItSupportPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-card">
-        <table className="eh-table w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Ticket</th>
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Priority</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {tickets.map((t) => (
-              <tr key={t.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
-                <td className="px-5 py-3.5" data-label="Ticket">
-                  <div className="font-semibold text-ink">{t.subject}</div>
-                  <div className="text-xs text-ink-soft">
-                    {t.category}
-                    {t.asset_tag && (
-                      <>
-                        {" · "}
-                        <Link href={`/dashboard/asset-inventory?asset=${t.asset}`} className="hover:text-primary hover:underline">
-                          {t.asset_tag}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </td>
-                <td className="px-5 py-3.5 text-ink-soft" data-label="Employee">
-                  <EmployeeLink employee={t.employee_detail} />
-                </td>
-                <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[t.priority]}`} data-label="Priority">{t.priority}</td>
-                <td className="px-5 py-3.5" data-label="Status">
-                  <select
-                    value={t.status}
-                    onChange={(e) => updateStatus(t, e.target.value as TicketStatus)}
-                    className={`rounded-full border-0 px-2.5 py-1 text-[11px] font-semibold ${statusTone[t.status]}`}
-                  >
-                    {statusOptions.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() => handleDelete(t)}
-                      aria-label={`Delete ticket ${t.subject}`}
-                      className="rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </td>
+      {loading ? (
+        <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
+      ) : tickets.length === 0 ? (
+        <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">No support tickets yet.</div>
+      ) : view === "board" ? (
+        <TicketBoard tickets={tickets} onMove={updateStatus} onDelete={handleDelete} />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-line bg-card">
+          <table className="eh-table w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
+                <th className="px-5 py-3 font-medium">Ticket</th>
+                <th className="px-5 py-3 font-medium">Employee</th>
+                <th className="px-5 py-3 font-medium">Priority</th>
+                <th className="px-5 py-3 font-medium">Resolution time</th>
+                <th className="px-5 py-3 font-medium">Status</th>
+                <th className="px-5 py-3 font-medium" />
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {!loading && tickets.length === 0 && (
-          <div className="p-10 text-center text-sm text-ink-soft">No support tickets yet.</div>
-        )}
-        {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
-      </div>
+            </thead>
+            <tbody>
+              {tickets.map((t) => (
+                <tr key={t.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
+                  <td className="px-5 py-3.5" data-label="Ticket">
+                    <div className="font-semibold text-ink">{t.subject}</div>
+                    <div className="text-xs text-ink-soft">
+                      {t.category}
+                      {t.asset_tag && (
+                        <>
+                          {" · "}
+                          <Link href={`/dashboard/asset-inventory?asset=${t.asset}`} className="hover:text-primary hover:underline">
+                            {t.asset_tag}
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5 text-ink-soft" data-label="Employee">
+                    <EmployeeLink employee={t.employee_detail} />
+                  </td>
+                  <td className={`px-5 py-3.5 text-xs font-semibold ${priorityTone[t.priority]}`} data-label="Priority">{t.priority}</td>
+                  <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Resolution time">{t.resolution_time ?? "—"}</td>
+                  <td className="px-5 py-3.5" data-label="Status">
+                    <select
+                      value={t.status}
+                      onChange={(e) => updateStatus(t, e.target.value as TicketStatus)}
+                      className={`rounded-full border-0 px-2.5 py-1 text-[11px] font-semibold ${statusTone[t.status]}`}
+                    >
+                      {statusOptions.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="eh-row-actions flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={() => handleDelete(t)}
+                        aria-label={`Delete ticket ${t.subject}`}
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showForm && (
         <Modal title="New support ticket" onClose={() => setShowForm(false)}>
@@ -308,6 +335,82 @@ export default function ItSupportPage() {
           </form>
         </Modal>
       )}
+    </div>
+  );
+}
+
+/** Kanban-style ticket workflow — one column per status, cards move left/right
+ * along `statusOptions` rather than free drag-and-drop, which keeps the
+ * interaction accessible (keyboard/click-only) without pulling in a DnD
+ * library for four fixed columns. */
+function TicketBoard({
+  tickets,
+  onMove,
+  onDelete,
+}: {
+  tickets: SupportTicket[];
+  onMove: (t: SupportTicket, status: TicketStatus) => void;
+  onDelete: (t: SupportTicket) => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {statusOptions.map((status) => {
+        const columnTickets = tickets.filter((t) => t.status === status);
+        return (
+          <div key={status} className="rounded-2xl border border-line bg-card p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusTone[status]}`}>{status}</span>
+              <span className="text-xs font-semibold text-ink-soft">{columnTickets.length}</span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {columnTickets.map((t) => {
+                const idx = statusOptions.indexOf(status);
+                return (
+                  <div key={t.id} className="group rounded-xl border border-line bg-cream p-3.5">
+                    <div className="mb-1.5 flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-ink">{t.subject}</p>
+                      <button
+                        onClick={() => onDelete(t)}
+                        aria-label={`Delete ticket ${t.subject}`}
+                        className="shrink-0 rounded-md p-1 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className="mb-2">
+                      <EmployeeLink employee={t.employee_detail} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className={`font-semibold ${priorityTone[t.priority]}`}>{t.priority}</span>
+                      {t.asset_tag && <span className="text-ink-soft">{t.asset_tag}</span>}
+                      {t.resolution_time && <span className="text-ink-soft">· {t.resolution_time}</span>}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <button
+                        onClick={() => idx > 0 && onMove(t, statusOptions[idx - 1])}
+                        disabled={idx === 0}
+                        aria-label="Move to previous status"
+                        className="rounded-md p-1 text-ink-soft hover:bg-cream-dim hover:text-ink disabled:opacity-30"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => idx < statusOptions.length - 1 && onMove(t, statusOptions[idx + 1])}
+                        disabled={idx === statusOptions.length - 1}
+                        aria-label="Move to next status"
+                        className="rounded-md p-1 text-ink-soft hover:bg-cream-dim hover:text-ink disabled:opacity-30"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {columnTickets.length === 0 && <p className="py-4 text-center text-xs text-ink-soft">No tickets</p>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default function ItAssetManagementPage() {
 
           <div className="mt-6 rounded-2xl border border-line bg-card p-6">
             <h2 className="mb-5 font-display text-lg font-bold text-ink">Warranty &amp; compliance KPIs</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {summary.kpis.map((k) => (
                 <Link
                   key={k.label}

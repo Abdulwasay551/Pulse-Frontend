@@ -44,6 +44,7 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/it-support",
     "/dashboard/device-tracker",
     "/dashboard/byod-policy",
+    "/dashboard/asset-recovery",
     "/dashboard/onboarding",
     "/dashboard/offboarding",
   ],
