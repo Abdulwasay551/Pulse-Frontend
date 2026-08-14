@@ -12,7 +12,7 @@ export default function Footer({ settings }: { settings: SiteSettingsData }) {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 font-display text-lg font-bold text-ink">
               <Logo className="h-7 w-7" />
-              EvoHR
+              Pulse
             </div>
             <p className="mt-3 max-w-[220px] text-sm text-ink-soft">{settings.footer_tagline}</p>
           </div>

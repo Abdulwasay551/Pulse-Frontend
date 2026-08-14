@@ -13,7 +13,7 @@ export interface IntegrationEntry {
   /** Whether the *vendor's API itself* is free to call, gated behind a
    * paid plan/subscription on their side, or somewhere in between (free
    * API, but the underlying account/platform it talks to is paid). This is
-   * about their pricing, not ours — nothing here is billed by EvoHR. */
+   * about their pricing, not ours — nothing here is billed by Pulse. */
   pricingTier: IntegrationPricingTier;
   pricingNote: string;
 }

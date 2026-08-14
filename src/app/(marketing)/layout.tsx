@@ -6,9 +6,9 @@ import { fontVariables } from "@/lib/fonts";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "EvoHR — The recruitment CRM & ATS for agency recruiters",
+  title: "Pulse — The recruitment CRM & ATS for agency recruiters",
   description:
-    "EvoHR is the all-in-one CRM and applicant tracking system for staffing agencies and recruiters — candidates, clients, and placements in one place.",
+    "Pulse is the all-in-one CRM and applicant tracking system for staffing agencies and recruiters — candidates, clients, and placements in one place.",
 };
 
 // All content comes from the headless CMS, which isn't reachable at build

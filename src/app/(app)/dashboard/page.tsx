@@ -193,7 +193,7 @@ function Hero({ title, description }: { title: string; description: string }) {
       }}
     >
       <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary-light uppercase">
-        The EvoHR Suite
+        The Pulse Suite
       </span>
       <h1 className="font-display text-3xl font-bold text-cream md:text-5xl">{title}</h1>
       <p className="mx-auto mt-4 max-w-lg text-cream/70 md:text-lg">{description}</p>

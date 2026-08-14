@@ -1,6 +1,6 @@
-# EvoHR Frontend
+# Pulse Frontend
 
-Next.js marketing site for **EvoHR** — a recruitment CRM & ATS for staffing agencies, in the vein of RecruitCRM. All page content is fetched from the headless [EvoHR backend](https://github.com/Abdulwasay551/EvoHr-Backend) (Wagtail CMS) rather than hardcoded.
+Next.js marketing site for **Pulse** — a recruitment CRM & ATS for staffing agencies, in the vein of RecruitCRM. All page content is fetched from the headless [Pulse backend](https://github.com/Abdulwasay551/Pulse-Backend) (Wagtail CMS) rather than hardcoded.
 
 ## Stack
 
@@ -51,7 +51,7 @@ cp .env.example .env.local   # point CMS_API_URL / NEXT_PUBLIC_API_URL at your r
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The [EvoHR backend](https://github.com/Abdulwasay551/EvoHr-Backend) must be running for pages to render (marketing content is fetched server-side at request time) and for login/signup/the demo form to work. For local auth to succeed cross-origin, the backend's `DJANGO_CORS_ALLOWED_ORIGINS` must include `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000). The [Pulse backend](https://github.com/Abdulwasay551/Pulse-Backend) must be running for pages to render (marketing content is fetched server-side at request time) and for login/signup/the demo form to work. For local auth to succeed cross-origin, the backend's `DJANGO_CORS_ALLOWED_ORIGINS` must include `http://localhost:3000`.
 
 ## Environment variables
 

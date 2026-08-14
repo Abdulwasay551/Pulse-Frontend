@@ -38,7 +38,7 @@ export default function BookADemoPage() {
     <>
       <PageHeader
         eyebrow="Book a demo"
-        title="See EvoHR run your desk"
+        title="See Pulse run your desk"
         subtitle="Tell us a bit about your agency and we'll get back to you to set up a walkthrough."
       />
 
@@ -120,7 +120,7 @@ export default function BookADemoPage() {
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="What are you hoping to solve with EvoHR?"
+                  placeholder="What are you hoping to solve with Pulse?"
                   rows={4}
                   className="w-full resize-none rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-primary focus:outline-none"
                 />

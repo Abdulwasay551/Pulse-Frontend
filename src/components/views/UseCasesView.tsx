@@ -73,7 +73,7 @@ export default function UseCasesView({
             </div>
             <div className="rounded-2xl border border-primary bg-primary-dark p-7">
               <h3 className="mb-5 text-xs font-semibold uppercase tracking-wide text-primary-light/70">
-                The EvoHR way
+                The Pulse way
               </h3>
               <ul className="space-y-3.5">
                 {after.map((a) => (

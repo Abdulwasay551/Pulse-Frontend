@@ -14,7 +14,7 @@ export default function PricingCalculator({ tiers }: { tiers: PricingTier[] }) {
           Cost calculator
         </div>
         <h3 className="font-display text-2xl font-bold text-ink">
-          How much would EvoHR cost your desk?
+          How much would Pulse cost your desk?
         </h3>
       </div>
 

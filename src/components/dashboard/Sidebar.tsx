@@ -72,13 +72,13 @@ export default function Sidebar({
     .join("");
 
   useEffect(() => {
-    const stored = localStorage.getItem("evohr_sidebar_collapsed");
+    const stored = localStorage.getItem("Pulse_sidebar_collapsed");
     if (stored === "true") requestAnimationFrame(() => setCollapsed(true));
   }, []);
 
   function toggle() {
     setCollapsed((v) => {
-      localStorage.setItem("evohr_sidebar_collapsed", String(!v));
+      localStorage.setItem("Pulse_sidebar_collapsed", String(!v));
       return !v;
     });
   }
@@ -108,7 +108,7 @@ export default function Sidebar({
           <Logo className="h-8 w-8 shrink-0" />
           {!collapsed && (
             <span className="font-display text-lg font-bold whitespace-nowrap text-cream">
-              EvoHR
+              Pulse
             </span>
           )}
           <button

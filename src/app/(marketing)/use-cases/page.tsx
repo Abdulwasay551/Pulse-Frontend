@@ -3,8 +3,8 @@ import UseCasesView from "@/components/views/UseCasesView";
 import { getPage, getSiteSettings, type UseCasesPageData } from "@/lib/cms";
 
 export const metadata: Metadata = {
-  title: "Use Cases — EvoHR",
-  description: "How staffing agencies, executive search, RPO, and in-house teams run on EvoHR.",
+  title: "Use Cases — Pulse",
+  description: "How staffing agencies, executive search, RPO, and in-house teams run on Pulse.",
 };
 
 export const dynamic = "force-dynamic";

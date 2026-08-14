@@ -4,8 +4,8 @@ import { AuthProvider } from "@/lib/auth-context";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "EvoHR Dashboard (Demo)",
-  description: "A sample walkthrough of the EvoHR product — demo data only.",
+  title: "Pulse Dashboard (Demo)",
+  description: "A sample walkthrough of the Pulse product — demo data only.",
   robots: "noindex, nofollow",
 };
 

@@ -7,10 +7,10 @@ export default function Logo({ className = "h-8 w-8" }: { className?: string }) 
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <rect width="32" height="32" rx="9" fill="#4a2e82" />
-      <rect x="7" y="18" width="4.5" height="8" rx="1.5" fill="#b3c2f5" />
-      <rect x="13.75" y="13" width="4.5" height="13" rx="1.5" fill="#4d6fe0" />
-      <rect x="20.5" y="7" width="4.5" height="19" rx="1.5" fill="#f6ecd9" />
+      <rect width="32" height="32" rx="9" fill="#ff6b35" />
+      <rect x="7" y="18" width="4.5" height="8" rx="1.5" fill="#f6ecd9" />
+      <rect x="13.75" y="13" width="4.5" height="13" rx="1.5" fill="#73b6c4" />
+      <rect x="20.5" y="7" width="4.5" height="19" rx="1.5" fill="#4a2e82" />
     </svg>
   );
 }

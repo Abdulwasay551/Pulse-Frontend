@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --cream: #f6ecd9;
-  --cream-dim: #ecdfc3;
-  --ink: #211a2e;
+  --cream: #f5f5f0;
+  --cream-dim: #d1d1cd;
+  --ink: #0a2e36;
   --ink-soft: #6d6478;
-  --primary: #4a2e82;
-  --primary-dark: #251742;
-  --primary-light: #4d6fe0;
+  --primary: #ff6b35;
+  --primary-dark: #0a2e36;
+  --primary-light: #73b6c4;
   --maroon: #7a1420;
   --maroon-soft: #f3e3e1;
   --amber: #b9861f;

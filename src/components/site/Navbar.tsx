@@ -20,7 +20,7 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold text-ink">
           <Logo />
-          EvoHR
+          Pulse
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

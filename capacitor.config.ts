@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// EvoHR is a genuinely dynamic Next.js app (server-rendered marketing
+// Pulse is a genuinely dynamic Next.js app (server-rendered marketing
 // pages, a client-rendered dashboard talking to a separate Django API,
 // httpOnly-cookie JWT auth) — not a static site — so `next export`
 // bundled into the app isn't a realistic option without rearchitecting
@@ -11,11 +11,11 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // needed for ordinary app changes. A new build is only needed for
 // native-level changes (icon, splash screen, permissions, plugins).
 const config: CapacitorConfig = {
-  appId: "com.evohr.app",
-  appName: "EvoHR",
+  appId: "com.Pulse.app",
+  appName: "Pulse",
   webDir: "capacitor-www",
   server: {
-    url: "https://evohr-frontend.vercel.app",
+    url: "https://Pulse-frontend.vercel.app",
     cleartext: false,
   },
 };

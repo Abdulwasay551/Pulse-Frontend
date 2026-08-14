@@ -47,7 +47,7 @@ export default function LoginPage() {
           <Logo className="h-10 w-10" />
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold text-ink">Welcome back</h1>
-            <p className="mt-1 text-sm text-ink-soft">Log in to your EvoHR desk</p>
+            <p className="mt-1 text-sm text-ink-soft">Log in to your Pulse desk</p>
           </div>
         </div>
 

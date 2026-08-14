@@ -8,7 +8,7 @@ import { dashboardModules } from "@/lib/dashboard-modules";
 
 function ComingSoonContent() {
   const searchParams = useSearchParams();
-  const moduleLabel = searchParams.get("module") ?? "EvoHR";
+  const moduleLabel = searchParams.get("module") ?? "Pulse";
   const sectionLabel = searchParams.get("section");
   const featureLabel = searchParams.get("feature") ?? "This feature";
   const description = searchParams.get("description");

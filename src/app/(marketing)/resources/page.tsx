@@ -3,8 +3,8 @@ import ResourcesView from "@/components/views/ResourcesView";
 import { getPage, getSiteSettings, type ResourcesPageData } from "@/lib/cms";
 
 export const metadata: Metadata = {
-  title: "Resources — EvoHR",
-  description: "Guides, playbooks, and documentation for running your desk on EvoHR.",
+  title: "Resources — Pulse",
+  description: "Guides, playbooks, and documentation for running your desk on Pulse.",
 };
 
 export const dynamic = "force-dynamic";

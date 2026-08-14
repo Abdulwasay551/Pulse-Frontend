@@ -3,8 +3,8 @@ import WhoWeServeView from "@/components/views/WhoWeServeView";
 import { getPage, getSiteSettings, type WhoWeServePageData } from "@/lib/cms";
 
 export const metadata: Metadata = {
-  title: "Who We Serve — EvoHR",
-  description: "EvoHR gives every seat on the recruiting team its own view of the same record.",
+  title: "Who We Serve — Pulse",
+  description: "Pulse gives every seat on the recruiting team its own view of the same record.",
 };
 
 export const dynamic = "force-dynamic";

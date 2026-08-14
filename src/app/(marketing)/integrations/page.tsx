@@ -9,8 +9,8 @@ import {
 } from "@/lib/integrations-catalog";
 
 export const metadata: Metadata = {
-  title: "Integrations — EvoHR",
-  description: "A roadmap of the third-party apps EvoHR could connect to, module by module — none are live yet.",
+  title: "Integrations — Pulse",
+  description: "A roadmap of the third-party apps Pulse could connect to, module by module — none are live yet.",
 };
 
 const complexityTone: Record<IntegrationComplexity, string> = {

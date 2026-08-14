@@ -3,8 +3,8 @@ import SolutionsView from "@/components/views/SolutionsView";
 import { getPage, getProducts, getSiteSettings, type SolutionsPageData } from "@/lib/cms";
 
 export const metadata: Metadata = {
-  title: "Solutions — EvoHR",
-  description: "Every module in the EvoHR suite, from core CRM to global mobility.",
+  title: "Solutions — Pulse",
+  description: "Every module in the Pulse suite, from core CRM to global mobility.",
 };
 
 export const dynamic = "force-dynamic";

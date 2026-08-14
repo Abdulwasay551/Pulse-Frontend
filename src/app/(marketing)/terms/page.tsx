@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import PageHeader from "@/components/site/PageHeader";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — EvoHR",
-  description: "The terms that govern use of the EvoHR platform.",
+  title: "Terms of Service — Pulse",
+  description: "The terms that govern use of the Pulse platform.",
 };
 
 const sections = [
   {
     heading: "Acceptance of terms",
-    body: "By creating an account or using EvoHR, you agree to these terms. If you're using EvoHR on behalf of an organization, you're agreeing on its behalf and confirming you have the authority to do so.",
+    body: "By creating an account or using Pulse, you agree to these terms. If you're using Pulse on behalf of an organization, you're agreeing on its behalf and confirming you have the authority to do so.",
   },
   {
     heading: "Use of the service",
-    body: "EvoHR is provided for managing recruiting, payroll, and workforce data for your organization. You agree not to misuse the service, attempt to disrupt it, or use it to store unlawful content.",
+    body: "Pulse is provided for managing recruiting, payroll, and workforce data for your organization. You agree not to misuse the service, attempt to disrupt it, or use it to store unlawful content.",
   },
   {
     heading: "Account responsibilities",
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     heading: "Intellectual property",
-    body: "EvoHR and its original content, features, and functionality remain the property of EvoHR and its licensors. Data you upload remains yours; we only process it to provide the service.",
+    body: "Pulse and its original content, features, and functionality remain the property of Pulse and its licensors. Data you upload remains yours; we only process it to provide the service.",
   },
   {
     heading: "Termination",
@@ -33,15 +33,15 @@ const sections = [
   },
   {
     heading: "Limitation of liability",
-    body: "EvoHR is provided \"as is\" without warranties of any kind. To the extent permitted by law, EvoHR is not liable for indirect, incidental, or consequential damages arising from use of the service.",
+    body: "Pulse is provided \"as is\" without warranties of any kind. To the extent permitted by law, Pulse is not liable for indirect, incidental, or consequential damages arising from use of the service.",
   },
   {
     heading: "Changes to these terms",
-    body: "We may revise these terms from time to time. Continued use of EvoHR after changes take effect constitutes acceptance of the revised terms.",
+    body: "We may revise these terms from time to time. Continued use of Pulse after changes take effect constitutes acceptance of the revised terms.",
   },
   {
     heading: "Contact us",
-    body: "Questions about these terms can be sent to legal@evohr.demo.",
+    body: "Questions about these terms can be sent to legal@Pulse.demo.",
   },
 ];
 
@@ -51,7 +51,7 @@ export default function TermsPage() {
       <PageHeader
         eyebrow="Legal"
         title="Terms of Service"
-        subtitle="Last updated July 2026. This page describes the terms for using EvoHR on this demo/staging site."
+        subtitle="Last updated July 2026. This page describes the terms for using Pulse on this demo/staging site."
       />
       <section className="px-6 pb-24">
         <div className="mx-auto flex max-w-2xl flex-col gap-10">

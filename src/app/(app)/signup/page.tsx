@@ -70,7 +70,7 @@ function SignupForm() {
             {invite ? `Join ${invite.organization}` : "Create your account"}
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {invite ? `Set up your employee login for ${invite.employee_name}` : "Start running your desk on EvoHR"}
+            {invite ? `Set up your employee login for ${invite.employee_name}` : "Start running your desk on Pulse"}
           </p>
         </div>
       </div>
