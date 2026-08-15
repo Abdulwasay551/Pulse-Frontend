@@ -113,7 +113,7 @@ const surveysHref = (kind: string) => `/dashboard/surveys?kind=${encodeURICompon
 export const dashboardModules: ModuleDef[] = [
   {
     key: "recruit",
-    label: "EVO-Recruit",
+    label: "Recruit",
     icon: Users,
     description: "Applicant tracking, onboarding, offboarding, and rehire.",
     overviewHref: "/dashboard/recruit",
@@ -121,7 +121,7 @@ export const dashboardModules: ModuleDef[] = [
     extraLinks: [{ href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 }],
     sections: [
       {
-        label: "Acquisition",
+        label: "Talent Acquisition Management (TAM)",
         description: "Clients, requisitions, and the full candidate pipeline.",
         icon: Briefcase,
         href: "/dashboard/acquisition",
@@ -141,7 +141,7 @@ export const dashboardModules: ModuleDef[] = [
         icon: ClipboardCheck,
         href: "/dashboard/onboarding",
         features: [
-          { label: "Pre-Joining Documents", description: "Documents collected before day one.", icon: FileText, href: onboardingHref("Pre-Joining Documents") },
+          { label: "Joining Documentation", description: "Documents collected before day one.", icon: FileText, href: onboardingHref("Joining Documentation") },
           { label: "Orientation", description: "Company orientation scheduling.", icon: CalendarCheck, href: onboardingHref("Orientation") },
           { label: "Training Plan and Schedule", description: "30/60/90 training plans.", icon: ClipboardList, href: onboardingHref("Training Plan") },
           { label: "Portal Access and Installations", description: "HR/payroll portal accounts and software installs.", icon: KeyRound, href: onboardingHref("Portal Access") },
@@ -165,7 +165,7 @@ export const dashboardModules: ModuleDef[] = [
   },
   {
     key: "people",
-    label: "EVO-People Management",
+    label: "People Management",
     icon: IdCard,
     description: "HR core: employee records, engagement, and attendance.",
     overviewHref: "/dashboard/people",
@@ -212,7 +212,7 @@ export const dashboardModules: ModuleDef[] = [
         icon: BarChart3,
         href: "/dashboard/workforce-dashboard",
         features: [
-          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by EVO-AI.", icon: BarChart3, href: "/dashboard/workforce-dashboard?view=forecast" },
+          { label: "Headcount Forecasting & Attrition Trends", description: "Powered by AI.", icon: BarChart3, href: "/dashboard/workforce-dashboard?view=forecast" },
           { label: "Day-to-Day KPI Tracking Dashboards", description: "Live workforce KPIs.", icon: PieChart, href: "/dashboard/workforce-dashboard?view=kpis" },
         ],
       },
@@ -220,7 +220,7 @@ export const dashboardModules: ModuleDef[] = [
   },
   {
     key: "talent",
-    label: "EVO-Talent Management",
+    label: "Talent Management",
     icon: TrendingUp,
     description: "Goals, appraisals, learning, and succession planning.",
     overviewHref: "/dashboard/talent",
@@ -236,7 +236,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Goal Setting & KPIs", description: "Set and track goals per employee.", icon: Target, href: "/dashboard/goals" },
           { label: "Performance Appraisals", description: "Based on yearly 360° feedback.", icon: Star, href: "/dashboard/appraisals?view=appraisals" },
           { label: "Competency Mapping of Employees", description: "Map skills against role expectations.", icon: Layers, href: "/dashboard/competency-mapping?view=employees" },
-          { label: "Value-Addition / Performance Scoring", description: "Powered by EVO-AI.", icon: Sparkles, href: "/dashboard/appraisals?view=scores" },
+          { label: "Value-Addition / Performance Scoring", description: "Powered by AI.", icon: Sparkles, href: "/dashboard/appraisals?view=scores" },
           { label: "Recruiter Feedback", description: "Notes a recruiter leaves on a placed employee.", icon: MessageSquareText, href: "/dashboard/recruiter-feedback" },
         ],
       },
@@ -256,7 +256,7 @@ export const dashboardModules: ModuleDef[] = [
   },
   {
     key: "payroll-benefits",
-    label: "EVO-Payroll & Benefits",
+    label: "Payroll & Benefits",
     icon: Banknote,
     description: "Payroll processing, compliance, and employee benefits.",
     overviewHref: "/dashboard/payroll-benefits",
@@ -291,7 +291,7 @@ export const dashboardModules: ModuleDef[] = [
   },
   {
     key: "it-assets",
-    label: "EVO-IT & Asset Management",
+    label: "IT & Asset Management",
     icon: Laptop,
     description: "Device lifecycle, support tickets, and compliance.",
     overviewHref: "/dashboard/it-assets",

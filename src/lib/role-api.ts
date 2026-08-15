@@ -32,6 +32,26 @@ export function createEmployeeAccount(
 
 // --- Employee self-service ---
 
+export interface HealthFlag {
+  module: string;
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface HealthScore {
+  score: number;
+  flags: HealthFlag[];
+}
+
+export interface PendingTask {
+  id: string;
+  label: string;
+  status: string;
+  tone: "primary" | "amber" | "maroon" | "neutral";
+  href: string;
+}
+
 export interface MyDashboard {
   employee: { id: number; name: string; initials: string; job_title: string; department: string };
   attendance_today: { clock_in: string | null; clock_out: string | null } | null;
@@ -43,10 +63,23 @@ export interface MyDashboard {
     target_date: string | null;
   }[];
   recent_activity: { id: string; message: string; time: string; tone: "primary" | "amber" | "maroon" | "neutral" }[];
+  work_health: HealthScore;
+  pending_tasks: PendingTask[];
+  this_month: {
+    hours_logged: number;
+    approved_leave_requests: number;
+    current_pay_period: string | null;
+    goal_progress: number;
+  };
+  weather: { temperature_f: number; location: string } | null;
 }
 
 export function getMyDashboard(token: string) {
   return apiFetch<MyDashboard>("/my/dashboard/", { method: "GET" }, token);
+}
+
+export function getOrgHealth(token: string) {
+  return apiFetch<HealthScore>("/org-health/", { method: "GET" }, token);
 }
 
 export interface ClockStatus {

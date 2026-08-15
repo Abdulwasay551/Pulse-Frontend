@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plug } from "lucide-react";
+import { Plug, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, updateMe, changePassword } from "@/lib/auth-api";
 
@@ -235,6 +235,19 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
+
+      <Link
+        href="/dashboard/settings/ai"
+        className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Sparkles className="h-5 w-5" />
+        </span>
+        <div>
+          <h3 className="font-display text-sm font-bold text-ink">AI Integrations</h3>
+          <p className="text-xs text-ink-soft">Connect OpenAI, Claude, Gemini, or another provider to unlock AI features.</p>
+        </div>
+      </Link>
 
       <Link
         href="/integrations"

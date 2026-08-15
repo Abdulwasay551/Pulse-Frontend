@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CandidateLink from "@/components/dashboard/CandidateLink";
@@ -11,10 +11,12 @@ import {
   candidatesApi,
   offboardingsApi,
   offboardingTasksApi,
+  uploadOffboardingTaskDocument,
   type Candidate,
   type Offboarding,
   type OffboardingCategory,
   type OffboardingStatus,
+  type OffboardingTask,
   type TaskStatus,
 } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
@@ -24,6 +26,19 @@ const CATEGORIES: OffboardingCategory[] = ["Documents Checklist", "Access Status
 function isOffboardingCategory(value: string | null): value is OffboardingCategory {
   return !!value && (CATEGORIES as string[]).includes(value);
 }
+
+// One category-specific field, on top of the generic title/due date/notes —
+// mirrors Onboarding's extra_fields pattern.
+const EXTRA_FIELD_CONFIG: Partial<Record<OffboardingCategory, { key: string; label: string; options?: string[] }>> = {
+  "Access Status": { key: "system_or_tool", label: "System or tool being revoked" },
+  "Hardware Clearance": {
+    key: "device_category",
+    label: "Device category",
+    options: ["Laptop", "Monitor", "Phone", "Tablet", "Peripheral", "Other"],
+  },
+};
+
+const DOCUMENT_CATEGORIES: OffboardingCategory[] = ["Documents Checklist"];
 
 const offboardingStatusOptions: OffboardingStatus[] = ["Not Started", "In Progress", "Completed"];
 
@@ -42,6 +57,69 @@ const taskStatusTone: Record<TaskStatus, string> = {
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
+
+/** Shared by both task-creation modals — the category is already fixed/known
+ * wherever this renders, same reasoning as Onboarding's TaskExtraFields. */
+function TaskExtraFields({
+  category,
+  extraValue,
+  onExtraChange,
+  file,
+  onFileChange,
+}: {
+  category: OffboardingCategory;
+  extraValue: string;
+  onExtraChange: (v: string) => void;
+  file: File | null;
+  onFileChange: (f: File | null) => void;
+}) {
+  const extraConfig = EXTRA_FIELD_CONFIG[category];
+  return (
+    <>
+      {extraConfig && (
+        <div className="mb-4">
+          <label className={labelClass}>{extraConfig.label}</label>
+          {extraConfig.options ? (
+            <select value={extraValue} onChange={(e) => onExtraChange(e.target.value)} className={inputClass}>
+              <option value="">Choose…</option>
+              {extraConfig.options.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input value={extraValue} onChange={(e) => onExtraChange(e.target.value)} className={inputClass} />
+          )}
+        </div>
+      )}
+      {DOCUMENT_CATEGORIES.includes(category) && (
+        <div className="mb-4">
+          <label className={labelClass}>Document</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
+            <Upload className="h-3.5 w-3.5" /> {file ? file.name : "Choose file"}
+            <input type="file" className="hidden" onChange={(e) => onFileChange(e.target.files?.[0] ?? null)} />
+          </label>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TaskDocumentLink({ task }: { task: OffboardingTask }) {
+  if (!task.document) return null;
+  return (
+    <a
+      href={task.document}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Document for ${task.title}`}
+      className="rounded-lg p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+    >
+      <FileText className="h-3.5 w-3.5" />
+    </a>
+  );
+}
 
 export default function OffboardingPageWrapper() {
   return (
@@ -159,7 +237,7 @@ function OffboardingPage() {
             className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            EVO-Recruit
+            Recruit
           </Link>
           <h1 className="font-display text-2xl font-bold text-ink">Offboarding</h1>
           <p className="mt-1 text-sm text-ink-soft">
@@ -319,7 +397,8 @@ function CategoryCrossSection({
 }) {
   const { withAuth } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ offboarding: "", title: "", due_date: "", notes: "" });
+  const [form, setForm] = useState({ offboarding: "", title: "", due_date: "", notes: "", extraValue: "" });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const rows = records
@@ -327,7 +406,8 @@ function CategoryCrossSection({
     .sort((a, b) => a.offboarding.candidate_detail.name.localeCompare(b.offboarding.candidate_detail.name));
 
   function openCreate() {
-    setForm({ offboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "" });
+    setForm({ offboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "", extraValue: "" });
+    setFile(null);
     setShowForm(true);
   }
 
@@ -336,15 +416,20 @@ function CategoryCrossSection({
     if (!form.offboarding || !form.title) return;
     setSaving(true);
     try {
-      await withAuth((token) =>
+      const extraConfig = EXTRA_FIELD_CONFIG[category];
+      const created = await withAuth((token) =>
         offboardingTasksApi.create(token, {
           offboarding: Number(form.offboarding),
           category,
           title: form.title,
           due_date: form.due_date || null,
           notes: form.notes,
+          extra_fields: extraConfig && form.extraValue ? { [extraConfig.key]: form.extraValue } : undefined,
         })
       );
+      if (file) {
+        await withAuth((token) => uploadOffboardingTaskDocument(token, created.id, file));
+      }
       setShowForm(false);
       await onChanged();
     } finally {
@@ -414,13 +499,16 @@ function CategoryCrossSection({
                   </button>
                 </td>
                 <td className="px-5 py-3.5 text-right">
-                  <button
-                    onClick={() => removeTask(task.id)}
-                    aria-label={`Remove task ${task.title}`}
-                    className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center justify-end gap-0.5">
+                    <TaskDocumentLink task={task} />
+                    <button
+                      onClick={() => removeTask(task.id)}
+                      aria-label={`Remove task ${task.title}`}
+                      className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -470,6 +558,13 @@ function CategoryCrossSection({
                 className={inputClass}
               />
             </div>
+            <TaskExtraFields
+              category={category}
+              extraValue={form.extraValue}
+              onExtraChange={(v) => setForm({ ...form, extraValue: v })}
+              file={file}
+              onFileChange={setFile}
+            />
             <div className="mb-6">
               <label className={labelClass}>Notes</label>
               <textarea
@@ -508,11 +603,13 @@ function OffboardingDetail({
 }) {
   const { withAuth } = useAuth();
   const [showTaskForm, setShowTaskForm] = useState<OffboardingCategory | null>(null);
-  const [taskForm, setTaskForm] = useState({ title: "", due_date: "", notes: "" });
+  const [taskForm, setTaskForm] = useState({ title: "", due_date: "", notes: "", extraValue: "" });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   function openTaskForm(category: OffboardingCategory) {
-    setTaskForm({ title: "", due_date: "", notes: "" });
+    setTaskForm({ title: "", due_date: "", notes: "", extraValue: "" });
+    setFile(null);
     setShowTaskForm(category);
   }
 
@@ -521,15 +618,20 @@ function OffboardingDetail({
     if (!showTaskForm || !taskForm.title) return;
     setSaving(true);
     try {
-      await withAuth((token) =>
+      const extraConfig = EXTRA_FIELD_CONFIG[showTaskForm];
+      const created = await withAuth((token) =>
         offboardingTasksApi.create(token, {
           offboarding: offboarding.id,
           category: showTaskForm,
           title: taskForm.title,
           due_date: taskForm.due_date || null,
           notes: taskForm.notes,
+          extra_fields: extraConfig && taskForm.extraValue ? { [extraConfig.key]: taskForm.extraValue } : undefined,
         })
       );
+      if (file) {
+        await withAuth((token) => uploadOffboardingTaskDocument(token, created.id, file));
+      }
       setShowTaskForm(null);
       await onChanged();
     } finally {
@@ -631,6 +733,7 @@ function OffboardingDetail({
                         {t.due_date && <p className="text-[11px] text-ink-soft">Due {t.due_date}</p>}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
+                        <TaskDocumentLink task={t} />
                         <button
                           onClick={() => cycleTaskStatus(t.id, t.status)}
                           className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[t.status]}`}
@@ -675,6 +778,13 @@ function OffboardingDetail({
                 className={inputClass}
               />
             </div>
+            <TaskExtraFields
+              category={showTaskForm}
+              extraValue={taskForm.extraValue}
+              onExtraChange={(v) => setTaskForm({ ...taskForm, extraValue: v })}
+              file={file}
+              onFileChange={setFile}
+            />
             <div className="mb-6">
               <label className={labelClass}>Notes</label>
               <textarea

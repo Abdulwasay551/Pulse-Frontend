@@ -3,24 +3,27 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarPlus, FileText, Plus, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CandidateLink from "@/components/dashboard/CandidateLink";
 import {
   candidatesApi,
+  downloadOnboardingTaskIcs,
   onboardingsApi,
   onboardingTasksApi,
+  uploadOnboardingTaskDocument,
   type Candidate,
   type Onboarding,
   type OnboardingCategory,
   type OnboardingStatus,
+  type OnboardingTask,
   type TaskStatus,
 } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
 const CATEGORIES: OnboardingCategory[] = [
-  "Pre-Joining Documents",
+  "Joining Documentation",
   "Orientation",
   "Training Plan",
   "Portal Access",
@@ -33,13 +36,30 @@ const CATEGORIES: OnboardingCategory[] = [
 // stored category value is the shorter enum key — this maps key -> the
 // exact spec wording for display in the category cross-section view.
 const CATEGORY_LABELS: Record<OnboardingCategory, string> = {
-  "Pre-Joining Documents": "Pre-Joining Documents",
+  "Joining Documentation": "Joining Documentation",
   Orientation: "Orientation",
   "Training Plan": "Training Plan and Schedule",
   "Portal Access": "Portal Access and Installations",
   "Probation Evaluation": "Probation Evaluation",
   "Device Assignment": "Device Assignment",
 };
+
+// One category-specific field, on top of the generic title/due date/notes —
+// keeps a small, targeted addition per category instead of one nullable
+// column per category per field (see OnboardingTask.extra_fields).
+const EXTRA_FIELD_CONFIG: Partial<Record<OnboardingCategory, { key: string; label: string; options?: string[] }>> = {
+  "Portal Access": { key: "system_or_tool", label: "System or tool being granted" },
+  "Probation Evaluation": { key: "outcome", label: "Outcome", options: ["Pass", "Extend", "Fail — pending"] },
+  "Device Assignment": {
+    key: "device_category",
+    label: "Device category",
+    options: ["Laptop", "Monitor", "Phone", "Tablet", "Peripheral", "Other"],
+  },
+};
+
+// Categories where a task can carry an uploaded file (the document itself /
+// a training resource).
+const DOCUMENT_CATEGORIES: OnboardingCategory[] = ["Joining Documentation", "Training Plan"];
 
 const onboardingStatusOptions: OnboardingStatus[] = ["Not Started", "In Progress", "Completed"];
 
@@ -61,6 +81,87 @@ const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
 function isOnboardingCategory(value: string | null): value is OnboardingCategory {
   return !!value && (CATEGORIES as string[]).includes(value);
+}
+
+/** The category-specific extra field + document upload, shared by both task-
+ * creation modals (CategoryCrossSection's and OnboardingDetail's) since the
+ * category is already fixed/known wherever this renders. */
+function TaskExtraFields({
+  category,
+  extraValue,
+  onExtraChange,
+  file,
+  onFileChange,
+}: {
+  category: OnboardingCategory;
+  extraValue: string;
+  onExtraChange: (v: string) => void;
+  file: File | null;
+  onFileChange: (f: File | null) => void;
+}) {
+  const extraConfig = EXTRA_FIELD_CONFIG[category];
+  return (
+    <>
+      {extraConfig && (
+        <div className="mb-4">
+          <label className={labelClass}>{extraConfig.label}</label>
+          {extraConfig.options ? (
+            <select value={extraValue} onChange={(e) => onExtraChange(e.target.value)} className={inputClass}>
+              <option value="">Choose…</option>
+              {extraConfig.options.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input value={extraValue} onChange={(e) => onExtraChange(e.target.value)} className={inputClass} />
+          )}
+        </div>
+      )}
+      {DOCUMENT_CATEGORIES.includes(category) && (
+        <div className="mb-4">
+          <label className={labelClass}>Document</label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-cream px-3.5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim">
+            <Upload className="h-3.5 w-3.5" /> {file ? file.name : "Choose file"}
+            <input type="file" className="hidden" onChange={(e) => onFileChange(e.target.files?.[0] ?? null)} />
+          </label>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Small actions row shared by both task-list renderings — a document link
+ * when one's on file, and an "add to calendar" download for Orientation
+ * tasks (generates a .ics file rather than a real Google Calendar invite,
+ * since no OAuth integration is provisioned). */
+function TaskExtraActions({ task, category }: { task: OnboardingTask; category: OnboardingCategory }) {
+  const { withAuth } = useAuth();
+  return (
+    <>
+      {task.document && (
+        <a
+          href={task.document}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Document for ${task.title}`}
+          className="rounded-lg p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+        >
+          <FileText className="h-3.5 w-3.5" />
+        </a>
+      )}
+      {category === "Orientation" && (
+        <button
+          onClick={() => withAuth((token) => downloadOnboardingTaskIcs(token, task.id, task.title))}
+          aria-label={`Add ${task.title} to calendar`}
+          className="rounded-lg p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+        >
+          <CalendarPlus className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </>
+  );
 }
 
 export default function OnboardingPageWrapper() {
@@ -168,11 +269,11 @@ function OnboardingPage() {
             className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft transition-colors hover:text-ink"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            EVO-Recruit
+            Recruit
           </Link>
           <h1 className="font-display text-2xl font-bold text-ink">Onboarding</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Pre-joining documents, orientation, training, portal access, probation, and device assignment.
+            Joining documentation, orientation, training, portal access, probation, and device assignment.
           </p>
         </div>
         <button
@@ -303,7 +404,8 @@ function CategoryCrossSection({
 }) {
   const { withAuth } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ onboarding: "", title: "", due_date: "", notes: "" });
+  const [form, setForm] = useState({ onboarding: "", title: "", due_date: "", notes: "", extraValue: "" });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const rows = records
@@ -311,7 +413,8 @@ function CategoryCrossSection({
     .sort((a, b) => a.onboarding.candidate_detail.name.localeCompare(b.onboarding.candidate_detail.name));
 
   function openCreate() {
-    setForm({ onboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "" });
+    setForm({ onboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "", extraValue: "" });
+    setFile(null);
     setShowForm(true);
   }
 
@@ -320,15 +423,20 @@ function CategoryCrossSection({
     if (!form.onboarding || !form.title) return;
     setSaving(true);
     try {
-      await withAuth((token) =>
+      const extraConfig = EXTRA_FIELD_CONFIG[category];
+      const created = await withAuth((token) =>
         onboardingTasksApi.create(token, {
           onboarding: Number(form.onboarding),
           category,
           title: form.title,
           due_date: form.due_date || null,
           notes: form.notes,
+          extra_fields: extraConfig && form.extraValue ? { [extraConfig.key]: form.extraValue } : undefined,
         })
       );
+      if (file) {
+        await withAuth((token) => uploadOnboardingTaskDocument(token, created.id, file));
+      }
       setShowForm(false);
       await onChanged();
     } finally {
@@ -398,13 +506,16 @@ function CategoryCrossSection({
                   </button>
                 </td>
                 <td className="px-5 py-3.5 text-right">
-                  <button
-                    onClick={() => removeTask(task.id)}
-                    aria-label={`Remove task ${task.title}`}
-                    className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center justify-end gap-0.5">
+                    <TaskExtraActions task={task} category={category} />
+                    <button
+                      onClick={() => removeTask(task.id)}
+                      aria-label={`Remove task ${task.title}`}
+                      className="eh-row-actions rounded-lg p-1.5 text-ink-soft opacity-0 transition-opacity hover:bg-maroon-soft hover:text-maroon group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -454,6 +565,13 @@ function CategoryCrossSection({
                 className={inputClass}
               />
             </div>
+            <TaskExtraFields
+              category={category}
+              extraValue={form.extraValue}
+              onExtraChange={(v) => setForm({ ...form, extraValue: v })}
+              file={file}
+              onFileChange={setFile}
+            />
             <div className="mb-6">
               <label className={labelClass}>Notes</label>
               <textarea
@@ -490,11 +608,13 @@ function OnboardingDetail({
 }) {
   const { withAuth } = useAuth();
   const [showTaskForm, setShowTaskForm] = useState<OnboardingCategory | null>(null);
-  const [taskForm, setTaskForm] = useState({ title: "", due_date: "", notes: "" });
+  const [taskForm, setTaskForm] = useState({ title: "", due_date: "", notes: "", extraValue: "" });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   function openTaskForm(category: OnboardingCategory) {
-    setTaskForm({ title: "", due_date: "", notes: "" });
+    setTaskForm({ title: "", due_date: "", notes: "", extraValue: "" });
+    setFile(null);
     setShowTaskForm(category);
   }
 
@@ -503,15 +623,20 @@ function OnboardingDetail({
     if (!showTaskForm || !taskForm.title) return;
     setSaving(true);
     try {
-      await withAuth((token) =>
+      const extraConfig = EXTRA_FIELD_CONFIG[showTaskForm];
+      const created = await withAuth((token) =>
         onboardingTasksApi.create(token, {
           onboarding: onboarding.id,
           category: showTaskForm,
           title: taskForm.title,
           due_date: taskForm.due_date || null,
           notes: taskForm.notes,
+          extra_fields: extraConfig && taskForm.extraValue ? { [extraConfig.key]: taskForm.extraValue } : undefined,
         })
       );
+      if (file) {
+        await withAuth((token) => uploadOnboardingTaskDocument(token, created.id, file));
+      }
       setShowTaskForm(null);
       await onChanged();
     } finally {
@@ -603,7 +728,8 @@ function OnboardingDetail({
                         <p className="truncate text-sm text-ink">{t.title}</p>
                         {t.due_date && <p className="text-[11px] text-ink-soft">Due {t.due_date}</p>}
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-1">
+                        <TaskExtraActions task={t} category={category} />
                         <button
                           onClick={() => cycleTaskStatus(t.id, t.status)}
                           className={`rounded-full px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap ${taskStatusTone[t.status]}`}
@@ -648,6 +774,13 @@ function OnboardingDetail({
                 className={inputClass}
               />
             </div>
+            <TaskExtraFields
+              category={showTaskForm}
+              extraValue={taskForm.extraValue}
+              onExtraChange={(v) => setTaskForm({ ...taskForm, extraValue: v })}
+              file={file}
+              onFileChange={setFile}
+            />
             <div className="mb-6">
               <label className={labelClass}>Notes</label>
               <textarea

@@ -271,7 +271,7 @@ export default function ResumePoolPage() {
           </div>
 
           <div className="mb-5 max-w-xs">
-            <label className={labelClass}>Current salary</label>
+            <label className={labelClass}>Current salary (USD)</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"

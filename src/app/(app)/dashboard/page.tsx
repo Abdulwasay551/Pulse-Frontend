@@ -18,7 +18,9 @@ import {
   Send,
   Settings,
   Star,
+  ThermometerSun,
   TrendingUp,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -38,13 +40,16 @@ import {
   getMyDashboard,
   getMyOnboardingChecklist,
   getMyTalent,
+  getOrgHealth,
   listMyBenefitClaims,
   listMySupportTickets,
   submitMyBenefitClaim,
   submitMySupportTicket,
+  type HealthScore,
   type MyDashboard,
   type MyOnboardingChecklist,
   type MyTalent,
+  type PendingTask,
 } from "@/lib/role-api";
 import type { BenefitClaim } from "@/lib/payroll-benefits-api";
 import type { SupportTicket } from "@/lib/it-assets-api";
@@ -68,7 +73,7 @@ const modules = [
     key: "recruit",
     href: "/dashboard/recruit",
     icon: Users,
-    title: "EVO-Recruit",
+    title: "Recruit",
     description:
       "Applicant tracking, offer letters, job requisitions, onboarding, offboarding, and rehire — your full hiring lifecycle.",
   },
@@ -76,28 +81,28 @@ const modules = [
     key: "people",
     href: "/dashboard/people",
     icon: IdCard,
-    title: "EVO-People Management",
+    title: "People Management",
     description: "Employee records, org chart, self-service, engagement, and attendance — HR core.",
   },
   {
     key: "talent",
     href: "/dashboard/talent",
     icon: TrendingUp,
-    title: "EVO-Talent Management",
+    title: "Talent Management",
     description: "Goals & appraisals, learning paths, competency mapping, and succession planning.",
   },
   {
     key: "payroll-benefits",
     href: "/dashboard/payroll-benefits",
     icon: Banknote,
-    title: "EVO-Payroll & Benefits",
+    title: "Payroll & Benefits",
     description: "Payroll processing, multi-country compliance, benefits enrollment, and claims.",
   },
   {
     key: "it-assets",
     href: "/dashboard/it-assets",
     icon: Laptop,
-    title: "EVO-IT & Asset Management",
+    title: "IT & Asset Management",
     description: "Device provisioning, asset inventory, warranty tracking, and IT support tickets.",
   },
 ];
@@ -276,6 +281,112 @@ function RecentActivityCard({
   );
 }
 
+function healthStatusLabel(score: number) {
+  if (score >= 85) return "Good";
+  if (score >= 65) return "Fair";
+  return "Needs attention";
+}
+
+/** A circular score gauge — used for both "ORG HEALTH" (HR home) and "MY
+ * WORK HEALTH" (employee home), fed by the same backend shape
+ * (core.health.compute_health) either way. */
+function HealthGauge({ title, health, loading }: { title: string; health: HealthScore | null; loading: boolean }) {
+  const score = health?.score ?? 100;
+  const circumference = 2 * Math.PI * 40;
+  const offset = circumference * (1 - score / 100);
+  const tone = score >= 85 ? "var(--primary)" : score >= 65 ? "var(--amber)" : "var(--maroon)";
+
+  return (
+    <div className="rounded-2xl border border-line bg-card p-6">
+      <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">{title}</h2>
+      {loading ? (
+        <p className="text-sm text-ink-soft">Loading…</p>
+      ) : (
+        <>
+          <div className="flex items-center gap-5">
+            <svg width="96" height="96" viewBox="0 0 96 96" className="shrink-0 -rotate-90">
+              <circle cx="48" cy="48" r="40" fill="none" stroke="var(--cream-dim)" strokeWidth="8" />
+              <circle
+                cx="48"
+                cy="48"
+                r="40"
+                fill="none"
+                stroke={tone}
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+              />
+              <text
+                x="48"
+                y="48"
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="rotate-90"
+                style={{ transformOrigin: "48px 48px", fontSize: "22px", fontWeight: 700, fill: "var(--ink)" }}
+              >
+                {score}
+              </text>
+            </svg>
+            <div>
+              <div className="text-sm font-semibold text-ink">{healthStatusLabel(score)}</div>
+              <div className="text-xs text-ink-soft">
+                {health && health.flags.length > 0
+                  ? `${health.flags.length} flag${health.flags.length === 1 ? "" : "s"} need review`
+                  : "No flags — all clear"}
+              </div>
+            </div>
+          </div>
+          {health && health.flags.length > 0 && (
+            <div className="mt-4 flex flex-col gap-1.5 border-t border-line pt-4">
+              {health.flags.slice(0, 5).map((f) => (
+                <div key={f.key} className="flex items-center justify-between text-xs">
+                  <span className="text-ink-soft">{f.label}</span>
+                  <span className="font-semibold text-ink">{f.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function PendingTasksCard({ tasks, loading }: { tasks: PendingTask[]; loading: boolean }) {
+  const toneClass: Record<PendingTask["tone"], string> = {
+    primary: "bg-primary/15 text-primary",
+    amber: "bg-amber-soft text-amber",
+    maroon: "bg-maroon-soft text-maroon",
+    neutral: "bg-cream-dim text-ink-soft",
+  };
+  return (
+    <div className="rounded-2xl border border-line bg-card p-6">
+      <h2 className="mb-4 font-display text-lg font-bold text-ink">My pending tasks</h2>
+      {loading ? (
+        <p className="text-sm text-ink-soft">Loading…</p>
+      ) : tasks.length === 0 ? (
+        <p className="text-sm text-ink-soft">Nothing pending — you&apos;re all caught up.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {tasks.map((t) => (
+            <Link
+              key={t.id}
+              href={t.href}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-cream px-3.5 py-2.5 transition-colors hover:border-primary/40"
+            >
+              <span className="truncate text-sm text-ink">{t.label}</span>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${toneClass[t.tone]}`}>
+                {t.status}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type EmployeesTab = "details" | "schedule" | "pay";
 
 function EmployeesWidget({ employees, shifts, loading }: { employees: Employee[]; shifts: Shift[]; loading: boolean }) {
@@ -398,22 +509,25 @@ function HrHome({ firstName }: { firstName: string }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [todaysAttendance, setTodaysAttendance] = useState<AttendanceRecord[]>([]);
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [health, setHealth] = useState<HealthScore | null>(null);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
 
   async function load() {
     try {
-      const [emps, allShifts, attendance, summary, announcements] = await withAuth((token) =>
+      const [emps, allShifts, attendance, summary, announcements, orgHealth] = await withAuth((token) =>
         Promise.all([
           employeesApi.list(token),
           shiftsApi.list(token),
           attendanceRecordsApi.list(token),
           getDashboardSummary(token),
           announcementsApi.list(token),
+          getOrgHealth(token),
         ])
       );
       setEmployees(emps);
       setShifts(allShifts);
+      setHealth(orgHealth);
       const today = new Date().toISOString().slice(0, 10);
       setTodaysAttendance(attendance.filter((a) => a.date === today && a.clock_in));
 
@@ -450,6 +564,39 @@ function HrHome({ firstName }: { firstName: string }) {
       <Hero title={`Hi, ${firstName}`} description="Pick a module to get to work — every part of your business, in one place." />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <HealthGauge title="Org health" health={health} loading={loading} />
+          <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+            <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Admin</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Link
+                href="/dashboard/employee-database"
+                className="group flex items-center gap-3 rounded-xl border border-line bg-cream px-4 py-3.5 transition-colors hover:border-primary/40"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <UserPlus className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-ink">Add or manage users</div>
+                  <div className="truncate text-xs text-ink-soft">Provision accounts, assign roles</div>
+                </div>
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="group flex items-center gap-3 rounded-xl border border-line bg-cream px-4 py-3.5 transition-colors hover:border-primary/40"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Settings className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-ink">Settings</div>
+                  <div className="truncate text-xs text-ink-soft">Organization &amp; integrations</div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <h2 className="mb-4 font-display text-lg font-bold text-ink">All modules</h2>
         <ModuleCardsGrid items={modules} />
 
@@ -818,12 +965,48 @@ function EmployeeHome({ firstName }: { firstName: string }) {
   }
 
   const attendance = data?.attendance_today ?? null;
+  const today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="-m-4 sm:-m-6">
       <Hero title={`Welcome back, ${firstName}`} description="Here's what's on your plate today." />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-6 flex flex-wrap items-center gap-3 text-xs text-ink-soft">
+          <span>{today}</span>
+          {data?.weather && (
+            <span className="flex items-center gap-1">
+              <ThermometerSun className="h-3.5 w-3.5" /> {Math.round(data.weather.temperature_f)}°F · {data.weather.location}
+            </span>
+          )}
+        </div>
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <HealthGauge title="My work health" health={data?.work_health ?? null} loading={loading} />
+          <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+            <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">This month</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div>
+                <div className="text-2xl font-bold text-ink">{data?.this_month.hours_logged ?? 0}</div>
+                <div className="text-[11px] text-ink-soft">Hours logged</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-ink">{data?.this_month.approved_leave_requests ?? 0}</div>
+                <div className="text-[11px] text-ink-soft">Leave requests approved</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-ink">{data?.this_month.current_pay_period ?? "—"}</div>
+                <div className="text-[11px] text-ink-soft">Current pay period</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-ink">{data?.this_month.goal_progress ?? 0}%</div>
+                <div className="text-[11px] text-ink-soft">Goal progress</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mb-6">
+          <PendingTasksCard tasks={data?.pending_tasks ?? []} loading={loading} />
+        </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">

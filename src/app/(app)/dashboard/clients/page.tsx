@@ -27,10 +27,18 @@ interface FormState {
   industry: string;
   contact_name: string;
   contact_email: string;
+  contact_number: string;
   status: ClientStatus;
 }
 
-const emptyForm: FormState = { name: "", industry: "", contact_name: "", contact_email: "", status: "Prospect" };
+const emptyForm: FormState = {
+  name: "",
+  industry: "",
+  contact_name: "",
+  contact_email: "",
+  contact_number: "",
+  status: "Prospect",
+};
 
 export default function ClientsPage() {
   const { withAuth } = useAuth();
@@ -71,6 +79,7 @@ export default function ClientsPage() {
       industry: c.industry,
       contact_name: c.contact_name,
       contact_email: c.contact_email,
+      contact_number: c.contact_number,
       status: c.status,
     });
     setError(null);
@@ -179,6 +188,7 @@ export default function ClientsPage() {
                   {c.contact_email}
                 </a>
               )}
+              {c.contact_number && <p className="mt-1 text-[11px] text-ink-soft">{c.contact_number}</p>}
             </div>
           ))}
         </div>
@@ -227,6 +237,14 @@ export default function ClientsPage() {
                   className={inputClass}
                 />
               </div>
+            </div>
+            <div className="mb-4">
+              <label className={labelClass}>Contact number</label>
+              <input
+                value={form.contact_number}
+                onChange={(e) => setForm({ ...form, contact_number: e.target.value })}
+                className={inputClass}
+              />
             </div>
             <div className="mb-6">
               <label className={labelClass}>Status</label>

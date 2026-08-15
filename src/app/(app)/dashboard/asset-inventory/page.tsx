@@ -248,7 +248,7 @@ function AssetInventoryPage() {
                   required
                   value={form.asset_tag}
                   onChange={(e) => setForm({ ...form, asset_tag: e.target.value })}
-                  placeholder="EVO-LT-1042"
+                  placeholder="PLS-LT-1042"
                   className={inputClass}
                 />
               </div>

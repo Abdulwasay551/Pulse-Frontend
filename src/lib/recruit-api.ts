@@ -1,4 +1,4 @@
-import { apiFetch } from "./auth-api";
+import { apiFetch, downloadFile } from "./auth-api";
 import { csvApi, resourceApi } from "./api-resource";
 
 export type ClientStatus = "Active" | "Prospect" | "At risk";
@@ -9,6 +9,7 @@ export interface Client {
   industry: string;
   contact_name: string;
   contact_email: string;
+  contact_number: string;
   status: ClientStatus;
   open_roles: number;
   created_at: string;
@@ -17,6 +18,7 @@ export interface Client {
 
 export type RequisitionPriority = "High" | "Medium" | "Low";
 export type RequisitionStatus = "Open" | "Interviewing" | "Offer stage" | "On hold" | "Filled";
+export type EmploymentType = "Full-time" | "Part-time" | "Contract" | "Temporary";
 
 export interface Requisition {
   id: number;
@@ -27,7 +29,15 @@ export interface Requisition {
   priority: RequisitionPriority;
   status: RequisitionStatus;
   requirements: string;
+  salary_min: string | null;
+  salary_max: string | null;
+  location: string;
+  employment_type: EmploymentType;
+  headcount: number;
+  description: string;
+  hiring_manager: string;
   posted_at: string;
+  days_open: number;
   candidates_count: number;
   created_at: string;
   updated_at: string;
@@ -43,6 +53,8 @@ export interface Candidate {
   role: string;
   email: string;
   phone: string;
+  country: string;
+  city: string;
   client: number | null;
   client_name: string | null;
   requisition: number | null;
@@ -56,6 +68,8 @@ export interface Candidate {
   resume_text: string;
   ai_score: number | null;
   ai_score_notes: string;
+  ai_score_strengths: string[];
+  ai_score_gaps: string[];
   portal_token: string;
   created_at: string;
   updated_at: string;
@@ -88,6 +102,7 @@ export interface ClientWrite {
   industry?: string;
   contact_name?: string;
   contact_email?: string;
+  contact_number?: string;
   status?: ClientStatus;
 }
 
@@ -98,6 +113,13 @@ export interface RequisitionWrite {
   priority?: RequisitionPriority;
   status?: RequisitionStatus;
   requirements?: string;
+  salary_min?: number | string | null;
+  salary_max?: number | string | null;
+  location?: string;
+  employment_type?: EmploymentType;
+  headcount?: number;
+  description?: string;
+  hiring_manager?: string;
 }
 
 export interface CandidateWrite {
@@ -105,6 +127,8 @@ export interface CandidateWrite {
   role: string;
   email?: string;
   phone?: string;
+  country?: string;
+  city?: string;
   client?: number | null;
   requisition?: number | null;
   stage?: CandidateStage;
@@ -199,7 +223,7 @@ export const backgroundChecksCsv = csvApi("/recruit/background-checks/", "backgr
 
 export type OnboardingStatus = "Not Started" | "In Progress" | "Completed";
 export type OnboardingCategory =
-  | "Pre-Joining Documents"
+  | "Joining Documentation"
   | "Orientation"
   | "Training Plan"
   | "Portal Access"
@@ -215,6 +239,8 @@ export interface OnboardingTask {
   status: TaskStatus;
   due_date: string | null;
   notes: string;
+  document: string | null;
+  extra_fields: Record<string, string>;
   created_at: string;
 }
 
@@ -225,6 +251,20 @@ export interface OnboardingTaskWrite {
   status?: TaskStatus;
   due_date?: string | null;
   notes?: string;
+  extra_fields?: Record<string, string>;
+}
+
+export function uploadOnboardingTaskDocument(token: string, taskId: number, file: File) {
+  const formData = new FormData();
+  formData.append("document", file);
+  return apiFetch<OnboardingTask>(`/recruit/onboarding-tasks/${taskId}/`, { method: "PATCH", body: formData }, token);
+}
+
+/** Downloads the .ics calendar invite for an Onboarding task (Orientation
+ * category) — same authenticated-blob-download pattern as CSV export,
+ * since the endpoint needs a bearer token, not a plain link. */
+export function downloadOnboardingTaskIcs(token: string, taskId: number, taskTitle: string) {
+  return downloadFile(`/recruit/onboarding-tasks/${taskId}/ics/`, token, `${taskTitle.slice(0, 50)}.ics`);
 }
 
 export interface Onboarding {
@@ -261,6 +301,8 @@ export interface OffboardingTask {
   status: TaskStatus;
   due_date: string | null;
   notes: string;
+  document: string | null;
+  extra_fields: Record<string, string>;
   created_at: string;
 }
 
@@ -271,6 +313,13 @@ export interface OffboardingTaskWrite {
   status?: TaskStatus;
   due_date?: string | null;
   notes?: string;
+  extra_fields?: Record<string, string>;
+}
+
+export function uploadOffboardingTaskDocument(token: string, taskId: number, file: File) {
+  const formData = new FormData();
+  formData.append("document", file);
+  return apiFetch<OffboardingTask>(`/recruit/offboarding-tasks/${taskId}/`, { method: "PATCH", body: formData }, token);
 }
 
 export interface Offboarding {

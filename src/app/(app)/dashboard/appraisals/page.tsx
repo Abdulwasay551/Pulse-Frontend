@@ -198,7 +198,7 @@ function AppraisalsPage() {
             {view === "scores" ? "Value-Addition / Performance Scoring" : "Performance Appraisals"}
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {view === "scores" ? "Powered by EVO-AI — every employee, ranked." : "Based on yearly 360° feedback."}
+            {view === "scores" ? "Powered by AI — every employee, ranked." : "Based on yearly 360° feedback."}
           </p>
         </div>
         {view === "appraisals" && (
@@ -396,7 +396,7 @@ function AppraisalsPage() {
             <p className="mt-3 text-sm text-ink-soft">{scoreInfo.notes}</p>
           </div>
           <p className="mt-4 text-xs text-ink-soft">
-            Value-addition score powered by EVO-AI — blends goal completion with appraisal ratings.
+            Value-addition score powered by AI — blends goal completion with appraisal ratings.
           </p>
         </Modal>
       )}

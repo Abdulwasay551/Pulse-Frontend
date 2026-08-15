@@ -17,7 +17,7 @@ const MOCK_NOTIFICATIONS = [
   { id: 1, tone: "bg-primary", message: "Ava Thompson advanced to Interview for Senior Backend Engineer", time: "2h ago" },
   { id: 2, tone: "bg-amber", message: "Contractor batch #14 payroll needs review", time: "5h ago" },
   { id: 3, tone: "bg-primary", message: "Offer sent to Priya Nair for DevOps Lead", time: "1d ago" },
-  { id: 4, tone: "bg-maroon", message: "Warranty expiring soon on EVO-LT-1055", time: "2d ago" },
+  { id: 4, tone: "bg-maroon", message: "Warranty expiring soon on PLS-LT-1055", time: "2d ago" },
 ];
 
 /** One module's own trigger in the top navbar — the label navigates

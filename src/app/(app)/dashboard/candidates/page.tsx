@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -42,6 +42,8 @@ const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 interface FormState {
   name: string;
   role: string;
+  country: string;
+  city: string;
   client: string;
   requisition: string;
   stage: CandidateStage;
@@ -51,6 +53,8 @@ interface FormState {
 const emptyForm: FormState = {
   name: "",
   role: "",
+  country: "",
+  city: "",
   client: "",
   requisition: "",
   stage: "Sourced",
@@ -119,6 +123,8 @@ function CandidatesPage() {
     setForm({
       name: c.name,
       role: c.role,
+      country: c.country,
+      city: c.city,
       client: c.client ? String(c.client) : "",
       requisition: c.requisition ? String(c.requisition) : "",
       stage: c.stage,
@@ -135,6 +141,8 @@ function CandidatesPage() {
     const payload = {
       name: form.name,
       role: form.role,
+      country: form.country,
+      city: form.city,
       client: form.client ? Number(form.client) : null,
       requisition: form.requisition ? Number(form.requisition) : null,
       stage: form.stage,
@@ -204,6 +212,7 @@ function CandidatesPage() {
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
               <th className="px-5 py-3 font-medium">Candidate</th>
               <th className="px-5 py-3 font-medium">Client</th>
+              <th className="px-5 py-3 font-medium">Location</th>
               <th className="px-5 py-3 font-medium">Stage</th>
               <th className="px-5 py-3 font-medium">Source</th>
               <th className="px-5 py-3 font-medium">Applied</th>
@@ -214,7 +223,20 @@ function CandidatesPage() {
             {filtered.map((c) => (
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Candidate">
-                  <CandidateLink candidate={c} subtitle={c.role} />
+                  <div className="flex items-center gap-2">
+                    <CandidateLink candidate={c} subtitle={c.role} />
+                    {c.resume_file && (
+                      <a
+                        href={c.resume_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`${c.name}'s resume`}
+                        className="shrink-0 text-ink-soft hover:text-primary"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
                 </td>
                 <td className="px-5 py-3.5 text-ink-soft" data-label="Client">
                   {c.client && c.client_name ? (
@@ -224,6 +246,9 @@ function CandidatesPage() {
                   ) : (
                     (c.client_name ?? "—")
                   )}
+                </td>
+                <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Location">
+                  {[c.city, c.country].filter(Boolean).join(", ") || "—"}
                 </td>
                 <td className="px-5 py-3.5" data-label="Stage">
                   <span
@@ -287,6 +312,24 @@ function CandidatesPage() {
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
                 className={inputClass}
               />
+            </div>
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Country</label>
+                <input
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>City of application</label>
+                <input
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div>
