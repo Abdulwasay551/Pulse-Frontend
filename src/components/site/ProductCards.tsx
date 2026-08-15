@@ -52,7 +52,7 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-cream",
     widgetBg: "bg-cream",
-    panelPattern: panelPattern("rgba(77,111,224,0.38)", "rgba(246,236,217,0.14)", DARK_DOT),
+    panelPattern: panelPattern("rgba(115,182,196,0.38)", "rgba(246,236,217,0.14)", DARK_DOT),
   },
   {
     card: "bg-card border border-line",
@@ -65,7 +65,7 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-cream-dim",
-    panelPattern: panelPattern("rgba(74,46,130,0.24)", "rgba(185,134,31,0.24)", LIGHT_DOT),
+    panelPattern: panelPattern("rgba(255,107,53,0.20)", "rgba(185,134,31,0.24)", LIGHT_DOT),
   },
   {
     card: "bg-cream-dim border border-line",
@@ -78,7 +78,7 @@ const CARD_VARIANTS = [
     cta: "text-primary hover:text-primary-dark",
     icon: "text-cream",
     widgetBg: "bg-card",
-    panelPattern: panelPattern("rgba(77,111,224,0.28)", "rgba(74,46,130,0.22)", LIGHT_DOT),
+    panelPattern: panelPattern("rgba(115,182,196,0.28)", "rgba(255,107,53,0.18)", LIGHT_DOT),
   },
   {
     card: "bg-primary-light",
@@ -104,7 +104,7 @@ const CARD_VARIANTS = [
     cta: "text-primary-light hover:text-cream",
     icon: "text-primary-dark",
     widgetBg: "bg-cream",
-    panelPattern: panelPattern("rgba(185,134,31,0.30)", "rgba(77,111,224,0.32)", DARK_DOT),
+    panelPattern: panelPattern("rgba(185,134,31,0.30)", "rgba(115,182,196,0.32)", DARK_DOT),
   },
 ];
 

@@ -160,6 +160,28 @@ export function uploadResume(token: string, id: number, file: File) {
   return apiFetch<Candidate>(`/recruit/candidates/${id}/`, { method: "PATCH", body: formData }, token);
 }
 
+// --- Offer letter templates ---
+
+export interface OfferLetterTemplate {
+  id: number;
+  client: number;
+  client_name: string;
+  role_title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OfferLetterTemplateWrite {
+  client: number;
+  role_title: string;
+  body: string;
+}
+
+export const offerLetterTemplatesApi = resourceApi<OfferLetterTemplate, OfferLetterTemplateWrite>(
+  "/recruit/offer-letter-templates/"
+);
+
 // --- Offer letters ---
 
 export type OfferLetterStatus = "Draft" | "Sent" | "Signed" | "Declined";
@@ -322,6 +344,8 @@ export function uploadOffboardingTaskDocument(token: string, taskId: number, fil
   return apiFetch<OffboardingTask>(`/recruit/offboarding-tasks/${taskId}/`, { method: "PATCH", body: formData }, token);
 }
 
+export type RehireInterest = "Not Contacted" | "Interested" | "Not Interested" | "Rehired";
+
 export interface Offboarding {
   id: number;
   candidate: number;
@@ -329,6 +353,8 @@ export interface Offboarding {
   last_working_day: string;
   reason: string;
   rehire_eligible: boolean;
+  rehire_interest: RehireInterest;
+  rehire_last_contacted: string | null;
   rehire_notes: string;
   status: OffboardingStatus;
   tasks: OffboardingTask[];
@@ -342,6 +368,8 @@ export interface OffboardingWrite {
   last_working_day: string;
   reason?: string;
   rehire_eligible?: boolean;
+  rehire_interest?: RehireInterest;
+  rehire_last_contacted?: string | null;
   rehire_notes?: string;
   status?: OffboardingStatus;
 }

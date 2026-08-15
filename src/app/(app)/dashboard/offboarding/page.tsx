@@ -30,6 +30,11 @@ function isOffboardingCategory(value: string | null): value is OffboardingCatego
 // One category-specific field, on top of the generic title/due date/notes —
 // mirrors Onboarding's extra_fields pattern.
 const EXTRA_FIELD_CONFIG: Partial<Record<OffboardingCategory, { key: string; label: string; options?: string[] }>> = {
+  "Documents Checklist": {
+    key: "document_type",
+    label: "Document type",
+    options: ["Final Settlement", "Exit Interview Form", "NDA Reminder", "Non-Compete Acknowledgement", "Other"],
+  },
   "Access Status": { key: "system_or_tool", label: "System or tool being revoked" },
   "Hardware Clearance": {
     key: "device_category",

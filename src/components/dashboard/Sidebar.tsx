@@ -138,7 +138,7 @@ export default function Sidebar({
           </div>
         )}
 
-        <nav className={`flex-1 space-y-1 px-3 pb-3 ${collapsed ? "overflow-visible" : "overflow-y-auto"}`}>
+        <nav className={`flex-1 space-y-1 px-3 pb-3 ${collapsed ? "overflow-visible" : "overflow-x-hidden overflow-y-auto"}`}>
           <SidebarLink
             href={activeModule.overviewHref}
             label="Overview"
@@ -239,7 +239,7 @@ export default function Sidebar({
                               }`}
                             >
                               <Icon className="h-[15px] w-[15px] shrink-0" />
-                              <SidebarHoverLabel label={feature.label} />
+                              <SidebarHoverLabel label={feature.label} className="min-w-0 flex-1" />
                               {!feature.href && (
                                 <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
                                   Soon
@@ -275,7 +275,7 @@ export default function Sidebar({
                       }`}
                     >
                       <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                      <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
+                      <SidebarHoverLabel label={section.label} className="min-w-0 flex-1 text-left" />
                     </Link>
                     <button
                       onClick={() => toggleSection(section.label)}
@@ -293,7 +293,7 @@ export default function Sidebar({
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
                   >
                     <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                    <SidebarHoverLabel label={section.label} className="flex-1 text-left" />
+                    <SidebarHoverLabel label={section.label} className="min-w-0 flex-1 text-left" />
                     <ChevronDown
                       className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
                     />

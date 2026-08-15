@@ -189,7 +189,7 @@ function Hero({ title, description }: { title: string; description: string }) {
       className="relative overflow-hidden px-6 py-16 text-center sm:py-20"
       style={{
         backgroundImage: [
-          "radial-gradient(circle at 15% 20%, rgba(77,111,224,0.35), transparent 45%)",
+          "radial-gradient(circle at 15% 20%, rgba(115,182,196,0.35), transparent 45%)",
           "radial-gradient(circle at 85% 80%, rgba(185,134,31,0.18), transparent 45%)",
           "radial-gradient(rgba(255,255,255,0.06) 1.5px, transparent 1.5px)",
         ].join(", "),

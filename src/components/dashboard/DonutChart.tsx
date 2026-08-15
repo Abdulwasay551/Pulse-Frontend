@@ -1,4 +1,4 @@
-const COLORS = ["#4a2e82", "#4d6fe0", "#b9861f", "#6d6478"];
+const COLORS = ["#ff6b35", "#73b6c4", "#b9861f", "#6d6478"];
 
 export default function DonutChart({
   data,
