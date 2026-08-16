@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import {
   getPayrollBenefitsDashboardSummary,
   benefitPlansApi,
@@ -48,7 +51,15 @@ function CostBreakdownCard({
   );
 }
 
-export default function BenefitCostAnalysisPage() {
+export default function BenefitCostAnalysisPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <BenefitCostAnalysisPage />
+    </Suspense>
+  );
+}
+
+function BenefitCostAnalysisPage() {
   const { withAuth } = useAuth();
   const [summary, setSummary] = useState<PayrollBenefitsDashboardSummary | null>(null);
   const [plans, setPlans] = useState<BenefitPlan[]>([]);
@@ -62,6 +73,9 @@ export default function BenefitCostAnalysisPage() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const searched = useTableSearch(plans, (p) => p.name);
+  const { pageItems: visiblePlans, page, setPage, totalPages, total, pageSize } = usePagination(searched);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -104,7 +118,7 @@ export default function BenefitCostAnalysisPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {plans.map((p) => (
+                  {visiblePlans.map((p) => (
                     <tr key={p.id} className="border-b border-line last:border-0">
                       <td className="py-2.5 pr-4 font-semibold text-ink" data-label="Plan">
                         <Link href="/dashboard/benefits-enrollment" className="hover:text-primary hover:underline">
@@ -121,8 +135,13 @@ export default function BenefitCostAnalysisPage() {
                   ))}
                 </tbody>
               </table>
-              {plans.length === 0 && <p className="py-6 text-center text-sm text-ink-soft">No benefit plans yet.</p>}
+              {visiblePlans.length === 0 && (
+                <p className="py-6 text-center text-sm text-ink-soft">
+                  {plans.length === 0 ? "No benefit plans yet." : "No plans match your search."}
+                </p>
+              )}
             </div>
+            <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
           </div>
         </>
       )}

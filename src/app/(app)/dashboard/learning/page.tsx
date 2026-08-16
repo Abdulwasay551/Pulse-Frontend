@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { coursesApi, coursesCsv, enrollmentsApi, type Course, type Enrollment, type EnrollmentStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 
@@ -20,7 +23,15 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function LearningPage() {
+export default function LearningPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <LearningPage />
+    </Suspense>
+  );
+}
+
+function LearningPage() {
   const { withAuth } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -54,6 +65,9 @@ export default function LearningPage() {
 
   const active = courses.find((c) => c.id === activeId) ?? null;
   const activeEnrollments = enrollments.filter((e) => e.course === activeId);
+
+  const searchedCourses = useTableSearch(courses, (c) => [c.title, c.description].filter(Boolean).join(" "));
+  const { pageItems: pagedCourses, page, setPage, totalPages, total, pageSize } = usePagination(searchedCourses);
 
   function openCreateCourse() {
     setCourseForm({ title: "", description: "", duration_hours: "4", link: "" });
@@ -213,11 +227,12 @@ export default function LearningPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : courses.length === 0 ? (
+      ) : pagedCourses.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">No courses yet.</div>
       ) : (
+        <>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((c) => (
+          {pagedCourses.map((c) => (
             <div key={c.id} className="group relative cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md" onClick={() => setActiveId(c.id)}>
               <button
                 onClick={(e) => { e.stopPropagation(); handleDeleteCourse(c); }}
@@ -238,6 +253,8 @@ export default function LearningPage() {
             </div>
           ))}
         </div>
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
+        </>
       )}
 
       {showCourseForm && (

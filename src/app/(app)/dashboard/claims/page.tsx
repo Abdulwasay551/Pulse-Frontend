@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   benefitPlansApi,
@@ -42,7 +47,15 @@ interface FormState {
 }
 const emptyForm: FormState = { employee: "", plan: "", claim_type: "", amount: "0", description: "" };
 
-export default function ClaimsPage() {
+export default function ClaimsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ClaimsPage />
+    </Suspense>
+  );
+}
+
+function ClaimsPage() {
   const { withAuth } = useAuth();
   const [claims, setClaims] = useState<BenefitClaim[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -132,6 +145,25 @@ export default function ClaimsPage() {
     await load();
   }
 
+  const searched = useTableSearch(claims, (c) =>
+    [c.employee_detail.name, c.claim_type, c.plan_name, c.status, c.description].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (c, key) => {
+    switch (key) {
+      case "employee":
+        return c.employee_detail.name;
+      case "claim_type":
+        return c.claim_type;
+      case "plan_name":
+        return c.plan_name;
+      case "amount":
+        return Number(c.amount);
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -159,16 +191,16 @@ export default function ClaimsPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Claim</th>
-              <th className="px-5 py-3 font-medium">Plan</th>
-              <th className="px-5 py-3 font-medium">Amount</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Claim" sortKeyName="claim_type" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Plan" sortKeyName="plan_name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Amount" sortKeyName="amount" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {claims.map((c) => (
+            {visible.map((c) => (
               <tr
                 key={c.id}
                 onClick={() => openEdit(c)}
@@ -208,10 +240,11 @@ export default function ClaimsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && claims.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No claims submitted yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

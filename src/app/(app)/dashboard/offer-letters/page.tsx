@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { FileStack, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import CandidateLink from "@/components/dashboard/CandidateLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   candidatesApi,
   clientsApi,
@@ -62,7 +67,15 @@ function applyTemplateVars(body: string, name: string, role: string) {
   return body.replace(/\{name\}/g, name).replace(/\{role\}/g, role);
 }
 
-export default function OfferLettersPage() {
+export default function OfferLettersPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <OfferLettersPage />
+    </Suspense>
+  );
+}
+
+function OfferLettersPage() {
   const { withAuth } = useAuth();
   const [offers, setOffers] = useState<OfferLetter[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -179,6 +192,27 @@ export default function OfferLettersPage() {
     await load();
   }
 
+  const searched = useTableSearch(offers, (o) =>
+    [o.candidate_detail.name, o.job_title, o.salary, o.start_date, o.status].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (o, key) => {
+    switch (key) {
+      case "candidate":
+        return o.candidate_detail.name;
+      case "job_title":
+        return o.job_title;
+      case "salary":
+        return o.salary !== null && o.salary !== undefined && o.salary !== "" ? Number(o.salary) : null;
+      case "start_date":
+        return o.start_date;
+      case "status":
+        return o.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -215,16 +249,16 @@ export default function OfferLettersPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Job title</th>
-              <th className="px-5 py-3 font-medium">Salary</th>
-              <th className="px-5 py-3 font-medium">Start date</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Candidate" sortKeyName="candidate" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Job title" sortKeyName="job_title" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Salary" sortKeyName="salary" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Start date" sortKeyName="start_date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {offers.map((o) => (
+            {visible.map((o) => (
               <tr key={o.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Candidate">
                   <CandidateLink candidate={o.candidate_detail} />
@@ -261,10 +295,11 @@ export default function OfferLettersPage() {
             ))}
           </tbody>
         </table>
-        {!loading && offers.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No offer letters yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

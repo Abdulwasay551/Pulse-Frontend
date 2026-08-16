@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { FileText, Upload } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import Modal from "@/components/dashboard/Modal";
 import AssetLink from "@/components/dashboard/AssetLink";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { useAuth } from "@/lib/auth-context";
 import { assetsApi, updateWarrantyDetails, type Asset, type WarrantyStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
@@ -43,7 +46,15 @@ function warrantyProgress(asset: Asset): number | null {
   return Math.min(100, Math.max(0, pct));
 }
 
-export default function WarrantyTrackingPage() {
+export default function WarrantyTrackingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <WarrantyTrackingPage />
+    </Suspense>
+  );
+}
+
+function WarrantyTrackingPage() {
   const { withAuth } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +82,10 @@ export default function WarrantyTrackingPage() {
   }, [assets]);
 
   const filtered = filter === "All" ? assets : assets.filter((a) => a.warranty_status === filter);
+  const searched = useTableSearch(filtered, (a) =>
+    [a.name, a.asset_tag, a.warranty_status, a.warranty_provider, a.assigned_to_detail?.name].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -101,11 +116,11 @@ export default function WarrantyTrackingPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : filtered.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">No assets match this filter.</div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((a) => {
+          {visible.map((a) => {
             const progress = warrantyProgress(a);
             return (
               <div key={a.id} className="rounded-2xl border border-line bg-card p-5">
@@ -163,6 +178,7 @@ export default function WarrantyTrackingPage() {
           })}
         </div>
       )}
+      <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
 
       {editing && (
         <WarrantyDetailsModal

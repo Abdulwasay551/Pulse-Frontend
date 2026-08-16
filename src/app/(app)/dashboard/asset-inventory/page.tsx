@@ -7,6 +7,11 @@ import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, assetsCsv, type Asset, type AssetCategory, type AssetStatus } from "@/lib/it-assets-api";
 import { ApiError } from "@/lib/auth-api";
@@ -96,6 +101,25 @@ function AssetInventoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const searched = useTableSearch(assets, (a) =>
+    [a.name, a.asset_tag, a.category, a.status, a.assigned_to_detail?.name].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (a, key) => {
+    switch (key) {
+      case "name":
+        return a.name;
+      case "category":
+        return a.category;
+      case "assigned_to":
+        return a.assigned_to_detail?.name;
+      case "status":
+        return a.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   function openCreate() {
     setEditing(null);
     setForm(emptyForm);
@@ -180,15 +204,15 @@ function AssetInventoryPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Asset</th>
-              <th className="px-5 py-3 font-medium">Category</th>
-              <th className="px-5 py-3 font-medium">Assigned to</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Asset" sortKeyName="name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Category" sortKeyName="category" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Assigned to" sortKeyName="assigned_to" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {assets.map((a) => (
+            {visible.map((a) => (
               <tr key={a.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Asset">
                   <button onClick={() => openEdit(a)} className="text-left">
@@ -227,10 +251,11 @@ function AssetInventoryPage() {
             ))}
           </tbody>
         </table>
-        {!loading && assets.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No assets tracked yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { useAuth } from "@/lib/auth-context";
 import { payrollApi, payrollCsv, type PayrollRun, type PayrollStatus } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
@@ -42,7 +47,15 @@ function formatCurrency(amount: number, currency = "USD") {
   }
 }
 
-export default function PayrollPage() {
+export default function PayrollPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <PayrollPage />
+    </Suspense>
+  );
+}
+
+function PayrollPage() {
   const { withAuth } = useAuth();
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +83,23 @@ export default function PayrollPage() {
   const totalProcessed = payrollRuns.reduce((sum, p) => sum + Number(p.amount), 0);
   const totalContractors = payrollRuns.reduce((sum, p) => sum + p.contractors, 0);
   const pendingRuns = payrollRuns.filter((p) => p.status !== "Reconciled").length;
+
+  const searched = useTableSearch(payrollRuns, (p) => [p.period, p.status, p.currency].filter(Boolean).join(" "));
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (p, key) => {
+    switch (key) {
+      case "period":
+        return p.period;
+      case "contractors":
+        return p.contractors;
+      case "amount":
+        return Number(p.amount);
+      case "status":
+        return p.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     setEditing(null);
@@ -155,15 +185,15 @@ export default function PayrollPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Run</th>
-              <th className="px-5 py-3 font-medium">Contractors</th>
-              <th className="px-5 py-3 font-medium">Amount</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Run" sortKeyName="period" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Contractors" sortKeyName="contractors" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Amount" sortKeyName="amount" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {payrollRuns.map((p) => (
+            {visible.map((p) => (
               <tr
                 key={p.id}
                 onClick={() => openEdit(p)}
@@ -201,10 +231,11 @@ export default function PayrollPage() {
             ))}
           </tbody>
         </table>
-        {!loading && payrollRuns.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No payroll runs yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

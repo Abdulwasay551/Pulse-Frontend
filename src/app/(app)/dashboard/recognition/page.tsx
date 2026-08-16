@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Award, Download, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { useTableSearch } from "@/lib/use-table-search";
 import {
   RECOGNITION_TYPES,
   downloadRecognitionCertificate,
@@ -23,7 +24,15 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function RecognitionPage() {
+export default function RecognitionPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <RecognitionPage />
+    </Suspense>
+  );
+}
+
+function RecognitionPage() {
   const { withAuth } = useAuth();
   const [recognitions, setRecognitions] = useState<Recognition[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -54,6 +63,10 @@ export default function RecognitionPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const visible = useTableSearch(recognitions, (r) =>
+    [r.employee_detail.name, r.recognition_type, r.given_by, r.message].filter(Boolean).join(" ")
+  );
 
   function openCreate() {
     setForm({
@@ -130,13 +143,13 @@ export default function RecognitionPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : recognitions.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           No recognitions yet — give someone a shoutout.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {recognitions.map((r) => (
+          {visible.map((r) => (
             <div key={r.id} className="group relative rounded-2xl border border-line bg-card p-5">
               <button
                 onClick={() => handleDelete(r)}

@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { BadgeCheck, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { bankAccountsApi, bankAccountsCsv, type BankAccount, type BankAccountType } from "@/lib/payroll-benefits-api";
 import { ApiError } from "@/lib/auth-api";
@@ -42,7 +47,15 @@ const emptyForm: FormState = {
   verified: false,
 };
 
-export default function DirectDepositPage() {
+export default function DirectDepositPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <DirectDepositPage />
+    </Suspense>
+  );
+}
+
+function DirectDepositPage() {
   const { withAuth } = useAuth();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -130,6 +143,25 @@ export default function DirectDepositPage() {
     await load();
   }
 
+  const searched = useTableSearch(accounts, (a) =>
+    [a.employee_detail.name, a.bank_name, a.bank_country, a.account_type].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (a, key) => {
+    switch (key) {
+      case "employee":
+        return a.employee_detail.name;
+      case "bank_name":
+        return a.bank_name;
+      case "bank_country":
+        return a.bank_country;
+      case "account_type":
+        return a.account_type;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -159,17 +191,17 @@ export default function DirectDepositPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Bank</th>
-              <th className="px-5 py-3 font-medium">Bank country</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Bank" sortKeyName="bank_name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Bank country" sortKeyName="bank_country" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Account</th>
-              <th className="px-5 py-3 font-medium">Type</th>
+              <SortableTh label="Type" sortKeyName="account_type" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {accounts.map((a) => (
+            {visible.map((a) => (
               <tr
                 key={a.id}
                 onClick={() => openEdit(a)}
@@ -218,10 +250,11 @@ export default function DirectDepositPage() {
             ))}
           </tbody>
         </table>
-        {!loading && accounts.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No bank accounts on file yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

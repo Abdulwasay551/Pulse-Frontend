@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Repeat } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CandidateLink from "@/components/dashboard/CandidateLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { offboardingsApi, type Offboarding, type RehireInterest } from "@/lib/recruit-api";
 
 const inputClass =
@@ -20,7 +25,15 @@ const interestTone: Record<RehireInterest, string> = {
   Rehired: "bg-amber-soft text-amber",
 };
 
-export default function RehirePoolPage() {
+export default function RehirePoolPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <RehirePoolPage />
+    </Suspense>
+  );
+}
+
+function RehirePoolPage() {
   const { withAuth } = useAuth();
   const [offboardings, setOffboardings] = useState<Offboarding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +57,26 @@ export default function RehirePoolPage() {
   }, []);
 
   const alumni = offboardings.filter((o) => o.rehire_eligible);
+  const searched = useTableSearch(alumni, (o) =>
+    [o.candidate_detail.name, o.candidate_detail.role, o.reason, o.rehire_interest, o.rehire_notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (o, key) => {
+    switch (key) {
+      case "candidate":
+        return o.candidate_detail.name;
+      case "last_working_day":
+        return o.last_working_day;
+      case "reason":
+        return o.reason;
+      case "interest":
+        return o.rehire_interest;
+      case "last_contacted":
+        return o.rehire_last_contacted;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openNotes(o: Offboarding) {
     setActive(o);
@@ -90,17 +123,29 @@ export default function RehirePoolPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Last working day</th>
-              <th className="px-5 py-3 font-medium">Reason</th>
-              <th className="px-5 py-3 font-medium">Interest</th>
-              <th className="px-5 py-3 font-medium">Last contacted</th>
+              <SortableTh label="Candidate" sortKeyName="candidate" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Last working day"
+                sortKeyName="last_working_day"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableTh label="Reason" sortKeyName="reason" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Interest" sortKeyName="interest" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Last contacted"
+                sortKeyName="last_contacted"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
               <th className="px-5 py-3 font-medium">Notes</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {alumni.map((o) => (
+            {visible.map((o) => (
               <tr key={o.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Candidate">
                   <CandidateLink candidate={o.candidate_detail} subtitle={o.candidate_detail.role} />
@@ -146,13 +191,14 @@ export default function RehirePoolPage() {
             ))}
           </tbody>
         </table>
-        {!loading && alumni.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="flex flex-col items-center gap-2 p-10 text-center text-sm text-ink-soft">
             <Repeat className="h-6 w-6 text-ink-soft/60" />
             No rehire-eligible alumni yet — mark someone eligible from their offboarding record.
           </div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {active && (

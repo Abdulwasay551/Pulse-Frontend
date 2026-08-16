@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { AlertTriangle, Flag, History } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { useAuth } from "@/lib/auth-context";
+import { useTableSearch } from "@/lib/use-table-search";
 import { getPayrollAuditTrail, payrollApi, type PayrollAuditEntry, type PayrollRun } from "@/lib/payroll-benefits-api";
 
 const toneDot: Record<PayrollAuditEntry["tone"], string> = {
@@ -35,7 +36,15 @@ function formatCurrency(amount: number, currency = "USD") {
   }
 }
 
-export default function PayrollAuditPage() {
+export default function PayrollAuditPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <PayrollAuditPage />
+    </Suspense>
+  );
+}
+
+function PayrollAuditPage() {
   const { withAuth } = useAuth();
   const [runs, setRuns] = useState<PayrollRun[]>([]);
   const [trail, setTrail] = useState<PayrollAuditEntry[]>([]);
@@ -81,6 +90,8 @@ export default function PayrollAuditPage() {
   const needsReviewCount = runs.filter((r) => r.status === "Needs review").length;
   const reconciledCount = runs.filter((r) => r.status === "Reconciled").length;
 
+  const searchedRuns = useTableSearch(runs, (r) => [r.period, r.status, r.audit_notes].filter(Boolean).join(" "));
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
@@ -95,7 +106,7 @@ export default function PayrollAuditPage() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {runs.map((r) => (
+        {searchedRuns.map((r) => (
           <div key={r.id} className="rounded-2xl border border-line bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -140,9 +151,9 @@ export default function PayrollAuditPage() {
             </div>
           </div>
         ))}
-        {!loading && runs.length === 0 && (
+        {!loading && searchedRuns.length === 0 && (
           <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
-            No payroll runs to audit yet.
+            {runs.length === 0 ? "No payroll runs to audit yet." : "No runs match your search."}
           </div>
         )}
         {loading && <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>}

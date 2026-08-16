@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Copy, ExternalLink, FileText, Sparkles, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { candidatesApi, uploadResume, type Candidate } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -24,7 +29,15 @@ function portalUrl(token: string) {
   return `${window.location.origin}/portal/${token}`;
 }
 
-export default function ResumePoolPage() {
+export default function ResumePoolPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ResumePoolPage />
+    </Suspense>
+  );
+}
+
+function ResumePoolPage() {
   const { withAuth } = useAuth();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,6 +144,29 @@ export default function ResumePoolPage() {
     }
   }
 
+  const searched = useTableSearch(candidates, (c) =>
+    [c.name, c.role, c.source, c.resume_file ? "file" : "", c.resume_text ? "text" : ""].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (c, key) => {
+    switch (key) {
+      case "name":
+        return c.name;
+      case "role":
+        return c.role;
+      case "salary":
+        return c.current_salary !== null && c.current_salary !== undefined ? Number(c.current_salary) : null;
+      case "applied_at":
+        return c.applied_at;
+      case "source":
+        return c.source;
+      case "ai_score":
+        return c.ai_score;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
@@ -144,18 +180,24 @@ export default function ResumePoolPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Name</th>
-              <th className="px-5 py-3 font-medium">Current Position</th>
-              <th className="px-5 py-3 font-medium">Salary</th>
-              <th className="px-5 py-3 font-medium">Application date</th>
-              <th className="px-5 py-3 font-medium">Source</th>
+              <SortableTh label="Name" sortKeyName="name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Current Position" sortKeyName="role" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Salary" sortKeyName="salary" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Application date"
+                sortKeyName="applied_at"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableTh label="Source" sortKeyName="source" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Resume</th>
-              <th className="px-5 py-3 font-medium">AI score</th>
+              <SortableTh label="AI score" sortKeyName="ai_score" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {candidates.map((c) => (
+            {visible.map((c) => (
               <tr key={c.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Name">
                   <button onClick={() => openCandidate(c)} className="flex items-center gap-3 text-left">
@@ -210,10 +252,11 @@ export default function ResumePoolPage() {
             ))}
           </tbody>
         </table>
-        {!loading && candidates.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No candidates yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {active && (

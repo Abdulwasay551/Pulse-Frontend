@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   employeesApi,
   promotionRequestsApi,
@@ -28,7 +33,15 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function PromotionsPage() {
+export default function PromotionsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <PromotionsPage />
+    </Suspense>
+  );
+}
+
+function PromotionsPage() {
   const { withAuth } = useAuth();
   const [requests, setRequests] = useState<PromotionRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -61,6 +74,29 @@ export default function PromotionsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const searched = useTableSearch(requests, (r) =>
+    [r.employee_detail.name, r.from_title, r.to_title, r.from_department, r.to_department, r.status]
+      .filter(Boolean)
+      .join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (r, key) => {
+    switch (key) {
+      case "employee":
+        return r.employee_detail.name;
+      case "from":
+        return r.from_title;
+      case "to":
+        return r.to_title;
+      case "effective_date":
+        return r.effective_date;
+      case "status":
+        return r.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     const first = employees[0];
@@ -142,16 +178,22 @@ export default function PromotionsPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">From</th>
-              <th className="px-5 py-3 font-medium">To</th>
-              <th className="px-5 py-3 font-medium">Effective</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="From" sortKeyName="from" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="To" sortKeyName="to" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Effective"
+                sortKeyName="effective_date"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {requests.map((r) => (
+            {visible.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Employee">
                   <EmployeeLink employee={r.employee_detail} />
@@ -205,10 +247,11 @@ export default function PromotionsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && requests.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No promotion or transfer requests yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

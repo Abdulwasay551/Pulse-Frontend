@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { goalsApi, goalsCsv, type Goal, type GoalStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee, type EmployeeLite } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -34,7 +39,15 @@ interface FormState {
   progress: string;
 }
 
-export default function GoalsPage() {
+export default function GoalsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <GoalsPage />
+    </Suspense>
+  );
+}
+
+function GoalsPage() {
   const { withAuth } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -65,6 +78,28 @@ export default function GoalsPage() {
 
   const sections = ["All", ...Array.from(new Set(goals.map((g) => g.section).filter(Boolean)))];
   const visibleGoals = sectionFilter === "All" ? goals : goals.filter((g) => g.section === sectionFilter);
+  const searchedGoals = useTableSearch(visibleGoals, (g) =>
+    [g.employee_detail.name, g.title, g.section, g.status].filter(Boolean).join(" ")
+  );
+  const { sorted: sortedGoals, sortKey, sortDir, toggleSort } = useSortableList(searchedGoals, (g, key) => {
+    switch (key) {
+      case "employee":
+        return g.employee_detail.name;
+      case "goal":
+        return g.title;
+      case "section":
+        return g.section;
+      case "target_date":
+        return g.target_date;
+      case "progress":
+        return g.progress;
+      case "status":
+        return g.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: pagedGoals, page, setPage, totalPages, total, pageSize } = usePagination(sortedGoals);
 
   const employeeGoals = employeeDetail ? goals.filter((g) => g.employee === employeeDetail.id) : [];
   const employeeCompleted = employeeGoals.filter((g) => g.status === "Completed").length;
@@ -171,17 +206,17 @@ export default function GoalsPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Goal</th>
-              <th className="px-5 py-3 font-medium">Section</th>
-              <th className="px-5 py-3 font-medium">Target date</th>
-              <th className="px-5 py-3 font-medium">Progress</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Goal" sortKeyName="goal" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Section" sortKeyName="section" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Target date" sortKeyName="target_date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Progress" sortKeyName="progress" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {visibleGoals.map((g) => (
+            {pagedGoals.map((g) => (
               <tr
                 key={g.id}
                 onClick={() => openEmployeeDetail(g)}
@@ -220,8 +255,9 @@ export default function GoalsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && visibleGoals.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No goals yet.</div>}
+        {!loading && pagedGoals.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No goals yet.</div>}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

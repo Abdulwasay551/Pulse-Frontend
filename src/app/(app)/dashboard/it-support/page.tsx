@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   assetsApi,
@@ -39,6 +44,8 @@ const priorityTone: Record<TicketPriority, string> = {
   High: "text-maroon",
 };
 
+const priorityRank: Record<TicketPriority, number> = { Low: 0, Medium: 1, High: 2 };
+
 const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
@@ -53,7 +60,15 @@ interface FormState {
 }
 const emptyForm: FormState = { employee: "", asset: "", subject: "", description: "", category: "Device Query", priority: "Medium" };
 
-export default function ItSupportPage() {
+export default function ItSupportPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ItSupportPage />
+    </Suspense>
+  );
+}
+
+function ItSupportPage() {
   const { withAuth } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -127,6 +142,25 @@ export default function ItSupportPage() {
     await load();
   }
 
+  const searched = useTableSearch(tickets, (t) =>
+    [t.subject, t.employee_detail.name, t.category, t.priority, t.status, t.asset_tag].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (t, key) => {
+    switch (key) {
+      case "subject":
+        return t.subject;
+      case "employee":
+        return t.employee_detail.name;
+      case "priority":
+        return priorityRank[t.priority];
+      case "status":
+        return t.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -172,25 +206,25 @@ export default function ItSupportPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : tickets.length === 0 ? (
+      ) : searched.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">No support tickets yet.</div>
       ) : view === "board" ? (
-        <TicketBoard tickets={tickets} onMove={updateStatus} onDelete={handleDelete} />
+        <TicketBoard tickets={searched} onMove={updateStatus} onDelete={handleDelete} />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-line bg-card">
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Ticket</th>
-                <th className="px-5 py-3 font-medium">Employee</th>
-                <th className="px-5 py-3 font-medium">Priority</th>
+                <SortableTh label="Ticket" sortKeyName="subject" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableTh label="Priority" sortKeyName="priority" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                 <th className="px-5 py-3 font-medium">Resolution time</th>
-                <th className="px-5 py-3 font-medium">Status</th>
+                <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                 <th className="px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {tickets.map((t) => (
+              {visible.map((t) => (
                 <tr key={t.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Ticket">
                     <div className="font-semibold text-ink">{t.subject}</div>
@@ -239,6 +273,7 @@ export default function ItSupportPage() {
               ))}
             </tbody>
           </table>
+          <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
         </div>
       )}
 

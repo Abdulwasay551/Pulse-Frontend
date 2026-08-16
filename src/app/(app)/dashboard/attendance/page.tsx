@@ -7,6 +7,11 @@ import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   attendanceRecordsApi,
   attendanceRecordsCsv,
@@ -80,7 +85,27 @@ function AttendancePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const visible = isOvertime ? records.filter((r) => Number(r.overtime_hours) > 0) : records;
+  const scoped = isOvertime ? records.filter((r) => Number(r.overtime_hours) > 0) : records;
+  const searched = useTableSearch(scoped, (r) =>
+    [r.employee_detail.name, r.date, r.clock_in, r.clock_out, r.notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (r, key) => {
+    switch (key) {
+      case "employee":
+        return r.employee_detail.name;
+      case "date":
+        return r.date;
+      case "clock_in":
+        return r.clock_in;
+      case "clock_out":
+        return r.clock_out;
+      case "overtime_hours":
+        return Number(r.overtime_hours);
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     setEditing(null);
@@ -182,14 +207,20 @@ function AttendancePage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Date</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Date" sortKeyName="date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               {isOvertime ? (
-                <th className="px-5 py-3 font-medium">Overtime (Hours)</th>
+                <SortableTh
+                  label="Overtime (Hours)"
+                  sortKeyName="overtime_hours"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
               ) : (
                 <>
-                  <th className="px-5 py-3 font-medium">Clock in</th>
-                  <th className="px-5 py-3 font-medium">Clock out</th>
+                  <SortableTh label="Clock in" sortKeyName="clock_in" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                  <SortableTh label="Clock out" sortKeyName="clock_out" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                   <th className="px-5 py-3 font-medium">Notes</th>
                 </>
               )}
@@ -246,6 +277,7 @@ function AttendancePage() {
           <div className="p-10 text-center text-sm text-ink-soft">No attendance records yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   clientsApi,
   requisitionsApi,
@@ -92,7 +97,15 @@ function formToPayload(form: FormState) {
   };
 }
 
-export default function RequisitionsPage() {
+export default function RequisitionsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <RequisitionsPage />
+    </Suspense>
+  );
+}
+
+function RequisitionsPage() {
   const { withAuth } = useAuth();
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -188,6 +201,29 @@ export default function RequisitionsPage() {
     await load();
   }
 
+  const searched = useTableSearch(requisitions, (r) =>
+    [r.title, r.client_name, r.recruiter, r.status, r.priority, r.location].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (r, key) => {
+    switch (key) {
+      case "title":
+        return r.title;
+      case "recruiter":
+        return r.recruiter;
+      case "priority":
+        return r.priority;
+      case "status":
+        return r.status;
+      case "posted_at":
+        return r.posted_at;
+      case "days_open":
+        return r.days_open;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   const active = requisitions.find((r) => r.id === activeId) ?? null;
 
   if (active) {
@@ -242,18 +278,18 @@ export default function RequisitionsPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Role</th>
-              <th className="px-5 py-3 font-medium">Recruiter</th>
+              <SortableTh label="Role" sortKeyName="title" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Recruiter" sortKeyName="recruiter" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Candidates</th>
-              <th className="px-5 py-3 font-medium">Priority</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Posted</th>
-              <th className="px-5 py-3 font-medium">Days open</th>
+              <SortableTh label="Priority" sortKeyName="priority" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Posted" sortKeyName="posted_at" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Days open" sortKeyName="days_open" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {requisitions.map((r) => (
+            {visible.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Role">
                   <button onClick={() => setActiveId(r.id)} className="text-left">
@@ -303,10 +339,11 @@ export default function RequisitionsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && requisitions.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No job openings yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

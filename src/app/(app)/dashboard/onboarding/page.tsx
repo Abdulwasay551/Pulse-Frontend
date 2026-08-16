@@ -7,6 +7,11 @@ import { ArrowLeft, CalendarPlus, FileText, Plus, Trash2, Upload } from "lucide-
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CandidateLink from "@/components/dashboard/CandidateLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   candidatesApi,
   downloadOnboardingTaskIcs,
@@ -245,6 +250,11 @@ function OnboardingPage() {
     await load();
   }
 
+  const searched = useTableSearch(records, (o) =>
+    [o.candidate_detail.name, o.candidate_detail.role, o.status].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
+
   if (category) {
     return <CategoryCrossSection category={category} records={records} loading={loading} onChanged={load} />;
   }
@@ -286,13 +296,13 @@ function OnboardingPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : records.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           No onboarding records yet.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {records.map((o) => (
+          {visible.map((o) => (
             <div
               key={o.id}
               className="group relative cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
@@ -337,6 +347,12 @@ function OnboardingPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className="mt-4 rounded-2xl border border-line bg-card">
+          <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
         </div>
       )}
 
@@ -412,6 +428,25 @@ function CategoryCrossSection({
     .flatMap((o) => o.tasks.filter((t) => t.category === category).map((t) => ({ task: t, onboarding: o })))
     .sort((a, b) => a.onboarding.candidate_detail.name.localeCompare(b.onboarding.candidate_detail.name));
 
+  const searched = useTableSearch(rows, ({ task, onboarding }) =>
+    [onboarding.candidate_detail.name, task.title, task.status, task.notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (row, key) => {
+    switch (key) {
+      case "candidate":
+        return row.onboarding.candidate_detail.name;
+      case "task":
+        return row.task.title;
+      case "due":
+        return row.task.due_date;
+      case "status":
+        return row.task.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   function openCreate() {
     setForm({ onboarding: records[0] ? String(records[0].id) : "", title: "", due_date: "", notes: "", extraValue: "" });
     setFile(null);
@@ -482,15 +517,15 @@ function CategoryCrossSection({
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Task</th>
-              <th className="px-5 py-3 font-medium">Due</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Candidate" sortKeyName="candidate" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Task" sortKeyName="task" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Due" sortKeyName="due" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ task, onboarding }) => (
+            {visible.map(({ task, onboarding }) => (
               <tr key={task.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Candidate">
                   <CandidateLink candidate={onboarding.candidate_detail} />
@@ -521,12 +556,13 @@ function CategoryCrossSection({
             ))}
           </tbody>
         </table>
-        {!loading && rows.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">
             No {category.toLowerCase()} tasks yet across any onboarding record.
           </div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

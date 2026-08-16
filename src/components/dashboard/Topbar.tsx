@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Bell, ChevronDown, Lock, LogOut, Menu, Settings, Search } from "lucide-react";
+import { Bell, ChevronDown, Lock, LogOut, Menu, Settings, Search, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules, featureHref, findActiveModuleForRoute, type ModuleDef } from "@/lib/dashboard-modules";
 import { filterSectionsForRole, visibleModuleKeysFor } from "@/lib/role-access";
@@ -138,6 +138,39 @@ export default function Topbar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Search lives in the URL (?q=…) rather than local-only state, same as
+  // the existing ?view=/?category= page-state params — that makes it
+  // shareable/bookmarkable and, more importantly, lets every list page
+  // read it independently via useSearchParams() without any prop drilling
+  // or context. Local `searchInput` exists only so typing feels instant;
+  // the URL (and therefore what pages actually filter on) updates
+  // debounced, and resyncs from the URL whenever the route itself changes
+  // (switching pages/modules) so a stale query from the last page never
+  // leaks into the next one.
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
+  useEffect(() => {
+    setSearchInput(searchParams.get("q") ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (searchInput === current) return;
+    const handle = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchInput) params.set("q", searchInput);
+      else params.delete("q");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }, 300);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput, pathname]);
+
+  function clearSearch() {
+    setSearchInput("");
+  }
+
   const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "";
   const initials = displayName
     .split(" ")
@@ -169,6 +202,13 @@ export default function Topbar({
             const visibleKeys = visibleModuleKeysFor(user?.role);
             return !visibleKeys || visibleKeys.includes(m.key);
           })
+          // Temporarily disabled — with all 5 module switchers plus the
+          // search box in one row, the search box gets squeezed down to
+          // invisible at normal widths. Hiding everything but Recruit here
+          // for now until the top nav gets a real responsive treatment;
+          // every module is still reachable via "All modules" / the
+          // dashboard hub. Drop this filter to re-enable.
+          .filter((m) => !["people", "talent", "payroll-benefits", "it-assets"].includes(m.key))
           .map((m) => (
             <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} role={user?.role} />
           ))}
@@ -179,9 +219,20 @@ export default function Topbar({
           <Search className="h-4 w-4 shrink-0 text-ink-soft" />
           <input
             type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder={activeModule.searchPlaceholder}
             className="w-full bg-transparent text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
           />
+          {searchInput && (
+            <button
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="shrink-0 rounded-full p-0.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex-1" />

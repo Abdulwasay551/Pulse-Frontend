@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { MessageSquareText, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { recruiterFeedbackApi, recruiterFeedbackCsv, type RecruiterFeedback } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -15,7 +18,15 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function RecruiterFeedbackPage() {
+export default function RecruiterFeedbackPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <RecruiterFeedbackPage />
+    </Suspense>
+  );
+}
+
+function RecruiterFeedbackPage() {
   const { withAuth } = useAuth();
   const [feedback, setFeedback] = useState<RecruiterFeedback[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -64,6 +75,11 @@ export default function RecruiterFeedbackPage() {
     }
   }
 
+  const searched = useTableSearch(feedback, (f) =>
+    [f.employee_detail.name, f.given_by, f.message].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -89,13 +105,13 @@ export default function RecruiterFeedbackPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : feedback.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           No feedback logged yet.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {feedback.map((f) => (
+          {visible.map((f) => (
             <div key={f.id} className="rounded-2xl border border-line bg-card p-5">
               <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <MessageSquareText className="h-5 w-5" />
@@ -108,6 +124,12 @@ export default function RecruiterFeedbackPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className="mt-4 rounded-2xl border border-line bg-card">
+          <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
         </div>
       )}
 

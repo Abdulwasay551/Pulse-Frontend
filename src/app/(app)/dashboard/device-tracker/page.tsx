@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   assetsApi,
@@ -54,7 +57,15 @@ const emptyForm: FormState = {
   currency: "USD",
 };
 
-export default function DeviceTrackerPage() {
+export default function DeviceTrackerPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <DeviceTrackerPage />
+    </Suspense>
+  );
+}
+
+function DeviceTrackerPage() {
   const { withAuth } = useAuth();
   const [incidents, setIncidents] = useState<AssetIncident[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -138,6 +149,11 @@ export default function DeviceTrackerPage() {
     await load();
   }
 
+  const searched = useTableSearch(incidents, (i) =>
+    [i.asset_name, i.asset_tag, i.incident_type, i.description, i.employee_detail?.name].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -162,7 +178,7 @@ export default function DeviceTrackerPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {incidents.map((i) => (
+        {visible.map((i) => (
           <div key={i.id} className="group rounded-2xl border border-line bg-card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -212,12 +228,13 @@ export default function DeviceTrackerPage() {
             </div>
           </div>
         ))}
-        {!loading && incidents.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
             No incidents logged yet.
           </div>
         )}
         {loading && <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

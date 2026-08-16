@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import AssetLink from "@/components/dashboard/AssetLink";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   assetsApi,
@@ -40,7 +43,15 @@ interface FormState {
 }
 const emptyForm: FormState = { employee: "", asset: "", last_working_day: new Date().toISOString().slice(0, 10), notes: "" };
 
-export default function AssetRecoveryPage() {
+export default function AssetRecoveryPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <AssetRecoveryPage />
+    </Suspense>
+  );
+}
+
+function AssetRecoveryPage() {
   const { withAuth } = useAuth();
   const [recoveries, setRecoveries] = useState<AssetRecovery[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -72,6 +83,11 @@ export default function AssetRecoveryPage() {
 
   // Only assets currently provisioned to someone are actually recoverable.
   const assignedAssets = assets.filter((a) => a.assigned_to);
+
+  const searched = useTableSearch(recoveries, (r) =>
+    [r.employee_detail.name, r.asset_name, r.asset_tag, r.status, r.notes].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
 
   function openCreate() {
     const firstAsset = assignedAssets[0];
@@ -150,13 +166,13 @@ export default function AssetRecoveryPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : recoveries.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           No recovery records yet. Start one when an employee with a provisioned device is offboarding.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {recoveries.map((r) => (
+          {visible.map((r) => (
             <div key={r.id} className="group relative rounded-2xl border border-line bg-card p-5">
               <button
                 onClick={() => handleDelete(r)}
@@ -193,6 +209,7 @@ export default function AssetRecoveryPage() {
           ))}
         </div>
       )}
+      <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
 
       {showForm && (
         <Modal title="New recovery record" onClose={() => setShowForm(false)}>

@@ -8,6 +8,11 @@ import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   deleteEmployeeDocument,
   employeesApi,
@@ -417,6 +422,66 @@ function EmployeeDatabasePage() {
     }
   }
 
+  const docsSearched = useTableSearch(documents, (d) =>
+    [d.title, d.doc_type, d.employee_detail.name].filter(Boolean).join(" ")
+  );
+  const { sorted: docsSorted, sortKey: docSortKey, sortDir: docSortDir, toggleSort: toggleDocSort } = useSortableList(
+    docsSearched,
+    (d, key) => {
+      switch (key) {
+        case "title":
+          return d.title;
+        case "employee":
+          return d.employee_detail.name;
+        case "doc_type":
+          return d.doc_type;
+        case "uploaded_at":
+          return d.uploaded_at;
+        default:
+          return null;
+      }
+    }
+  );
+  const {
+    pageItems: visibleDocuments,
+    page: docsPage,
+    setPage: setDocsPage,
+    totalPages: docsTotalPages,
+    total: docsTotal,
+    pageSize: docsPageSize,
+  } = usePagination(docsSorted);
+
+  const empSearched = useTableSearch(employees, (e) =>
+    [e.name, e.job_title, e.department, e.manager_name, e.status].filter(Boolean).join(" ")
+  );
+  const { sorted: empSorted, sortKey: empSortKey, sortDir: empSortDir, toggleSort: toggleEmpSort } = useSortableList(
+    empSearched,
+    (e, key) => {
+      switch (key) {
+        case "name":
+          return e.name;
+        case "department":
+          return e.department;
+        case "manager":
+          return e.manager_name;
+        case "status":
+          return e.status;
+        case "hire_date":
+          return e.hire_date;
+        default:
+          return null;
+      }
+    }
+  );
+  const {
+    pageItems: visibleEmployees,
+    page: empPage,
+    setPage: setEmpPage,
+    totalPages: empTotalPages,
+    total: empTotal,
+    pageSize: empPageSize,
+  } = usePagination(empSorted);
+
   const visibleTabs = editing ? TABS : TABS.filter((t) => t.id === "details" || t.id === "employment");
   const employeeAssets = editing ? assets.filter((a) => a.assigned_to === editing.id) : [];
   const employeeGoals = editing ? goals.filter((g) => g.employee === editing.id) : [];
@@ -484,15 +549,15 @@ function EmployeeDatabasePage() {
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Document</th>
-                <th className="px-5 py-3 font-medium">Employee</th>
-                <th className="px-5 py-3 font-medium">Type</th>
-                <th className="px-5 py-3 font-medium">Uploaded</th>
+                <SortableTh label="Document" sortKeyName="title" activeKey={docSortKey} dir={docSortDir} onSort={toggleDocSort} />
+                <SortableTh label="Employee" sortKeyName="employee" activeKey={docSortKey} dir={docSortDir} onSort={toggleDocSort} />
+                <SortableTh label="Type" sortKeyName="doc_type" activeKey={docSortKey} dir={docSortDir} onSort={toggleDocSort} />
+                <SortableTh label="Uploaded" sortKeyName="uploaded_at" activeKey={docSortKey} dir={docSortDir} onSort={toggleDocSort} />
                 <th className="px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {documents.map((d) => (
+              {visibleDocuments.map((d) => (
                 <tr key={d.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Document">
                     <a
@@ -525,26 +590,33 @@ function EmployeeDatabasePage() {
               ))}
             </tbody>
           </table>
-          {!loading && documents.length === 0 && (
+          {!loading && visibleDocuments.length === 0 && (
             <div className="p-10 text-center text-sm text-ink-soft">No documents uploaded yet.</div>
           )}
           {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+          <PaginationFooter
+            page={docsPage}
+            totalPages={docsTotalPages}
+            total={docsTotal}
+            pageSize={docsPageSize}
+            onPageChange={setDocsPage}
+          />
         </div>
       ) : (
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Department</th>
-              <th className="px-5 py-3 font-medium">Manager</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Hired</th>
+              <SortableTh label="Employee" sortKeyName="name" activeKey={empSortKey} dir={empSortDir} onSort={toggleEmpSort} />
+              <SortableTh label="Department" sortKeyName="department" activeKey={empSortKey} dir={empSortDir} onSort={toggleEmpSort} />
+              <SortableTh label="Manager" sortKeyName="manager" activeKey={empSortKey} dir={empSortDir} onSort={toggleEmpSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={empSortKey} dir={empSortDir} onSort={toggleEmpSort} />
+              <SortableTh label="Hired" sortKeyName="hire_date" activeKey={empSortKey} dir={empSortDir} onSort={toggleEmpSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {employees.map((e) => (
+            {visibleEmployees.map((e) => (
               <tr key={e.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Employee">
                   <button onClick={() => openEdit(e)} className="flex items-center gap-3 text-left">
@@ -605,10 +677,17 @@ function EmployeeDatabasePage() {
             ))}
           </tbody>
         </table>
-        {!loading && employees.length === 0 && (
+        {!loading && visibleEmployees.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No employees yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter
+          page={empPage}
+          totalPages={empTotalPages}
+          total={empTotal}
+          pageSize={empPageSize}
+          onPageChange={setEmpPage}
+        />
       </div>
       )}
 

@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   assetsApi,
   byodComplianceApi,
@@ -50,7 +55,15 @@ const emptyForm: FormState = {
   notes: "",
 };
 
-export default function ByodPolicyPage() {
+export default function ByodPolicyPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ByodPolicyPage />
+    </Suspense>
+  );
+}
+
+function ByodPolicyPage() {
   const { withAuth } = useAuth();
   const [checks, setChecks] = useState<BYODCompliance[]>([]);
   const [byodAssets, setByodAssets] = useState<Asset[]>([]);
@@ -75,6 +88,29 @@ export default function ByodPolicyPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const searched = useTableSearch(checks, (c) =>
+    [c.employee_detail.name, c.asset_tag, c.compliance_status, c.notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (c, key) => {
+    switch (key) {
+      case "employee":
+        return c.employee_detail.name;
+      case "device":
+        return c.asset_tag;
+      case "encryption":
+        return c.encryption_enabled ? 1 : 0;
+      case "antivirus":
+        return c.antivirus_installed ? 1 : 0;
+      case "passcode":
+        return c.passcode_enabled ? 1 : 0;
+      case "status":
+        return c.compliance_status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     setForm({ ...emptyForm, asset: byodAssets[0] ? String(byodAssets[0].id) : "" });
@@ -148,17 +184,17 @@ export default function ByodPolicyPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Device</th>
-              <th className="px-5 py-3 font-medium">Encryption</th>
-              <th className="px-5 py-3 font-medium">Antivirus</th>
-              <th className="px-5 py-3 font-medium">Passcode</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Device" sortKeyName="device" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Encryption" sortKeyName="encryption" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Antivirus" sortKeyName="antivirus" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Passcode" sortKeyName="passcode" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {checks.map((c) => (
+            {visible.map((c) => (
               <tr key={c.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5 font-semibold text-ink" data-label="Employee">
                   <EmployeeLink employee={c.employee_detail} />
@@ -191,7 +227,7 @@ export default function ByodPolicyPage() {
             ))}
           </tbody>
         </table>
-        {!loading && checks.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">
             No BYOD compliance checks yet. Mark a device as BYOD on{" "}
             <Link href="/dashboard/asset-inventory" className="text-primary hover:underline">
@@ -201,6 +237,7 @@ export default function ByodPolicyPage() {
           </div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

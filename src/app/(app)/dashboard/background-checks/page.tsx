@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import CandidateLink from "@/components/dashboard/CandidateLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   backgroundChecksApi,
   backgroundChecksCsv,
@@ -48,7 +53,15 @@ interface FormState {
 
 const emptyForm: FormState = { candidate: "", check_type: "Education", status: "Pending", notes: "" };
 
-export default function BackgroundChecksPage() {
+export default function BackgroundChecksPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <BackgroundChecksPage />
+    </Suspense>
+  );
+}
+
+function BackgroundChecksPage() {
   const { withAuth } = useAuth();
   const [checks, setChecks] = useState<BackgroundCheck[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -126,6 +139,27 @@ export default function BackgroundChecksPage() {
     await load();
   }
 
+  const searched = useTableSearch(checks, (b) =>
+    [b.candidate_detail.name, typeLabels[b.check_type], b.status, b.notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (b, key) => {
+    switch (key) {
+      case "candidate":
+        return b.candidate_detail.name;
+      case "check_type":
+        return typeLabels[b.check_type];
+      case "status":
+        return b.status;
+      case "initiated_at":
+        return b.initiated_at;
+      case "completed_at":
+        return b.completed_at;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -156,16 +190,34 @@ export default function BackgroundChecksPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Screening Type</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Initiated</th>
-              <th className="px-5 py-3 font-medium">Completed</th>
+              <SortableTh label="Candidate" sortKeyName="candidate" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Screening Type"
+                sortKeyName="check_type"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh
+                label="Initiated"
+                sortKeyName="initiated_at"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableTh
+                label="Completed"
+                sortKeyName="completed_at"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {checks.map((b) => (
+            {visible.map((b) => (
               <tr key={b.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Candidate">
                   <CandidateLink candidate={b.candidate_detail} />
@@ -206,10 +258,11 @@ export default function BackgroundChecksPage() {
             ))}
           </tbody>
         </table>
-        {!loading && checks.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No background checks yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

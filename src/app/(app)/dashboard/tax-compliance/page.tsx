@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import StatCard from "@/components/dashboard/StatCard";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   taxProfilesApi,
@@ -52,7 +57,15 @@ const emptyForm: FormState = {
   last_reviewed: "",
 };
 
-export default function TaxCompliancePage() {
+export default function TaxCompliancePageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <TaxCompliancePage />
+    </Suspense>
+  );
+}
+
+function TaxCompliancePage() {
   const { withAuth } = useAuth();
   const [profiles, setProfiles] = useState<TaxProfile[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -140,6 +153,27 @@ export default function TaxCompliancePage() {
   const actionRequiredCount = profiles.filter((p) => p.compliance_status === "Action Required").length;
   const countryCount = new Set(profiles.map((p) => p.country)).size;
 
+  const searched = useTableSearch(profiles, (p) =>
+    [p.employee_detail.name, p.country, p.tax_id, p.filing_status, p.compliance_status, p.notes].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (p, key) => {
+    switch (key) {
+      case "employee":
+        return p.employee_detail.name;
+      case "country":
+        return p.country;
+      case "filing_status":
+        return p.filing_status;
+      case "compliance_status":
+        return p.compliance_status;
+      case "last_reviewed":
+        return p.last_reviewed;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -174,16 +208,16 @@ export default function TaxCompliancePage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Country</th>
-              <th className="px-5 py-3 font-medium">Filing status</th>
-              <th className="px-5 py-3 font-medium">Compliance</th>
-              <th className="px-5 py-3 font-medium">Last reviewed</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Country" sortKeyName="country" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Filing status" sortKeyName="filing_status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Compliance" sortKeyName="compliance_status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Last reviewed" sortKeyName="last_reviewed" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {profiles.map((p) => (
+            {visible.map((p) => (
               <tr
                 key={p.id}
                 onClick={() => openEdit(p)}
@@ -224,10 +258,11 @@ export default function TaxCompliancePage() {
             ))}
           </tbody>
         </table>
-        {!loading && profiles.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No tax profiles yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

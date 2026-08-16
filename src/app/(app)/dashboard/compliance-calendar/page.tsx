@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ArrowLeftRight, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   complianceEventsApi,
   complianceEventsCsv,
@@ -67,7 +72,15 @@ const emptyForm: FormState = {
   notes: "",
 };
 
-export default function ComplianceCalendarPage() {
+export default function ComplianceCalendarPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ComplianceCalendarPage />
+    </Suspense>
+  );
+}
+
+function ComplianceCalendarPage() {
   const { withAuth } = useAuth();
   const [events, setEvents] = useState<ComplianceEvent[]>([]);
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
@@ -228,6 +241,31 @@ export default function ComplianceCalendarPage() {
     await load();
   }
 
+  const searched = useTableSearch(events, (ev) =>
+    [ev.title, ev.country, ev.category, ev.responsible_party, ev.linked_payroll_run_period, ev.notes]
+      .filter(Boolean)
+      .join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (ev, key) => {
+    switch (key) {
+      case "title":
+        return ev.title;
+      case "country":
+        return ev.country;
+      case "category":
+        return ev.category;
+      case "due_date":
+        return ev.due_date;
+      case "amount":
+        return ev.amount ? Number(ev.amount) : null;
+      case "calendar_status":
+        return ev.calendar_status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -342,19 +380,19 @@ export default function ComplianceCalendarPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Event</th>
-              <th className="px-5 py-3 font-medium">Country</th>
-              <th className="px-5 py-3 font-medium">Category</th>
-              <th className="px-5 py-3 font-medium">Due date</th>
-              <th className="px-5 py-3 font-medium">Amount</th>
+              <SortableTh label="Event" sortKeyName="title" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Country" sortKeyName="country" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Category" sortKeyName="category" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Due date" sortKeyName="due_date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Amount" sortKeyName="amount" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium">Responsible party</th>
               <th className="px-5 py-3 font-medium">Linked payroll run</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Status" sortKeyName="calendar_status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {events.map((ev) => (
+            {visible.map((ev) => (
               <tr
                 key={ev.id}
                 onClick={() => openEdit(ev)}
@@ -405,10 +443,11 @@ export default function ComplianceCalendarPage() {
             ))}
           </tbody>
         </table>
-        {!loading && events.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No compliance events yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

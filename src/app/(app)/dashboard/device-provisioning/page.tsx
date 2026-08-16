@@ -1,19 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Laptop, UserCheck, UserX } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import AssetLink from "@/components/dashboard/AssetLink";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
 import StatCard from "@/components/dashboard/StatCard";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import { assetsApi, type Asset } from "@/lib/it-assets-api";
 
 const inputClass =
   "rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none";
 
-export default function DeviceProvisioningPage() {
+export default function DeviceProvisioningPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <DeviceProvisioningPage />
+    </Suspense>
+  );
+}
+
+function DeviceProvisioningPage() {
   const { withAuth } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -39,6 +52,51 @@ export default function DeviceProvisioningPage() {
   const assigned = assets.filter((a) => a.assigned_to);
   const inRepair = assets.filter((a) => a.status === "In Repair").length;
   const retired = assets.filter((a) => a.status === "Retired").length;
+
+  const availableSearched = useTableSearch(available, (a) => [a.name, a.asset_tag, a.category].filter(Boolean).join(" "));
+  const {
+    sorted: availableSorted,
+    sortKey: availableSortKey,
+    sortDir: availableSortDir,
+    toggleSort: toggleAvailableSort,
+  } = useSortableList(availableSearched, (a, key) => (key === "name" ? a.name : null));
+  const {
+    pageItems: visibleAvailable,
+    page: availablePage,
+    setPage: setAvailablePage,
+    totalPages: availableTotalPages,
+    total: availableTotal,
+    pageSize: availablePageSize,
+  } = usePagination(availableSorted);
+
+  const assignedSearched = useTableSearch(assigned, (a) =>
+    [a.name, a.asset_tag, a.category, a.assigned_to_detail?.name].filter(Boolean).join(" ")
+  );
+  const {
+    sorted: assignedSorted,
+    sortKey: assignedSortKey,
+    sortDir: assignedSortDir,
+    toggleSort: toggleAssignedSort,
+  } = useSortableList(assignedSearched, (a, key) => {
+    switch (key) {
+      case "name":
+        return a.name;
+      case "assigned_to":
+        return a.assigned_to_detail?.name;
+      case "assigned_at":
+        return a.assigned_at;
+      default:
+        return null;
+    }
+  });
+  const {
+    pageItems: visibleAssigned,
+    page: assignedPage,
+    setPage: setAssignedPage,
+    totalPages: assignedTotalPages,
+    total: assignedTotal,
+    pageSize: assignedPageSize,
+  } = usePagination(assignedSorted);
 
   async function assign(asset: Asset) {
     const employeeId = assignTarget[asset.id];
@@ -85,13 +143,13 @@ export default function DeviceProvisioningPage() {
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Asset</th>
+                <SortableTh label="Asset" sortKeyName="name" activeKey={availableSortKey} dir={availableSortDir} onSort={toggleAvailableSort} />
                 <th className="px-5 py-3 font-medium">Assign to</th>
                 <th className="px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {available.map((a) => (
+              {visibleAvailable.map((a) => (
                 <tr key={a.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Asset">
                     <div className="flex items-center gap-2">
@@ -126,9 +184,16 @@ export default function DeviceProvisioningPage() {
               ))}
             </tbody>
           </table>
-          {!loading && available.length === 0 && (
+          {!loading && visibleAvailable.length === 0 && (
             <div className="p-8 text-center text-sm text-ink-soft">No unassigned devices in stock.</div>
           )}
+          <PaginationFooter
+            page={availablePage}
+            totalPages={availableTotalPages}
+            total={availableTotal}
+            pageSize={availablePageSize}
+            onPageChange={setAvailablePage}
+          />
         </div>
       </div>
 
@@ -138,14 +203,14 @@ export default function DeviceProvisioningPage() {
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Asset</th>
-                <th className="px-5 py-3 font-medium">Assigned to</th>
-                <th className="px-5 py-3 font-medium">Since</th>
+                <SortableTh label="Asset" sortKeyName="name" activeKey={assignedSortKey} dir={assignedSortDir} onSort={toggleAssignedSort} />
+                <SortableTh label="Assigned to" sortKeyName="assigned_to" activeKey={assignedSortKey} dir={assignedSortDir} onSort={toggleAssignedSort} />
+                <SortableTh label="Since" sortKeyName="assigned_at" activeKey={assignedSortKey} dir={assignedSortDir} onSort={toggleAssignedSort} />
                 <th className="px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {assigned.map((a) => (
+              {visibleAssigned.map((a) => (
                 <tr key={a.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Asset">
                     <AssetLink asset={a} />
@@ -166,10 +231,17 @@ export default function DeviceProvisioningPage() {
               ))}
             </tbody>
           </table>
-          {!loading && assigned.length === 0 && (
+          {!loading && visibleAssigned.length === 0 && (
             <div className="p-8 text-center text-sm text-ink-soft">No devices provisioned yet.</div>
           )}
           {loading && <div className="p-8 text-center text-sm text-ink-soft">Loading…</div>}
+          <PaginationFooter
+            page={assignedPage}
+            totalPages={assignedTotalPages}
+            total={assignedTotal}
+            pageSize={assignedPageSize}
+            onPageChange={setAssignedPage}
+          />
         </div>
       </div>
     </div>

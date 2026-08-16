@@ -7,6 +7,11 @@ import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import CandidateLink from "@/components/dashboard/CandidateLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import Link from "next/link";
 import {
   candidatesApi,
@@ -109,7 +114,29 @@ function CandidatesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = filter === "All" ? candidates : candidates.filter((c) => c.stage === filter);
+  const byStage = filter === "All" ? candidates : candidates.filter((c) => c.stage === filter);
+  const searched = useTableSearch(byStage, (c) =>
+    [c.name, c.role, c.client_name, c.city, c.country, c.stage, c.source].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (c, key) => {
+    switch (key) {
+      case "name":
+        return c.name;
+      case "client":
+        return c.client_name;
+      case "location":
+        return [c.city, c.country].filter(Boolean).join(", ");
+      case "stage":
+        return c.stage;
+      case "source":
+        return c.source;
+      case "applied_at":
+        return c.applied_at;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: filtered, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     setEditing(null);
@@ -210,12 +237,12 @@ function CandidatesPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Candidate</th>
-              <th className="px-5 py-3 font-medium">Client</th>
-              <th className="px-5 py-3 font-medium">Location</th>
-              <th className="px-5 py-3 font-medium">Stage</th>
-              <th className="px-5 py-3 font-medium">Source</th>
-              <th className="px-5 py-3 font-medium">Applied</th>
+              <SortableTh label="Candidate" sortKeyName="name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Client" sortKeyName="client" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Location" sortKeyName="location" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Stage" sortKeyName="stage" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Source" sortKeyName="source" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Applied" sortKeyName="applied_at" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
@@ -285,6 +312,7 @@ function CandidatesPage() {
           <div className="p-10 text-center text-sm text-ink-soft">No candidates in this stage.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

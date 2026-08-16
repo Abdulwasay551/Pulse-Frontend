@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, shiftsApi, shiftsCsv, type Employee, type Shift } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -23,7 +28,15 @@ interface FormState {
   notes: string;
 }
 
-export default function ShiftSchedulingPage() {
+export default function ShiftSchedulingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ShiftSchedulingPage />
+    </Suspense>
+  );
+}
+
+function ShiftSchedulingPage() {
   const { withAuth } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -58,8 +71,26 @@ export default function ShiftSchedulingPage() {
   }, []);
 
   const departments = ["All", ...Array.from(new Set(employees.map((e) => e.department).filter(Boolean)))];
-  const visible =
+  const byDepartment =
     departmentFilter === "All" ? shifts : shifts.filter((s) => s.employee_detail.department === departmentFilter);
+  const searched = useTableSearch(byDepartment, (s) =>
+    [s.employee_detail.name, s.employee_detail.department, s.date, s.start_time, s.end_time].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (s, key) => {
+    switch (key) {
+      case "employee":
+        return s.employee_detail.name;
+      case "department":
+        return s.employee_detail.department;
+      case "date":
+        return s.date;
+      case "start_time":
+        return s.start_time;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
 
   function openCreate() {
     setEditing(null);
@@ -149,10 +180,10 @@ export default function ShiftSchedulingPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Department</th>
-              <th className="px-5 py-3 font-medium">Date</th>
-              <th className="px-5 py-3 font-medium">Shift</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Department" sortKeyName="department" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Date" sortKeyName="date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Shift" sortKeyName="start_time" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
@@ -191,6 +222,7 @@ export default function ShiftSchedulingPage() {
         </table>
         {!loading && visible.length === 0 && <div className="p-10 text-center text-sm text-ink-soft">No shifts yet.</div>}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (

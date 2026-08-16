@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { employeesApi, type Employee } from "@/lib/people-api";
 import {
   benefitPlansApi,
@@ -68,7 +73,15 @@ const emptyEnrollmentForm: EnrollmentFormState = {
   status: "Pending",
 };
 
-export default function BenefitsEnrollmentPage() {
+export default function BenefitsEnrollmentPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <BenefitsEnrollmentPage />
+    </Suspense>
+  );
+}
+
+function BenefitsEnrollmentPage() {
   const { withAuth } = useAuth();
   const [plans, setPlans] = useState<BenefitPlan[]>([]);
   const [enrollments, setEnrollments] = useState<BenefitEnrollment[]>([]);
@@ -212,6 +225,25 @@ export default function BenefitsEnrollmentPage() {
     await load();
   }
 
+  const searchedPlans = useTableSearch(plans, (p) => [p.name, p.plan_type, p.provider].filter(Boolean).join(" "));
+
+  const searchedEnrollments = useTableSearch(enrollments, (en) =>
+    [en.employee_detail.name, en.plan_detail.name, en.coverage_level, en.status].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searchedEnrollments, (en, key) => {
+    switch (key) {
+      case "employee":
+        return en.employee_detail.name;
+      case "plan":
+        return en.plan_detail.name;
+      case "coverage_level":
+        return en.coverage_level;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visibleEnrollments, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
@@ -238,7 +270,7 @@ export default function BenefitsEnrollmentPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {plans.map((p) => (
+          {searchedPlans.map((p) => (
             <div
               key={p.id}
               onClick={() => openEditPlan(p)}
@@ -274,9 +306,9 @@ export default function BenefitsEnrollmentPage() {
               <div className="mt-2 text-xs text-ink-soft">{p.enrolled_count} enrolled</div>
             </div>
           ))}
-          {!loading && plans.length === 0 && (
+          {!loading && searchedPlans.length === 0 && (
             <div className="col-span-full rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
-              No benefit plans yet.
+              {plans.length === 0 ? "No benefit plans yet." : "No plans match your search."}
             </div>
           )}
         </div>
@@ -305,15 +337,15 @@ export default function BenefitsEnrollmentPage() {
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Employee</th>
-                <th className="px-5 py-3 font-medium">Plan</th>
-                <th className="px-5 py-3 font-medium">Coverage</th>
+                <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableTh label="Plan" sortKeyName="plan" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableTh label="Coverage" sortKeyName="coverage_level" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {enrollments.map((en) => (
+              {visibleEnrollments.map((en) => (
                 <tr
                   key={en.id}
                   onClick={() => openEditEnrollment(en)}
@@ -352,10 +384,11 @@ export default function BenefitsEnrollmentPage() {
               ))}
             </tbody>
           </table>
-          {!loading && enrollments.length === 0 && (
+          {!loading && visibleEnrollments.length === 0 && (
             <div className="p-10 text-center text-sm text-ink-soft">No enrollments yet.</div>
           )}
           {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+          <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
         </div>
       </div>
 

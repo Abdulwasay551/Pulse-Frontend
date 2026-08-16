@@ -7,6 +7,11 @@ import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import { appraisalsApi, appraisalsCsv, getEmployeeScore, type Appraisal, type AppraisalStatus } from "@/lib/talent-api";
 import { employeesApi, type Employee, type EmployeeLite } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
@@ -180,6 +185,62 @@ function AppraisalsPage() {
     searchTerm ? a.employee_detail.name.toLowerCase().includes(searchTerm) : true
   );
 
+  const searchedScoreRows = useTableSearch(visibleScoreRows, (row) => row.employee.name);
+  const {
+    sorted: sortedScoreRows,
+    sortKey: scoreSortKey,
+    sortDir: scoreSortDir,
+    toggleSort: toggleScoreSort,
+  } = useSortableList(searchedScoreRows, (row, key) => {
+    switch (key) {
+      case "employee":
+        return row.employee.name;
+      case "score":
+        return row.score;
+      default:
+        return null;
+    }
+  });
+  const {
+    pageItems: pagedScoreRows,
+    page: scorePage,
+    setPage: setScorePage,
+    totalPages: scoreTotalPages,
+    total: scoreTotal,
+    pageSize: scorePageSize,
+  } = usePagination(sortedScoreRows);
+
+  const searchedAppraisals = useTableSearch(visibleAppraisals, (a) =>
+    [a.employee_detail.name, a.period, a.status].filter(Boolean).join(" ")
+  );
+  const {
+    sorted: sortedAppraisals,
+    sortKey: apprSortKey,
+    sortDir: apprSortDir,
+    toggleSort: toggleApprSort,
+  } = useSortableList(searchedAppraisals, (a, key) => {
+    switch (key) {
+      case "employee":
+        return a.employee_detail.name;
+      case "period":
+        return a.period;
+      case "rating":
+        return a.overall_rating;
+      case "status":
+        return a.status;
+      default:
+        return null;
+    }
+  });
+  const {
+    pageItems: pagedAppraisals,
+    page: apprPage,
+    setPage: setApprPage,
+    totalPages: apprTotalPages,
+    total: apprTotal,
+    pageSize: apprPageSize,
+  } = usePagination(sortedAppraisals);
+
   const employeeAppraisals = employeeDetail ? appraisals.filter((a) => a.employee === employeeDetail.id) : [];
   const employeeFinalized = employeeAppraisals.filter((a) => a.status === "Finalized").length;
   const employeeAvgRating = employeeAppraisals.length
@@ -249,13 +310,13 @@ function AppraisalsPage() {
           <table className="eh-table w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-                <th className="px-5 py-3 font-medium">Employee</th>
-                <th className="px-5 py-3 font-medium">Score</th>
+                <SortableTh label="Employee" sortKeyName="employee" activeKey={scoreSortKey} dir={scoreSortDir} onSort={toggleScoreSort} />
+                <SortableTh label="Score" sortKeyName="score" activeKey={scoreSortKey} dir={scoreSortDir} onSort={toggleScoreSort} />
                 <th className="px-5 py-3 font-medium">Notes</th>
               </tr>
             </thead>
             <tbody>
-              {visibleScoreRows.map((row) => (
+              {pagedScoreRows.map((row) => (
                 <tr key={row.employee.id} className="border-b border-line last:border-0 hover:bg-cream/60">
                   <td className="px-5 py-3.5" data-label="Employee">
                     <EmployeeLink employee={row.employee} />
@@ -270,27 +331,28 @@ function AppraisalsPage() {
               ))}
             </tbody>
           </table>
-          {!scoresLoading && visibleScoreRows.length === 0 && (
+          {!scoresLoading && pagedScoreRows.length === 0 && (
             <div className="p-10 text-center text-sm text-ink-soft">
               {searchTerm ? `No employees matching "${employeeSearch}".` : "Add employees to see their scores here."}
             </div>
           )}
           {scoresLoading && <div className="p-10 text-center text-sm text-ink-soft">Computing scores…</div>}
+          <PaginationFooter page={scorePage} totalPages={scoreTotalPages} total={scoreTotal} pageSize={scorePageSize} onPageChange={setScorePage} />
         </div>
       ) : (
       <div className="overflow-hidden rounded-2xl border border-line bg-card">
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Period</th>
-              <th className="px-5 py-3 font-medium">Rating</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={apprSortKey} dir={apprSortDir} onSort={toggleApprSort} />
+              <SortableTh label="Period" sortKeyName="period" activeKey={apprSortKey} dir={apprSortDir} onSort={toggleApprSort} />
+              <SortableTh label="Rating" sortKeyName="rating" activeKey={apprSortKey} dir={apprSortDir} onSort={toggleApprSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={apprSortKey} dir={apprSortDir} onSort={toggleApprSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {visibleAppraisals.map((a) => (
+            {pagedAppraisals.map((a) => (
               <tr
                 key={a.id}
                 onClick={() => openEmployeeDetail(a)}
@@ -328,12 +390,13 @@ function AppraisalsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && visibleAppraisals.length === 0 && (
+        {!loading && pagedAppraisals.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">
             {searchTerm ? `No employees matching "${employeeSearch}".` : "No appraisals yet."}
           </div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={apprPage} totalPages={apprTotalPages} total={apprTotal} pageSize={apprPageSize} onPageChange={setApprPage} />
       </div>
       )}
 

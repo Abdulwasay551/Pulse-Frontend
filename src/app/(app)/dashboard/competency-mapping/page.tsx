@@ -6,6 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import { useTableSearch } from "@/lib/use-table-search";
 import { competencyRatingsApi, competencyRatingsCsv, type CompetencyRating } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 
@@ -82,14 +83,18 @@ function CompetencyMappingPage() {
     await load();
   }
 
+  const searchedRatings = useTableSearch(ratings, (r) =>
+    [r.employee_detail.name, r.competency].filter(Boolean).join(" ")
+  );
+
   const groupedByEmployee = employees
-    .map((emp) => ({ employee: emp, ratings: ratings.filter((r) => r.employee === emp.id) }))
+    .map((emp) => ({ employee: emp, ratings: searchedRatings.filter((r) => r.employee === emp.id) }))
     .filter((g) => g.ratings.length > 0);
 
-  const skillNames = Array.from(new Set(ratings.map((r) => r.competency))).sort((a, b) => a.localeCompare(b));
+  const skillNames = Array.from(new Set(searchedRatings.map((r) => r.competency))).sort((a, b) => a.localeCompare(b));
   const groupedBySkill = skillNames.map((competency) => ({
     competency,
-    ratings: ratings.filter((r) => r.competency === competency),
+    ratings: searchedRatings.filter((r) => r.competency === competency),
   }));
 
   return (

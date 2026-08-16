@@ -6,6 +6,9 @@ import { ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import {
   employeesApi,
   surveyResponsesApi,
@@ -76,7 +79,11 @@ function SurveysPage() {
   }, []);
 
   const active = surveys.find((s) => s.id === activeId) ?? null;
-  const visible = activeKind ? surveys.filter((s) => s.kind === activeKind) : surveys;
+  const byKind = activeKind ? surveys.filter((s) => s.kind === activeKind) : surveys;
+  const searched = useTableSearch(byKind, (s) =>
+    [s.title, s.kind, s.is_open ? "Open" : "Closed", s.questions.join(" ")].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
 
   function openCreate() {
     setForm({ kind: activeKind ?? "Survey", title: "", questions: [""], frequency: "" });
@@ -311,32 +318,39 @@ function SurveysPage() {
           {activeKind ? `No ${activeKind === "Pulse Check" ? "pulse checks" : "surveys"} yet.` : "No surveys yet."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((s) => (
-            <div
-              key={s.id}
-              onClick={() => setActiveId(s.id)}
-              className="cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-cream-dim px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap text-ink-soft">
-                  {s.kind}
-                </span>
-                {!s.is_open && (
-                  <span className="rounded-full bg-maroon-soft px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap text-maroon">
-                    Closed
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {visible.map((s) => (
+              <div
+                key={s.id}
+                onClick={() => setActiveId(s.id)}
+                className="cursor-pointer rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="rounded-full bg-cream-dim px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap text-ink-soft">
+                    {s.kind}
                   </span>
-                )}
+                  {!s.is_open && (
+                    <span className="rounded-full bg-maroon-soft px-2.5 py-1 text-[10.5px] font-semibold whitespace-nowrap text-maroon">
+                      Closed
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display text-base font-bold text-ink">{s.title}</h3>
+                <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.questions.join(" · ")}</p>
+                <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
+                  <span className="text-ink-soft">{s.response_count} responses</span>
+                  {s.average_rating !== null && <span className="font-semibold text-ink">{s.average_rating}/5</span>}
+                </div>
               </div>
-              <h3 className="font-display text-base font-bold text-ink">{s.title}</h3>
-              <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.questions.join(" · ")}</p>
-              <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
-                <span className="text-ink-soft">{s.response_count} responses</span>
-                {s.average_rating !== null && <span className="font-semibold text-ink">{s.average_rating}/5</span>}
-              </div>
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-card">
+              <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {showForm && (

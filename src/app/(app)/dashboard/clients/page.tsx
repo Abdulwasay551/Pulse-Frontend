@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { clientsApi, clientsCsv, type Client, type ClientStatus } from "@/lib/recruit-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -40,7 +43,15 @@ const emptyForm: FormState = {
   status: "Prospect",
 };
 
-export default function ClientsPage() {
+export default function ClientsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <ClientsPage />
+    </Suspense>
+  );
+}
+
+function ClientsPage() {
   const { withAuth } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +122,11 @@ export default function ClientsPage() {
     await load();
   }
 
+  const searched = useTableSearch(clients, (c) =>
+    [c.name, c.industry, c.contact_name, c.contact_email, c.status].filter(Boolean).join(" ")
+  );
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(searched);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -133,13 +149,13 @@ export default function ClientsPage() {
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           Loading…
         </div>
-      ) : clients.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
           No clients yet.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {clients.map((c) => (
+          {visible.map((c) => (
             <div key={c.id} className="group relative rounded-2xl border border-line bg-card p-5">
               <div className="mb-3 flex items-start justify-between gap-2">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -191,6 +207,12 @@ export default function ClientsPage() {
               {c.contact_number && <p className="mt-1 text-[11px] text-ink-soft">{c.contact_number}</p>}
             </div>
           ))}
+        </div>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className="mt-4 rounded-2xl border border-line bg-card">
+          <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
         </div>
       )}
 

@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { usePagination } from "@/lib/use-pagination";
 import { careerPathsApi, careerPathsCsv, type CareerPath } from "@/lib/talent-api";
 import { employeesApi, type Employee } from "@/lib/people-api";
 
@@ -25,7 +28,15 @@ interface FormState {
 
 const emptyForm: FormState = { employee: "", current_role: "", target_role: "", department: "", milestones: "", target_date: "" };
 
-export default function CareerPathsPage() {
+export default function CareerPathsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <CareerPathsPage />
+    </Suspense>
+  );
+}
+
+function CareerPathsPage() {
   const { withAuth } = useAuth();
   const [paths, setPaths] = useState<CareerPath[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -50,6 +61,11 @@ export default function CareerPathsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const searchedPaths = useTableSearch(paths, (p) =>
+    [p.employee_detail.name, p.current_role, p.target_role, p.department].filter(Boolean).join(" ")
+  );
+  const { pageItems: pagedPaths, page, setPage, totalPages, total, pageSize } = usePagination(searchedPaths);
 
   function openCreate() {
     setEditing(null);
@@ -123,11 +139,12 @@ export default function CareerPathsPage() {
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
-      ) : paths.length === 0 ? (
+      ) : pagedPaths.length === 0 ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">No career paths mapped yet.</div>
       ) : (
+        <>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {paths.map((p) => (
+          {pagedPaths.map((p) => (
             <div
               key={p.id}
               onClick={() => openEdit(p)}
@@ -160,6 +177,8 @@ export default function CareerPathsPage() {
             </div>
           ))}
         </div>
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
+        </>
       )}
 
       {showForm && (

@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
 import EmployeeLink from "@/components/dashboard/EmployeeLink";
+import SortableTh from "@/components/dashboard/SortableTh";
+import PaginationFooter from "@/components/dashboard/PaginationFooter";
+import { useTableSearch } from "@/lib/use-table-search";
+import { useSortableList } from "@/lib/use-sortable-list";
+import { usePagination } from "@/lib/use-pagination";
 import {
   employeesApi,
   leaveRequestsApi,
@@ -31,7 +36,15 @@ const inputClass =
   "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
 const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
 
-export default function LeaveRequestsPage() {
+export default function LeaveRequestsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <LeaveRequestsPage />
+    </Suspense>
+  );
+}
+
+function LeaveRequestsPage() {
   const { withAuth } = useAuth();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -105,6 +118,27 @@ export default function LeaveRequestsPage() {
     await load();
   }
 
+  const searched = useTableSearch(requests, (r) =>
+    [r.employee_detail.name, r.leave_type, r.status, r.start_date, r.end_date].filter(Boolean).join(" ")
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableList(searched, (r, key) => {
+    switch (key) {
+      case "employee":
+        return r.employee_detail.name;
+      case "leave_type":
+        return r.leave_type;
+      case "start_date":
+        return r.start_date;
+      case "hours":
+        return r.hours != null ? Number(r.hours) : null;
+      case "status":
+        return r.status;
+      default:
+        return null;
+    }
+  });
+  const { pageItems: visible, page, setPage, totalPages, total, pageSize } = usePagination(sorted);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -132,16 +166,16 @@ export default function LeaveRequestsPage() {
         <table className="eh-table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="px-5 py-3 font-medium">Employee</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium">Dates</th>
-              <th className="px-5 py-3 font-medium">Hours</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <SortableTh label="Employee" sortKeyName="employee" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Type" sortKeyName="leave_type" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Dates" sortKeyName="start_date" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Hours" sortKeyName="hours" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <th className="px-5 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
-            {requests.map((r) => (
+            {visible.map((r) => (
               <tr key={r.id} className="group border-b border-line last:border-0 hover:bg-cream/60">
                 <td className="px-5 py-3.5" data-label="Employee">
                   <EmployeeLink employee={r.employee_detail} />
@@ -191,10 +225,11 @@ export default function LeaveRequestsPage() {
             ))}
           </tbody>
         </table>
-        {!loading && requests.length === 0 && (
+        {!loading && visible.length === 0 && (
           <div className="p-10 text-center text-sm text-ink-soft">No leave requests yet.</div>
         )}
         {loading && <div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}
+        <PaginationFooter page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
       </div>
 
       {showForm && (
