@@ -214,29 +214,33 @@ export default function Topbar({
           ))}
       </nav>
 
-      {activeModule ? (
-        <div className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex">
-          <Search className="h-4 w-4 shrink-0 text-ink-soft" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={activeModule.searchPlaceholder}
-            className="w-full bg-transparent text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
-          />
-          {searchInput && (
-            <button
-              onClick={clearSearch}
-              aria-label="Clear search"
-              className="shrink-0 rounded-full p-0.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="flex-1" />
-      )}
+      {/* This spacer soaks up all the leftover row width and right-aligns
+          the search box against it, so the box sits snugly against the
+          bell/profile icons instead of stretching (or floating with an
+          awkward gap) across whatever space is left after the module nav. */}
+      <div className="flex flex-1 items-center justify-end">
+        {activeModule && (
+          <div className="hidden w-full max-w-xs items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2 sm:flex lg:max-w-sm">
+            <Search className="h-4 w-4 shrink-0 text-ink-soft" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={activeModule.searchPlaceholder}
+              className="w-full bg-transparent text-[13px] text-ink placeholder:text-ink-soft/70 focus:outline-none"
+            />
+            {searchInput && (
+              <button
+                onClick={clearSearch}
+                aria-label="Clear search"
+                className="shrink-0 rounded-full p-0.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="relative" ref={notifRef}>
