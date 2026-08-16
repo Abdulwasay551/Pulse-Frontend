@@ -105,7 +105,7 @@ export default function Sidebar({
         } lg:translate-x-0 ${collapsed ? "lg:w-[76px]" : "lg:w-64"}`}
       >
         <div className="flex items-center gap-2 px-4 py-5">
-          <Logo className="h-8 w-8 shrink-0" />
+          <Logo className="h-10 w-10 shrink-0" />
           {!collapsed && (
             <span className="font-display text-lg font-bold whitespace-nowrap text-cream">
               Pulse

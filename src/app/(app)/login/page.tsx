@@ -44,7 +44,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <Logo className="h-10 w-10" />
+          <Logo className="h-14 w-14" />
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold text-ink">Welcome back</h1>
             <p className="mt-1 text-sm text-ink-soft">Log in to your Pulse desk</p>
@@ -104,8 +104,8 @@ export default function LoginPage() {
 
         <p className="mt-5 text-center text-[11px] text-ink-soft">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary hover:text-primary-dark">
-            Sign up
+          <Link href="/book-a-demo" className="text-primary hover:text-primary-dark">
+            Book a demo
           </Link>
         </p>
       </div>

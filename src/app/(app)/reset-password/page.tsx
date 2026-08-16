@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <Logo className="h-10 w-10" />
+          <Logo className="h-14 w-14" />
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold text-ink">Choose a new password</h1>
             <p className="mt-1 text-sm text-ink-soft">Make it something you haven&apos;t used before</p>

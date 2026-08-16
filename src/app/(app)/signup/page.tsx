@@ -22,6 +22,39 @@ function SignupForm() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [checkingInvite, setCheckingInvite] = useState(!!inviteToken);
 
+  // Public self-signup (creating a brand-new organization from scratch) is
+  // disabled — Book a Demo is the only public conversion path now. This page
+  // still has to work for the *invite* flow though: an HR admin inviting
+  // their own employee lands here with ?invite=<token> to set up their
+  // account, which is a different, still-needed feature, not public signup.
+  if (!inviteToken) {
+    return (
+      <div className="relative w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <Logo className="h-14 w-14" />
+          <div className="text-center">
+            <h1 className="font-display text-2xl font-bold text-ink">Let&apos;s talk first</h1>
+            <p className="mt-1 text-sm text-ink-soft">
+              Self-signup isn&apos;t open right now — book a demo and we&apos;ll get your desk set up.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/book-a-demo"
+          className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-cream transition-colors hover:bg-primary-dark"
+        >
+          Book a Demo
+        </Link>
+        <p className="mt-5 text-center text-[11px] text-ink-soft">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary hover:text-primary-dark">
+            Log in
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [organizationName, setOrganizationName] = useState("");
@@ -83,10 +116,10 @@ function SignupForm() {
         <div className="rounded-2xl border border-line bg-card p-7 text-center shadow-lg shadow-ink/5">
           <p className="text-sm text-maroon">{inviteError}</p>
           <Link
-            href="/signup"
+            href="/book-a-demo"
             className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-dark"
           >
-            Sign up without an invite instead
+            Book a demo instead
           </Link>
         </div>
       ) : (

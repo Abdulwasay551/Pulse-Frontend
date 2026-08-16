@@ -57,12 +57,13 @@ export default function Hero({ data }: { data: HomePageData }) {
             >
               {data.hero_cta_primary_label}
             </Link>
-            <Link
+            {/* Self-signup is disabled — Book a Demo above is the sole public CTA now. */}
+            {/* <Link
               href="/signup"
               className="rounded-lg border border-line bg-card px-7 py-3 text-center text-sm font-semibold text-ink transition-colors hover:bg-cream-dim"
             >
               {data.hero_cta_secondary_label}
-            </Link>
+            </Link> */}
           </div>
 
           <p
