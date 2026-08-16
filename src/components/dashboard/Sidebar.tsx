@@ -170,7 +170,8 @@ export default function Sidebar({
                 <SidebarLink
                   key={section.label}
                   href={href}
-                  label={section.label}
+                  label={section.sidebarLabel ?? section.label}
+                  fullLabel={section.label}
                   icon={section.icon}
                   active={href === currentUrl}
                   collapsed={collapsed}
@@ -208,22 +209,26 @@ export default function Sidebar({
                     <SectionIcon className="h-[18px] w-[18px] shrink-0" />
                   </button>
                   {isOpenCollapsed && (
-                    <div className="absolute top-0 left-full z-[60] ml-2 w-60 rounded-xl border border-cream/10 bg-primary-dark p-2 shadow-xl">
+                    <div className="animate-sidebar-flyout-in absolute top-0 left-full z-[60] ml-2 w-60 origin-left rounded-xl border border-cream/10 bg-primary-dark p-2 shadow-xl">
                       {section.href ? (
                         <Link
                           href={section.href}
                           onClick={onClose}
+                          title={section.sidebarLabel ? section.label : undefined}
                           className="block px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40 transition-colors hover:text-primary-light"
                         >
-                          {section.label}
+                          {section.sidebarLabel ?? section.label}
                         </Link>
                       ) : (
-                        <div className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40">
-                          {section.label}
+                        <div
+                          title={section.sidebarLabel ? section.label : undefined}
+                          className="px-2 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-cream/40"
+                        >
+                          {section.sidebarLabel ?? section.label}
                         </div>
                       )}
                       <div className="flex flex-col gap-0.5">
-                        {section.features.map((feature) => {
+                        {section.features.map((feature, i) => {
                           const href = featureHref(activeModule, section, feature);
                           const active = href === currentUrl;
                           const Icon = feature.icon;
@@ -232,14 +237,19 @@ export default function Sidebar({
                               key={href + feature.label}
                               href={href}
                               onClick={onClose}
-                              className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] transition-colors ${
+                              style={{ animationDelay: `${60 + Math.min(i, 6) * 30}ms` }}
+                              className={`animate-sidebar-flyout-row-in flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] transition-colors ${
                                 active
                                   ? "bg-primary-light/15 text-primary-light"
                                   : "text-cream/70 hover:bg-cream/10 hover:text-cream"
                               }`}
                             >
                               <Icon className="h-[15px] w-[15px] shrink-0" />
-                              <SidebarHoverLabel label={feature.label} className="min-w-0 flex-1" />
+                              <SidebarHoverLabel
+                                label={feature.sidebarLabel ?? feature.label}
+                                fullLabel={feature.label}
+                                className="min-w-0 flex-1"
+                              />
                               {!feature.href && (
                                 <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
                                   Soon
@@ -275,7 +285,11 @@ export default function Sidebar({
                       }`}
                     >
                       <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                      <SidebarHoverLabel label={section.label} className="min-w-0 flex-1 text-left" />
+                      <SidebarHoverLabel
+                        label={section.sidebarLabel ?? section.label}
+                        fullLabel={section.label}
+                        className="min-w-0 flex-1 text-left"
+                      />
                     </Link>
                     <button
                       onClick={() => toggleSection(section.label)}
@@ -283,7 +297,7 @@ export default function Sidebar({
                       className="shrink-0 rounded-lg p-2.5 text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
                     >
                       <ChevronDown
-                        className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-out ${isOpen ? "rotate-180" : ""}`}
                       />
                     </button>
                   </div>
@@ -293,15 +307,27 @@ export default function Sidebar({
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
                   >
                     <SectionIcon className="h-[18px] w-[18px] shrink-0" />
-                    <SidebarHoverLabel label={section.label} className="min-w-0 flex-1 text-left" />
+                    <SidebarHoverLabel
+                      label={section.sidebarLabel ?? section.label}
+                      fullLabel={section.label}
+                      className="min-w-0 flex-1 text-left"
+                    />
                     <ChevronDown
-                      className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      className={`h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-out ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                 )}
-                {isOpen && (
-                  <div className="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5 border-l border-cream/10 pl-3">
-                    {section.features.map((feature) => {
+                <div
+                  className="grid transition-[grid-template-rows] duration-300 ease-out"
+                  style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                >
+                  <div className="overflow-hidden">
+                  <div
+                    className={`mt-0.5 mb-1 ml-4 flex flex-col gap-0.5 border-l border-cream/10 pl-3 transition-all duration-300 ease-out ${
+                      isOpen ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+                    }`}
+                  >
+                    {section.features.map((feature, i) => {
                       const href = featureHref(activeModule, section, feature);
                       const active = href === currentUrl;
                       const Icon = feature.icon;
@@ -310,6 +336,7 @@ export default function Sidebar({
                           key={href + feature.label}
                           href={href}
                           onClick={onClose}
+                          style={{ transitionDelay: isOpen ? `${Math.min(i, 6) * 35}ms` : "0ms" }}
                           className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] transition-colors ${
                             active
                               ? "bg-primary-light/15 text-primary-light"
@@ -317,7 +344,7 @@ export default function Sidebar({
                           }`}
                         >
                           <Icon className="h-[15px] w-[15px] shrink-0" />
-                          <SidebarHoverLabel label={feature.label} />
+                          <SidebarHoverLabel label={feature.sidebarLabel ?? feature.label} fullLabel={feature.label} />
                           {!feature.href && (
                             <span className="ml-auto shrink-0 rounded-full bg-cream/10 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-cream/50">
                               Soon
@@ -327,7 +354,8 @@ export default function Sidebar({
                       );
                     })}
                   </div>
-                )}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -370,6 +398,7 @@ export default function Sidebar({
 function SidebarLink({
   href,
   label,
+  fullLabel,
   icon: Icon,
   active,
   collapsed,
@@ -377,6 +406,8 @@ function SidebarLink({
 }: {
   href: string;
   label: string;
+  /** The un-abbreviated name, shown on hover when it differs from `label`. */
+  fullLabel?: string;
   icon: React.ComponentType<{ className?: string }>;
   active: boolean;
   collapsed: boolean;
@@ -386,13 +417,13 @@ function SidebarLink({
     <Link
       href={href}
       onClick={onClick}
-      title={collapsed ? label : undefined}
+      title={collapsed ? (fullLabel ?? label) : undefined}
       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] transition-colors ${
         active ? "bg-primary-light/15 text-primary-light" : "text-cream/60 hover:bg-cream/5 hover:text-cream"
       }`}
     >
       <Icon className="h-[18px] w-[18px] shrink-0" />
-      {!collapsed && <SidebarHoverLabel label={label} className="min-w-0 flex-1" />}
+      {!collapsed && <SidebarHoverLabel label={label} fullLabel={fullLabel} className="min-w-0 flex-1" />}
     </Link>
   );
 }
