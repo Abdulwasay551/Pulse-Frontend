@@ -18,12 +18,12 @@ import {
   Send,
   Settings,
   Star,
-  ThermometerSun,
   TrendingUp,
   UserPlus,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import {
   attendanceRecordsApi,
   employeesApi,
@@ -179,29 +179,6 @@ function ModuleCardsGrid({ items }: { items: typeof modules }) {
           </Link>
         );
       })}
-    </div>
-  );
-}
-
-function Hero({ title, description }: { title: string; description: string }) {
-  return (
-    <div
-      className="relative overflow-hidden px-6 py-16 text-center sm:py-20"
-      style={{
-        backgroundImage: [
-          "radial-gradient(circle at 15% 20%, rgba(115,182,196,0.35), transparent 45%)",
-          "radial-gradient(circle at 85% 80%, rgba(185,134,31,0.18), transparent 45%)",
-          "radial-gradient(rgba(255,255,255,0.06) 1.5px, transparent 1.5px)",
-        ].join(", "),
-        backgroundSize: "auto, auto, 22px 22px",
-        backgroundColor: "var(--primary-dark)",
-      }}
-    >
-      <span className="mb-3 inline-block text-xs font-semibold tracking-wide text-primary-light uppercase">
-        The Pulse Suite
-      </span>
-      <h1 className="font-display text-3xl font-bold text-cream md:text-5xl">{title}</h1>
-      <p className="mx-auto mt-4 max-w-lg text-cream/70 md:text-lg">{description}</p>
     </div>
   );
 }
@@ -504,7 +481,7 @@ function TimeSheetCard({ records, loading }: { records: AttendanceRecord[]; load
 }
 
 function HrHome({ firstName }: { firstName: string }) {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [todaysAttendance, setTodaysAttendance] = useState<AttendanceRecord[]>([]);
@@ -561,7 +538,12 @@ function HrHome({ firstName }: { firstName: string }) {
 
   return (
     <div className="-m-4 bg-white sm:-m-6">
-      <Hero title={`Hi, ${firstName}`} description="Pick a module to get to work — every part of your business, in one place." />
+      <WelcomeBanner
+        name={firstName}
+        role={user?.role}
+        description="Pick a module to get to work — every part of your business, in one place."
+        notificationCount={health?.flags.length}
+      />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -619,7 +601,7 @@ function NarrowRoleHome({ firstName, role }: { firstName: string; role: UserRole
 
   return (
     <div className="-m-4 bg-white sm:-m-6">
-      <Hero title={`Hi, ${firstName}`} description="Pick up where you left off." />
+      <WelcomeBanner name={firstName} role={role} description="Pick up where you left off." />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {role === "Department Head" && (
@@ -878,7 +860,7 @@ function SupportTicketsCard({
 }
 
 function EmployeeHome({ firstName }: { firstName: string }) {
-  const { withAuth } = useAuth();
+  const { withAuth, user } = useAuth();
   const [data, setData] = useState<MyDashboard | null>(null);
   const [checklist, setChecklist] = useState<MyOnboardingChecklist | null>(null);
   const [talent, setTalent] = useState<MyTalent | null>(null);
@@ -969,16 +951,16 @@ function EmployeeHome({ firstName }: { firstName: string }) {
 
   return (
     <div className="-m-4 sm:-m-6">
-      <Hero title={`Welcome back, ${firstName}`} description="Here's what's on your plate today." />
+      <WelcomeBanner
+        name={firstName}
+        role={user?.role}
+        description="Here's what's on your plate today."
+        notificationCount={data?.work_health.flags.length}
+      />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs text-ink-soft">
           <span>{today}</span>
-          {data?.weather && (
-            <span className="flex items-center gap-1">
-              <ThermometerSun className="h-3.5 w-3.5" /> {Math.round(data.weather.temperature_f)}°F · {data.weather.location}
-            </span>
-          )}
         </div>
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <HealthGauge title="My work health" health={data?.work_health ?? null} loading={loading} />

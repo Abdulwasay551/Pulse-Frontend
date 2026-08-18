@@ -35,6 +35,7 @@ export interface Employee {
   source_candidate: number | null;
   portal_token: string;
   documents: EmployeeDocument[];
+  linked_user: { id: number; username: string; role: string | null } | null;
   created_at: string;
   updated_at: string;
 }

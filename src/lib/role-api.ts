@@ -82,6 +82,22 @@ export function getOrgHealth(token: string) {
   return apiFetch<HealthScore>("/org-health/", { method: "GET" }, token);
 }
 
+// --- Dashboard banner: region + weather, shared by every role's home ---
+
+export interface BannerInfo {
+  region: string;
+  weather: { temperature_f: number; location: string } | null;
+  can_edit_region: boolean;
+}
+
+export function getBannerInfo(token: string) {
+  return apiFetch<BannerInfo>("/banner-info/", { method: "GET" }, token);
+}
+
+export function updateBannerRegion(token: string, region: string) {
+  return apiFetch<BannerInfo>("/banner-info/", { method: "PATCH", body: JSON.stringify({ region }) }, token);
+}
+
 export interface ClockStatus {
   clock_in: string | null;
   clock_out: string | null;

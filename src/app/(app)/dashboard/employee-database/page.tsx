@@ -127,6 +127,13 @@ function EmployeeDatabasePage() {
   const searchParams = useSearchParams();
   const [view, setView] = useState<ViewMode>(searchParams.get("view") === "documents" ? "documents" : "employees");
   const { withAuth } = useAuth();
+  // "View as this user" lives only in Django Admin (see core/admin.py's
+  // UserAdmin "Impersonate" column + core/admin_impersonate_views.py) —
+  // not exposed here. Kept commented out below rather than deleted in
+  // case that decision changes.
+  // const router = useRouter();
+  // const [impersonateError, setImpersonateError] = useState<string | null>(null);
+  // const [impersonateLoading, setImpersonateLoading] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -381,6 +388,19 @@ function EmployeeDatabasePage() {
     setLoginError(null);
     setLoginResult(null);
   }
+
+  // async function handleImpersonate(userId: number) {
+  //   setImpersonateError(null);
+  //   setImpersonateLoading(true);
+  //   try {
+  //     await impersonate(userId);
+  //     router.push("/dashboard");
+  //   } catch (err) {
+  //     setImpersonateError(err instanceof ApiError ? err.message : "Couldn't view as this user. Please try again.");
+  //   } finally {
+  //     setImpersonateLoading(false);
+  //   }
+  // }
 
   async function handleSendInvite(ev: React.FormEvent) {
     ev.preventDefault();
@@ -1101,7 +1121,38 @@ function EmployeeDatabasePage() {
 
       {loginTarget && (
         <Modal title={`Manage login · ${loginTarget.name}`} onClose={() => setLoginTarget(null)}>
-          {loginResult ? (
+          {/* Impersonation from this HR-facing UI is intentionally disabled —
+              "view as this user" is a Django Admin-only action (see
+              core/admin.py's UserAdmin "Impersonate" link), not something
+              exposed in the app itself. Left here, commented out, in case
+              that decision changes later — the linked_user data + handler
+              below are already wired and ready to use.
+          {loginTarget.linked_user ? (
+            <div>
+              <p className="mb-4 text-sm text-ink-soft">
+                {loginTarget.name} already has a login —{" "}
+                <span className="font-semibold text-ink">{loginTarget.linked_user.username}</span>{" "}
+                ({loginTarget.linked_user.role}).
+              </p>
+              {impersonateError && (
+                <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+                  {impersonateError}
+                </div>
+              )}
+              <button
+                onClick={() => handleImpersonate(loginTarget.linked_user!.id)}
+                disabled={impersonateLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+              >
+                <Eye className="h-4 w-4" />
+                {impersonateLoading ? "Loading…" : "View as this user"}
+              </button>
+              <p className="mt-3 text-xs text-ink-soft">
+                Opens the dashboard signed in as {loginTarget.linked_user.username} — a banner stays up the whole
+                time so you can return to your own account in one click.
+              </p>
+            </div>
+          ) : */ loginResult ? (
             <div className="rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">{loginResult}</div>
           ) : (
             <>
