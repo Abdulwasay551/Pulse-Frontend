@@ -17,10 +17,8 @@ function Chip({
 }) {
   return (
     <span
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap ${
-        tone === "alert"
-          ? "border-amber/40 bg-amber/15 text-amber-light"
-          : "border-cream/15 bg-cream/10 text-cream/85"
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${
+        tone === "alert" ? "border-amber bg-amber-soft text-amber" : "border-cream/25 bg-cream text-ink"
       }`}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -107,27 +105,27 @@ export default function WelcomeBanner({
           {role && <Chip icon={UserRound}>{role}</Chip>}
 
           {editing ? (
-            <span className="flex items-center gap-1 rounded-full border border-cream/15 bg-cream/10 py-1 pr-1.5 pl-3">
+            <span className="flex items-center gap-1 rounded-full border border-cream/25 bg-cream py-1 pr-1.5 pl-3">
               <input
                 autoFocus
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && saveRegion()}
                 placeholder="City, Country"
-                className="w-32 bg-transparent text-xs text-cream placeholder:text-cream/40 focus:outline-none"
+                className="w-32 bg-transparent text-xs text-ink placeholder:text-ink-soft/60 focus:outline-none"
               />
               <button
                 onClick={saveRegion}
                 disabled={saving}
                 aria-label="Save region"
-                className="rounded-full p-1 text-cream/70 hover:bg-cream/10 hover:text-cream disabled:opacity-50"
+                className="rounded-full p-1 text-ink-soft hover:bg-cream-dim hover:text-ink disabled:opacity-50"
               >
                 <Check className="h-3 w-3" />
               </button>
               <button
                 onClick={() => setEditing(false)}
                 aria-label="Cancel"
-                className="rounded-full p-1 text-cream/70 hover:bg-cream/10 hover:text-cream"
+                className="rounded-full p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
               >
                 <X className="h-3 w-3" />
               </button>
