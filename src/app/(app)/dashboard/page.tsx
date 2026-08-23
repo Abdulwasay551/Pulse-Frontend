@@ -6,18 +6,14 @@ import {
   ArrowRight,
   Banknote,
   CalendarDays,
-  ClipboardCheck,
   Clock,
   IdCard,
   Laptop,
-  LifeBuoy,
   LogIn,
   LogOut,
   Megaphone,
-  Receipt,
   Send,
   Settings,
-  Star,
   TrendingUp,
   UserPlus,
   Users,
@@ -38,21 +34,11 @@ import {
   clockIn,
   clockOut,
   getMyDashboard,
-  getMyOnboardingChecklist,
-  getMyTalent,
   getOrgHealth,
-  listMyBenefitClaims,
-  listMySupportTickets,
-  submitMyBenefitClaim,
-  submitMySupportTicket,
   type HealthScore,
   type MyDashboard,
-  type MyOnboardingChecklist,
-  type MyTalent,
   type PendingTask,
 } from "@/lib/role-api";
-import type { BenefitClaim } from "@/lib/payroll-benefits-api";
-import type { SupportTicket } from "@/lib/it-assets-api";
 import { ApiError, type UserRole } from "@/lib/auth-api";
 import { NARROW_ROLES, visibleModuleKeysFor } from "@/lib/role-access";
 
@@ -619,275 +605,17 @@ function NarrowRoleHome({ firstName, role }: { firstName: string; role: UserRole
   );
 }
 
-const taskStatusTone: Record<string, string> = {
-  Pending: "bg-ink-soft/15 text-ink-soft",
-  "In Progress": "bg-amber-soft text-amber",
-  Done: "bg-primary/15 text-primary",
-  Open: "bg-amber-soft text-amber",
-  Resolved: "bg-primary/15 text-primary",
-  Closed: "bg-ink-soft/15 text-ink-soft",
-  Submitted: "bg-ink-soft/15 text-ink-soft",
-  "Under Review": "bg-amber-soft text-amber",
-  Approved: "bg-primary/15 text-primary",
-  Rejected: "bg-maroon-soft text-maroon",
-  Paid: "bg-primary/15 text-primary",
-};
-
-function OnboardingChecklistCard({ checklist, loading }: { checklist: MyOnboardingChecklist | null; loading: boolean }) {
-  if (!loading && (!checklist || !checklist.onboarding)) return null;
-
-  return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
-        <ClipboardCheck className="h-5 w-5 text-primary" /> My onboarding checklist
-      </h2>
-      {loading || !checklist?.onboarding ? (
-        <p className="text-sm text-ink-soft">Loading…</p>
-      ) : (
-        <>
-          <div className="mb-3 text-xs text-ink-soft">Status: {checklist.onboarding.status}</div>
-          <div className="flex flex-col gap-2">
-            {checklist.tasks.map((t) => (
-              <div key={t.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-cream px-3.5 py-2.5">
-                <span className="truncate text-sm text-ink">{t.title}</span>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${taskStatusTone[t.status] ?? "bg-ink-soft/15 text-ink-soft"}`}>
-                  {t.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function MyPerformanceCard({ talent, loading }: { talent: MyTalent | null; loading: boolean }) {
-  return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
-        <Star className="h-5 w-5 text-primary" /> My performance
-      </h2>
-      {loading ? (
-        <p className="text-sm text-ink-soft">Loading…</p>
-      ) : !talent || (talent.appraisals.length === 0 && talent.competency_ratings.length === 0) ? (
-        <p className="text-sm text-ink-soft">Nothing on file yet.</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {talent.appraisals.length > 0 && (
-            <div>
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">Appraisals</div>
-              <div className="flex flex-col gap-2">
-                {talent.appraisals.slice(0, 3).map((a) => (
-                  <div key={a.id} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="truncate text-ink">{a.period}</span>
-                    <span className="shrink-0 text-ink-soft">{a.overall_rating}/5 · {a.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {talent.competency_ratings.length > 0 && (
-            <div>
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">Competencies</div>
-              <div className="flex flex-wrap gap-1.5">
-                {talent.competency_ratings.slice(0, 8).map((c) => (
-                  <span key={c.id} className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-                    {c.competency} · {c.level}/5
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function BenefitClaimsCard({
-  claims,
-  loading,
-  onSubmit,
-  submitting,
-}: {
-  claims: BenefitClaim[];
-  loading: boolean;
-  onSubmit: (data: { claim_type: string; amount: string; description: string }) => void;
-  submitting: boolean;
-}) {
-  const [claimType, setClaimType] = useState("");
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-
-  return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
-        <Receipt className="h-5 w-5 text-primary" /> Benefit claims
-      </h2>
-      {loading ? (
-        <p className="mb-4 text-sm text-ink-soft">Loading…</p>
-      ) : claims.length === 0 ? (
-        <p className="mb-4 text-sm text-ink-soft">No claims submitted yet.</p>
-      ) : (
-        <div className="mb-4 flex flex-col gap-2">
-          {claims.slice(0, 5).map((c) => (
-            <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-cream px-3.5 py-2.5">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-ink">{c.claim_type}</div>
-                <div className="text-xs text-ink-soft">${c.amount}</div>
-              </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${taskStatusTone[c.status] ?? "bg-ink-soft/15 text-ink-soft"}`}>
-                {c.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-      <form
-        onSubmit={(ev) => {
-          ev.preventDefault();
-          if (!claimType.trim() || !amount) return;
-          onSubmit({ claim_type: claimType.trim(), amount, description });
-          setClaimType("");
-          setAmount("");
-          setDescription("");
-        }}
-        className="flex flex-col gap-2 border-t border-line pt-4"
-      >
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            value={claimType}
-            onChange={(ev) => setClaimType(ev.target.value)}
-            placeholder="Claim type"
-            className="rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-          />
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(ev) => setAmount(ev.target.value)}
-            placeholder="Amount"
-            className="rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-          />
-        </div>
-        <input
-          value={description}
-          onChange={(ev) => setDescription(ev.target.value)}
-          placeholder="Description (optional)"
-          className="rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={submitting || !claimType.trim() || !amount}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-50"
-        >
-          {submitting ? "Submitting…" : "Submit claim"}
-        </button>
-      </form>
-    </div>
-  );
-}
-
-function SupportTicketsCard({
-  tickets,
-  loading,
-  onSubmit,
-  submitting,
-}: {
-  tickets: SupportTicket[];
-  loading: boolean;
-  onSubmit: (data: { subject: string; description: string }) => void;
-  submitting: boolean;
-}) {
-  const [subject, setSubject] = useState("");
-  const [description, setDescription] = useState("");
-
-  return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
-        <LifeBuoy className="h-5 w-5 text-primary" /> Support tickets
-      </h2>
-      {loading ? (
-        <p className="mb-4 text-sm text-ink-soft">Loading…</p>
-      ) : tickets.length === 0 ? (
-        <p className="mb-4 text-sm text-ink-soft">No tickets submitted yet.</p>
-      ) : (
-        <div className="mb-4 flex flex-col gap-2">
-          {tickets.slice(0, 5).map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-cream px-3.5 py-2.5">
-              <span className="truncate text-sm font-medium text-ink">{t.subject}</span>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${taskStatusTone[t.status] ?? "bg-ink-soft/15 text-ink-soft"}`}>
-                {t.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-      <form
-        onSubmit={(ev) => {
-          ev.preventDefault();
-          if (!subject.trim()) return;
-          onSubmit({ subject: subject.trim(), description });
-          setSubject("");
-          setDescription("");
-        }}
-        className="flex flex-col gap-2 border-t border-line pt-4"
-      >
-        <input
-          value={subject}
-          onChange={(ev) => setSubject(ev.target.value)}
-          placeholder="Subject"
-          className="rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-        />
-        <input
-          value={description}
-          onChange={(ev) => setDescription(ev.target.value)}
-          placeholder="Description (optional)"
-          className="rounded-lg border border-line bg-cream px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={submitting || !subject.trim()}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-50"
-        >
-          {submitting ? "Submitting…" : "Submit ticket"}
-        </button>
-      </form>
-    </div>
-  );
-}
-
 function EmployeeHome({ firstName }: { firstName: string }) {
   const { withAuth, user } = useAuth();
   const [data, setData] = useState<MyDashboard | null>(null);
-  const [checklist, setChecklist] = useState<MyOnboardingChecklist | null>(null);
-  const [talent, setTalent] = useState<MyTalent | null>(null);
-  const [claims, setClaims] = useState<BenefitClaim[]>([]);
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [clocking, setClocking] = useState(false);
-  const [submittingClaim, setSubmittingClaim] = useState(false);
-  const [submittingTicket, setSubmittingTicket] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     try {
-      const [dashboard, onboarding, myTalent, myClaims, myTickets] = await withAuth((token) =>
-        Promise.all([
-          getMyDashboard(token),
-          getMyOnboardingChecklist(token),
-          getMyTalent(token),
-          listMyBenefitClaims(token),
-          listMySupportTickets(token),
-        ])
-      );
+      const dashboard = await withAuth((token) => getMyDashboard(token));
       setData(dashboard);
-      setChecklist(onboarding);
-      setTalent(myTalent);
-      setClaims(myClaims);
-      setTickets(myTickets);
     } finally {
       setLoading(false);
     }
@@ -897,28 +625,6 @@ function EmployeeHome({ firstName }: { firstName: string }) {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function handleSubmitClaim(claim: { claim_type: string; amount: string; description: string }) {
-    setSubmittingClaim(true);
-    try {
-      await withAuth((token) => submitMyBenefitClaim(token, claim));
-      const myClaims = await withAuth((token) => listMyBenefitClaims(token));
-      setClaims(myClaims);
-    } finally {
-      setSubmittingClaim(false);
-    }
-  }
-
-  async function handleSubmitTicket(ticket: { subject: string; description: string }) {
-    setSubmittingTicket(true);
-    try {
-      await withAuth((token) => submitMySupportTicket(token, ticket));
-      const myTickets = await withAuth((token) => listMySupportTickets(token));
-      setTickets(myTickets);
-    } finally {
-      setSubmittingTicket(false);
-    }
-  }
 
   async function handleClockIn() {
     setClocking(true);
@@ -986,9 +692,18 @@ function EmployeeHome({ firstName }: { firstName: string }) {
             </div>
           </div>
         </div>
-        <div className="mb-6">
+
+        <h2 className="mb-4 font-display text-lg font-bold text-ink">All modules</h2>
+        <ModuleCardsGrid items={modules} />
+
+        <div className="mt-10 mb-6">
           <PendingTasksCard tasks={data?.pending_tasks ?? []} loading={loading} />
         </div>
+
+        {/* Clock in/out stays here as a daily quick-action — everything else
+            (goals, onboarding checklist, benefit claims, support tickets)
+            now lives inside its own module page, reachable via the grid
+            above, rather than being duplicated on this dashboard too. */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
@@ -1031,55 +746,7 @@ function EmployeeHome({ firstName }: { firstName: string }) {
             )}
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl border border-line bg-card p-6">
-              <h2 className="mb-4 font-display text-lg font-bold text-ink">Goals & KPIs</h2>
-              {loading ? (
-                <p className="text-sm text-ink-soft">Loading…</p>
-              ) : !data || data.goals.length === 0 ? (
-                <p className="text-sm text-ink-soft">No goals set yet.</p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {data.goals.slice(0, 4).map((g) => (
-                    <div key={g.id}>
-                      <div className="mb-1 flex justify-between text-xs">
-                        <span className="truncate text-ink">{g.title}</span>
-                        <span className="shrink-0 text-ink-soft">{g.progress}%</span>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${g.progress}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <RecentActivityCard items={data?.recent_activity ?? []} loading={loading} />
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <OnboardingChecklistCard checklist={checklist} loading={loading} />
-          <MyPerformanceCard talent={talent} loading={loading} />
-          <BenefitClaimsCard claims={claims} loading={loading} onSubmit={handleSubmitClaim} submitting={submittingClaim} />
-          <SupportTicketsCard tickets={tickets} loading={loading} onSubmit={handleSubmitTicket} submitting={submittingTicket} />
-        </div>
-
-        <h2 className="mt-10 mb-4 font-display text-lg font-bold text-ink">Your access</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Link
-            href="/dashboard/settings"
-            className="group flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Settings className="h-5 w-5" />
-            </span>
-            <div>
-              <h3 className="font-display text-sm font-bold text-ink">My Profile & Settings</h3>
-              <p className="text-xs text-ink-soft">Update your name, email, and password.</p>
-            </div>
-          </Link>
+          <RecentActivityCard items={data?.recent_activity ?? []} loading={loading} />
         </div>
       </div>
     </div>
