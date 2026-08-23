@@ -1,18 +1,35 @@
 import type { UserRole } from "./auth-api";
-import { hrefPathname, type ModuleFeatureSection } from "./dashboard-modules";
+import { dashboardModules, hrefPathname, type ModuleDef, type ModuleFeatureSection } from "./dashboard-modules";
 
-/** Every role sees every one of the 5 modules now — the Control Hierarchy
- * Matrix rollout replaced "hide the whole module for this role" with
- * "show every module, filter which *sub-features* are reachable inside
- * it" (see ROLE_ALLOWED_PATHS below). Kept as a function (rather than
- * deleting it outright) since dashboard-modules.ts's module-grid
- * components still call it — it now just always returns null, i.e. no
- * restriction, for every role. Left as a hook point rather than inlining
- * `null` everywhere, in case a role ever needs true module-level hiding
- * again.
- */
-export function visibleModuleKeysFor(_role: UserRole | undefined): string[] | null {
-  return null;
+/** True if `allowed` (a role's ROLE_ALLOWED_PATHS list) reaches at least one
+ * page anywhere inside `moduleDef` — its own hub, an extra link, a
+ * section's own sub-hub, or any feature leaf. A module the matrix gives a
+ * role zero rows in (e.g. Recruiter in Payroll & Benefits, IT Manager in
+ * Talent Management) won't match anything here. */
+function moduleHasAnyAllowedPath(moduleDef: ModuleDef, allowed: string[]): boolean {
+  if (allowed.includes(hrefPathname(moduleDef.overviewHref))) return true;
+  if (moduleDef.extraLinks.some((l) => allowed.includes(hrefPathname(l.href)))) return true;
+  return moduleDef.sections.some(
+    (s) =>
+      (s.href && allowed.includes(hrefPathname(s.href))) ||
+      s.features.some((f) => f.href && allowed.includes(hrefPathname(f.href)))
+  );
+}
+
+/** Which of the 5 modules a role should even see a tile for. The Control
+ * Hierarchy Matrix rollout replaced "hide the whole module" with "show
+ * every module, filter which *sub-features* are reachable inside it" —
+ * but that only holds when the role has *some* reachable page in the
+ * module at all. A role with zero matrix rows anywhere in a module (e.g.
+ * Recruiter has no Payroll & Benefits or IT & Asset Management access
+ * whatsoever) would otherwise get a tile that 404s/redirects on click, so
+ * this computes real per-role visibility from ROLE_ALLOWED_PATHS instead
+ * of a hardcoded list — a role missing from that map (HR, Auditor,
+ * legacy) is unrestricted and sees every module, same as always. */
+export function visibleModuleKeysFor(role: UserRole | undefined): string[] | null {
+  const allowed = role ? ROLE_ALLOWED_PATHS[role] : undefined;
+  if (!allowed) return null;
+  return dashboardModules.filter((m) => moduleHasAnyAllowedPath(m, allowed)).map((m) => m.key);
 }
 
 /** Roles that get a narrower, module-grid dashboard home instead of the
@@ -106,6 +123,16 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
   // `survey.kind` — this can't be split at the page-route level; kept
   // reachable for both roles, same approximation the backend agent noted).
   Contractor: EMPLOYEE_MATRIX_PATHS.filter((p) => p !== "/dashboard/promotions"),
+  // IT Admin (ITA): full control across IT & Asset Management (unchanged),
+  // plus the matrix's real partial grants elsewhere — Onboarding's Portal
+  // Access/Device Assignment tasks and Offboarding's Access Status/Hardware
+  // Clearance tasks (ITA=RWA on those rows specifically, everything else in
+  // Recruit is '-'), and read-only on People's Employee Database (the
+  // "Company Property" sub-tab links back to IT & Asset Mgmt). Recruit and
+  // People's *module* hubs are included so those pages are actually
+  // reachable — Talent Management and Payroll & Benefits get zero rows
+  // anywhere in the matrix for ITA, so they're deliberately absent here and
+  // get hidden entirely by visibleModuleKeysFor instead of 404ing on click.
   "IT Manager": [
     "/dashboard",
     "/dashboard/settings",
@@ -120,9 +147,22 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/device-tracker",
     "/dashboard/byod-policy",
     "/dashboard/asset-recovery",
+    "/dashboard/recruit",
     "/dashboard/onboarding",
     "/dashboard/offboarding",
+    "/dashboard/people",
+    "/dashboard/employee-records",
+    "/dashboard/employee-database",
   ],
+  // Finance Admin (FA): full control across Payroll & Benefits (unchanged),
+  // plus "read access to comp-adjacent data elsewhere" per its role
+  // definition — Recruit's Recruiting Dashboard/Client/Job Openings/Offer
+  // Letters (comp terms) and Offboarding's Hardware Clearance (asset
+  // write-off impact); People's Overtime/Time Off/Promotions (payroll cost
+  // impact) and Employee Database; IT & Asset's Overview/Device
+  // Provisioning/Asset Inventory/Warranty Tracking (read) and Device
+  // Tracker (its one write exception in that module). Talent Management
+  // gets zero rows anywhere for FA, so it's absent and hidden entirely.
   "Finance Admin": [
     "/dashboard",
     "/dashboard/settings",
@@ -138,7 +178,26 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/benefits-enrollment",
     "/dashboard/claims",
     "/dashboard/benefit-cost-analysis",
+    "/dashboard/recruit",
+    "/dashboard/acquisition",
+    "/dashboard/clients",
+    "/dashboard/requisitions",
+    "/dashboard/offer-letters",
+    "/dashboard/offboarding",
+    "/dashboard/people",
+    "/dashboard/attendance-management",
     "/dashboard/attendance",
+    "/dashboard/leave-requests",
+    "/dashboard/employee-engagement",
+    "/dashboard/promotions",
+    "/dashboard/employee-records",
+    "/dashboard/employee-database",
+    "/dashboard/it-assets",
+    "/dashboard/assets-management",
+    "/dashboard/device-provisioning",
+    "/dashboard/asset-inventory",
+    "/dashboard/warranty-tracking",
+    "/dashboard/device-tracker",
   ],
   "Department Head": [
     "/dashboard",
@@ -174,6 +233,13 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/it-support",
     "/dashboard/device-tracker",
   ],
+  // Recruiter (REC): full Recruit access (unchanged) plus its two real
+  // partial grants elsewhere — People's Employee Database & Org Chart
+  // (both 'R', to see who's already on staff) and Talent's Recruiter
+  // Feedback ('RW', notes left on a placed candidate post-hire). Payroll &
+  // Benefits and IT & Asset Management get zero rows anywhere for REC, so
+  // they're deliberately absent here and hidden entirely rather than
+  // showing a tile that redirects on click.
   Recruiter: [
     "/dashboard",
     "/dashboard/settings",
@@ -191,6 +257,12 @@ export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
     "/dashboard/offboarding",
     "/dashboard/rehire-pool",
     "/dashboard/analytics",
+    "/dashboard/people",
+    "/dashboard/employee-records",
+    "/dashboard/employee-database",
+    "/dashboard/org-chart",
+    "/dashboard/talent",
+    "/dashboard/goals-appraisal",
     "/dashboard/recruiter-feedback",
   ],
 };
