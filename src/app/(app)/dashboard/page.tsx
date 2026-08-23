@@ -1090,7 +1090,12 @@ export default function DashboardHubPage() {
   const { user } = useAuth();
   const firstName = (user ? [user.first_name].filter(Boolean).join(" ") || user.username : "") || "there";
 
-  if (user?.role === "Employee") return <EmployeeHome firstName={firstName} />;
+  // Contractor is "a restricted Employee variant" per the Control
+  // Hierarchy Matrix — same self-service home (clock-in, goals, etc, all
+  // already gated to Employee-or-Contractor server-side in
+  // core/my_views.py), narrower access enforced within each module
+  // instead of a different landing page.
+  if (user?.role === "Employee" || user?.role === "Contractor") return <EmployeeHome firstName={firstName} />;
   if (user?.role && NARROW_ROLES.includes(user.role)) return <NarrowRoleHome firstName={firstName} role={user.role} />;
   return <HrHome firstName={firstName} />;
 }

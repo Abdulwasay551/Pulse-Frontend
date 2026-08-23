@@ -196,19 +196,20 @@ export default function Topbar({
         </button>
       )}
 
-      <nav className="hidden shrink-0 items-center gap-1 sm:flex">
+      {/* Every role sees every module here — module-level access no longer
+          hides a whole module from the nav (see role-access.ts), only
+          individual sub-features within one are filtered per role now.
+          overflow-x-auto is the safety net for narrow viewports: each item
+          is icon-only below `xl` anyway (see ModuleNavItem), so 5 of them
+          rarely need to scroll, but they can if the window is small enough
+          that even that doesn't fit, rather than squeezing the search box
+          on the flex-1 side below it. */}
+      <nav className="hidden min-w-0 shrink items-center gap-1 overflow-x-auto sm:flex">
         {dashboardModules
           .filter((m) => {
             const visibleKeys = visibleModuleKeysFor(user?.role);
             return !visibleKeys || visibleKeys.includes(m.key);
           })
-          // Temporarily disabled — with all 5 module switchers plus the
-          // search box in one row, the search box gets squeezed down to
-          // invisible at normal widths. Hiding everything but Recruit here
-          // for now until the top nav gets a real responsive treatment;
-          // every module is still reachable via "All modules" / the
-          // dashboard hub. Drop this filter to re-enable.
-          .filter((m) => !["people", "talent", "payroll-benefits", "it-assets"].includes(m.key))
           .map((m) => (
             <ModuleNavItem key={m.key} moduleDef={m} isActive={activeModule?.key === m.key} role={user?.role} />
           ))}

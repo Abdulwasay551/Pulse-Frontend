@@ -1,6 +1,18 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
-export type UserRole = "HR" | "Employee" | "IT Manager" | "Finance Admin" | "Department Head" | "Recruiter";
+export type UserRole =
+  | "HR"
+  | "Employee"
+  | "IT Manager"
+  | "Finance Admin"
+  | "Department Head"
+  | "Recruiter"
+  // Added for the Control Hierarchy Matrix rollout — Auditor is
+  // read-everywhere/write-nowhere across every module; Contractor is a
+  // narrower Employee variant (see backend core/models.py's UserProfile
+  // and core/access_matrix.py for how each maps to real permissions).
+  | "Auditor"
+  | "Contractor";
 
 export interface AuthUser {
   id: number;

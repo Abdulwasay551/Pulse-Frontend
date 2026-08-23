@@ -1,26 +1,30 @@
 import type { UserRole } from "./auth-api";
 import { hrefPathname, type ModuleFeatureSection } from "./dashboard-modules";
 
-/** Which of the 5 dashboard-modules.ts module keys a role's nav/home should
- * show — missing role = every module (HR/legacy default). This is a UX
- * convenience only; the real access boundary is the backend's permission
- * classes, same as ROLE_ALLOWED_PATHS below. */
-export const ROLE_VISIBLE_MODULE_KEYS: Partial<Record<UserRole, string[]>> = {
-  Employee: [],
-  "IT Manager": ["it-assets"],
-  "Finance Admin": ["payroll-benefits"],
-  Recruiter: ["recruit"],
-  "Department Head": ["recruit", "people", "talent", "payroll-benefits", "it-assets"],
-};
-
-export function visibleModuleKeysFor(role: UserRole | undefined): string[] | null {
-  if (!role) return null;
-  return ROLE_VISIBLE_MODULE_KEYS[role] ?? null;
+/** Every role sees every one of the 5 modules now — the Control Hierarchy
+ * Matrix rollout replaced "hide the whole module for this role" with
+ * "show every module, filter which *sub-features* are reachable inside
+ * it" (see ROLE_ALLOWED_PATHS below). Kept as a function (rather than
+ * deleting it outright) since dashboard-modules.ts's module-grid
+ * components still call it — it now just always returns null, i.e. no
+ * restriction, for every role. Left as a hook point rather than inlining
+ * `null` everywhere, in case a role ever needs true module-level hiding
+ * again.
+ */
+export function visibleModuleKeysFor(_role: UserRole | undefined): string[] | null {
+  return null;
 }
 
-/** The 4 new roles that get a narrower, module-filtered dashboard home
- * instead of the full "all modules" HR home. */
-export const NARROW_ROLES: UserRole[] = ["IT Manager", "Finance Admin", "Department Head", "Recruiter"];
+/** Roles that get a narrower, module-grid dashboard home instead of the
+ * full HR admin home or Employee's self-service one. Auditor lands here
+ * too — "read-everywhere" doesn't need HR's admin quick-actions (add
+ * users, org settings), and the actual read-only enforcement is the
+ * backend's matrix permissions (Auditor can navigate anywhere in
+ * ROLE_ALLOWED_PATHS below since it's deliberately absent from that map,
+ * same as HR — writes 403 server-side regardless of what the UI shows).
+ * Contractor is handled separately in dashboard/page.tsx (routes through
+ * EmployeeHome, same as Employee — see the comment there). */
+export const NARROW_ROLES: UserRole[] = ["IT Manager", "Finance Admin", "Department Head", "Recruiter", "Auditor"];
 
 // Every narrower role only ever gets a hand-picked slice of routes plus
 // Settings — every module's full CRUD is HR-only both here and (as the
@@ -31,8 +35,77 @@ export const NARROW_ROLES: UserRole[] = ["IT Manager", "Finance Admin", "Departm
 // below (Sidebar, Topbar's module dropdown, module hub pages), so a page
 // is never reachable from the nav without also being an allowed route,
 // and vice versa.
+// Employee/Contractor's slice, straight off the Control Hierarchy Matrix
+// (see backend core/access_matrix.py + each module's views.py for the
+// real enforcement — this list exists so the nav/sidebar don't show a
+// link that would just 403 once clicked). Every module's own top-level
+// hub (`/dashboard/{module}`) is included for both roles regardless of
+// what the matrix's module-level "Overview" row says, so the module
+// itself always stays reachable/visible per-role differences are about
+// which *sub-features* show up inside it, not whether the module exists
+// in their nav at all; a hub page whose own aggregate summary the matrix
+// denies them just renders without that summary (each hub already
+// handles its stats call failing/being unavailable gracefully).
+const EMPLOYEE_MATRIX_PATHS = [
+  "/dashboard",
+  "/dashboard/settings",
+  "/dashboard/coming-soon",
+  // Recruit — Onboarding only (an active employee has no reason to see
+  // Offboarding, which the matrix denies EMP entirely) + their own
+  // background-check consent status.
+  "/dashboard/recruit",
+  "/dashboard/onboarding",
+  "/dashboard/background-checks",
+  // People Management — full self-service slice.
+  "/dashboard/people",
+  "/dashboard/attendance-management",
+  "/dashboard/attendance",
+  "/dashboard/shift-scheduling",
+  "/dashboard/leave-requests",
+  "/dashboard/employee-engagement",
+  "/dashboard/surveys",
+  "/dashboard/recognition",
+  "/dashboard/promotions",
+  "/dashboard/employee-records",
+  "/dashboard/employee-database",
+  "/dashboard/org-chart",
+  // Talent Management.
+  "/dashboard/talent",
+  "/dashboard/goals-appraisal",
+  "/dashboard/goals",
+  "/dashboard/appraisals",
+  "/dashboard/competency-mapping",
+  "/dashboard/learning-growth",
+  "/dashboard/learning",
+  "/dashboard/career-paths",
+  // Payroll & Benefits — own payslips/direct deposit/benefits/claims only.
+  "/dashboard/payroll-benefits",
+  "/dashboard/payroll-overview",
+  "/dashboard/payroll",
+  "/dashboard/direct-deposit",
+  "/dashboard/benefits-overview",
+  "/dashboard/benefits-enrollment",
+  "/dashboard/claims",
+  // IT & Asset Management — own devices/tickets/BYOD status only.
+  "/dashboard/it-assets",
+  "/dashboard/device-provisioning",
+  "/dashboard/asset-inventory",
+  "/dashboard/device-tracker",
+  "/dashboard/it-support",
+  "/dashboard/byod-policy",
+];
+
 export const ROLE_ALLOWED_PATHS: Partial<Record<UserRole, string[]>> = {
-  Employee: ["/dashboard", "/dashboard/settings"],
+  Employee: EMPLOYEE_MATRIX_PATHS,
+  // Contractor mirrors Employee almost exactly (it's explicitly "a
+  // restricted Employee variant") minus the couple of rows the matrix
+  // denies Contractor specifically: Promotion & Transfer Workflows
+  // ('-' vs Employee's R*) and Pulse Checks (folded into the same Surveys
+  // page/model as regular surveys on the frontend, so — unlike the
+  // backend, which can gate the underlying SurveyResponse write per
+  // `survey.kind` — this can't be split at the page-route level; kept
+  // reachable for both roles, same approximation the backend agent noted).
+  Contractor: EMPLOYEE_MATRIX_PATHS.filter((p) => p !== "/dashboard/promotions"),
   "IT Manager": [
     "/dashboard",
     "/dashboard/settings",
