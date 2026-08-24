@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  Code2,
   Copy,
   FileSignature,
   Gamepad2,
@@ -12,6 +14,7 @@ import {
   Mail,
   MessageSquare,
   Plug,
+  Search,
   Send,
   ShieldCheck,
   Smartphone,
@@ -47,6 +50,17 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   zoom: Video,
   checkr: ShieldCheck,
   dropbox_sign: FileSignature,
+  hackerrank: Code2,
+};
+
+// A little visual personality per category, beyond just a plain heading —
+// each gets its own accent color for the header dot/count chip so the page
+// reads as organized sections rather than one long undifferentiated list.
+const CATEGORY_ACCENT: Record<string, string> = {
+  Notifications: "bg-primary",
+  Automation: "bg-amber",
+  Email: "bg-accent",
+  Recruiting: "bg-maroon",
 };
 
 export default function IntegrationsSettingsPage() {
@@ -56,6 +70,8 @@ export default function IntegrationsSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [editingKey, setEditingKey] = useState<IntegrationKey | null>(null);
   const [testStatus, setTestStatus] = useState<Record<number, { ok: boolean; detail: string } | "testing">>({});
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   async function load() {
     try {
@@ -92,7 +108,22 @@ export default function IntegrationsSettingsPage() {
   }
 
   const connectionByKey = new Map(connections.map((c) => [c.integration_key, c]));
-  const categories = catalog ? [...new Set(Object.values(catalog).map((m) => m.category))] : [];
+  const entries = useMemo(
+    () => (catalog ? (Object.entries(catalog) as [IntegrationKey, IntegrationCatalog[IntegrationKey]][]) : []),
+    [catalog]
+  );
+  const categories = useMemo(() => [...new Set(entries.map(([, meta]) => meta.category))], [entries]);
+
+  const q = query.trim().toLowerCase();
+  const isSearching = q.length > 0;
+  const matches = ([key, meta]: [IntegrationKey, IntegrationCatalog[IntegrationKey]]) =>
+    !isSearching || meta.label.toLowerCase().includes(q) || meta.description.toLowerCase().includes(q) || key.includes(q);
+
+  function toggleCategory(category: string) {
+    setCollapsed((c) => ({ ...c, [category]: !c[category] }));
+  }
+
+  const totalConnected = connections.length;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -103,134 +134,190 @@ export default function IntegrationsSettingsPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Settings
       </Link>
 
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Integrations</h1>
-        <p className="mt-1 text-sm text-ink-soft">
-          Connect Pulse to the tools you already use. Each one includes step-by-step instructions for where to find
-          the key or URL it needs — nothing here requires touching code.
-        </p>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink">Integrations</h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            Connect Pulse to the tools you already use. Each one includes step-by-step instructions for where to
+            find the key or URL it needs — nothing here requires touching code.
+          </p>
+        </div>
+        {!loading && (
+          <span className="shrink-0 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-ink-soft">
+            {totalConnected} connected
+          </span>
+        )}
+      </div>
+
+      <div className="mb-6 flex items-center gap-2 rounded-xl border border-line bg-card px-3.5 py-2.5">
+        <Search className="h-4 w-4 shrink-0 text-ink-soft" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search integrations — Slack, e-signature, SMS…"
+          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-soft/70 focus:outline-none"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="shrink-0 rounded-full p-0.5 text-ink-soft hover:bg-cream-dim hover:text-ink"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {loading || !catalog ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
       ) : (
-        categories.map((category) => (
-          <div key={category} className="mb-8">
-            <h2 className="mb-3 font-display text-sm font-bold text-ink uppercase tracking-wide">{category}</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {(Object.entries(catalog) as [IntegrationKey, IntegrationCatalog[IntegrationKey]][])
-                .filter(([, meta]) => meta.category === category)
-                .map(([key, meta]) => {
-                  const Icon = INTEGRATION_ICONS[key];
-                  const conn = connectionByKey.get(key);
-                  const test = conn ? testStatus[conn.id] : undefined;
-                  return (
-                    <div key={key} className="rounded-2xl border border-line bg-card p-5">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <Icon className="h-4.5 w-4.5" />
-                          </span>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold text-ink">{meta.label}</div>
-                            {conn && (
-                              <div
-                                className={`text-xs ${conn.is_enabled ? "text-primary" : "text-ink-soft"}`}
-                              >
-                                {conn.is_enabled ? "Connected" : "Connected (paused)"}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="mb-3 text-xs text-ink-soft">{meta.description}</p>
+        categories.map((category) => {
+          const categoryEntries = entries.filter(([, meta]) => meta.category === category);
+          const visibleEntries = categoryEntries.filter(matches);
+          if (visibleEntries.length === 0) return null;
+          const connectedCount = categoryEntries.filter(([key]) => connectionByKey.has(key)).length;
+          const isOpen = isSearching || !collapsed[category];
 
-                      {conn && (
-                        <div className="mb-3 flex flex-col gap-1 rounded-lg border border-line bg-cream px-3 py-2 text-[11px] text-ink-soft">
-                          {Object.entries(conn.masked_config).map(([field, value]) => (
-                            <div key={field} className="flex justify-between gap-2">
-                              <span className="capitalize">{field.replace(/_/g, " ")}</span>
-                              <span className="truncate">{value}</span>
+          return (
+            <div key={category} className="mb-4 overflow-hidden rounded-2xl border border-line bg-card">
+              <button
+                type="button"
+                onClick={() => toggleCategory(category)}
+                disabled={isSearching}
+                className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-cream/60 disabled:cursor-default disabled:hover:bg-transparent"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${CATEGORY_ACCENT[category] ?? "bg-ink-soft"}`} />
+                  <h2 className="font-display text-sm font-bold text-ink">{category}</h2>
+                  <span className="rounded-full bg-cream-dim px-2 py-0.5 text-[10.5px] font-semibold text-ink-soft">
+                    {connectedCount > 0 ? `${connectedCount}/${categoryEntries.length} connected` : categoryEntries.length}
+                  </span>
+                </div>
+                {!isSearching && (
+                  <ChevronDown className={`h-4 w-4 shrink-0 text-ink-soft transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                )}
+              </button>
+
+              {isOpen && (
+                <div className="grid grid-cols-1 gap-3 border-t border-line p-5 sm:grid-cols-2">
+                  {visibleEntries.map(([key, meta]) => {
+                    const Icon = INTEGRATION_ICONS[key];
+                    const conn = connectionByKey.get(key);
+                    const test = conn ? testStatus[conn.id] : undefined;
+                    return (
+                      <div key={key} className="rounded-2xl border border-line bg-cream/40 p-5">
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                              <Icon className="h-4.5 w-4.5" />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold text-ink">{meta.label}</div>
+                              {conn && (
+                                <div className={`text-xs ${conn.is_enabled ? "text-primary" : "text-ink-soft"}`}>
+                                  {conn.is_enabled ? "Connected" : "Connected (paused)"}
+                                </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {conn?.webhook_receiver_url && (
-                        <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-                          <div className="mb-1 text-[11px] font-semibold text-ink">
-                            Paste this into {meta.label}&apos;s webhook setting
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <code className="flex-1 truncate text-[10.5px] text-ink-soft">{conn.webhook_receiver_url}</code>
-                            <button
-                              type="button"
-                              onClick={() => navigator.clipboard.writeText(conn.webhook_receiver_url!)}
-                              aria-label="Copy webhook URL"
-                              className="shrink-0 rounded p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
                           </div>
                         </div>
-                      )}
+                        <p className="mb-3 text-xs text-ink-soft">{meta.description}</p>
 
-                      {test && test !== "testing" && (
-                        <div
-                          className={`mb-3 flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs ${
-                            test.ok ? "bg-primary/10 text-primary" : "bg-maroon-soft text-maroon"
-                          }`}
-                        >
-                          {test.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                          {test.detail}
-                        </div>
-                      )}
+                        {conn && (
+                          <div className="mb-3 flex flex-col gap-1 rounded-lg border border-line bg-cream px-3 py-2 text-[11px] text-ink-soft">
+                            {Object.entries(conn.masked_config).map(([field, value]) => (
+                              <div key={field} className="flex justify-between gap-2">
+                                <span className="capitalize">{field.replace(/_/g, " ")}</span>
+                                <span className="truncate">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                      <div className="flex items-center gap-2">
-                        {conn ? (
-                          <>
-                            <button
-                              onClick={() => handleTest(conn.id)}
-                              disabled={test === "testing"}
-                              className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim disabled:opacity-60"
-                            >
-                              {test === "testing" ? "Testing…" : "Test"}
-                            </button>
+                        {conn?.webhook_receiver_url && (
+                          <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+                            <div className="mb-1 text-[11px] font-semibold text-ink">
+                              Paste this into {meta.label}&apos;s webhook setting
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <code className="flex-1 truncate text-[10.5px] text-ink-soft">{conn.webhook_receiver_url}</code>
+                              <button
+                                type="button"
+                                onClick={() => navigator.clipboard.writeText(conn.webhook_receiver_url!)}
+                                aria-label="Copy webhook URL"
+                                className="shrink-0 rounded p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {test && test !== "testing" && (
+                          <div
+                            className={`mb-3 flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs ${
+                              test.ok ? "bg-primary/10 text-primary" : "bg-maroon-soft text-maroon"
+                            }`}
+                          >
+                            {test.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                            {test.detail}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          {conn ? (
+                            <>
+                              <button
+                                onClick={() => handleTest(conn.id)}
+                                disabled={test === "testing"}
+                                className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim disabled:opacity-60"
+                              >
+                                {test === "testing" ? "Testing…" : "Test"}
+                              </button>
+                              <button
+                                onClick={() => setEditingKey(key)}
+                                className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleToggle(conn)}
+                                className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
+                              >
+                                {conn.is_enabled ? "Pause" : "Resume"}
+                              </button>
+                              <button
+                                onClick={() => handleRemove(conn)}
+                                aria-label={`Disconnect ${meta.label}`}
+                                className="ml-auto rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : (
                             <button
                               onClick={() => setEditingKey(key)}
-                              className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
+                              className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
                             >
-                              Edit
+                              <Plug className="h-3.5 w-3.5" /> Connect
                             </button>
-                            <button
-                              onClick={() => handleToggle(conn)}
-                              className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
-                            >
-                              {conn.is_enabled ? "Pause" : "Resume"}
-                            </button>
-                            <button
-                              onClick={() => handleRemove(conn)}
-                              aria-label={`Disconnect ${meta.label}`}
-                              className="ml-auto rounded-lg p-1.5 text-ink-soft hover:bg-maroon-soft hover:text-maroon"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => setEditingKey(key)}
-                            className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-cream transition-colors hover:bg-primary-dark"
-                          >
-                            <Plug className="h-3.5 w-3.5" /> Connect
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))
+          );
+        })
+      )}
+
+      {!loading && catalog && isSearching && categories.every((c) => entries.filter(([, m]) => m.category === c).filter(matches).length === 0) && (
+        <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">
+          No integrations match &quot;{query}&quot;.
+        </div>
       )}
 
       {editingKey && catalog && (

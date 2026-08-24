@@ -11,7 +11,8 @@ export type IntegrationKey =
   | "smtp"
   | "zoom"
   | "checkr"
-  | "dropbox_sign";
+  | "dropbox_sign"
+  | "hackerrank";
 
 export interface IntegrationField {
   name: string;

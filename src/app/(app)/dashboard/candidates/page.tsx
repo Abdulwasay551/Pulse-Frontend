@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, Pencil, Plus, Trash2, Video } from "lucide-react";
+import { Code2, FileText, Pencil, Plus, RefreshCw, Trash2, Video } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -16,6 +16,8 @@ import Link from "next/link";
 import {
   candidatesApi,
   createZoomMeeting,
+  refreshHackerRankScore,
+  sendCandidateToHackerRank,
   candidatesCsv,
   clientsApi,
   requisitionsApi,
@@ -211,6 +213,38 @@ function CandidatesPage() {
     }
   }
 
+  const [sendingHackerRankFor, setSendingHackerRankFor] = useState<number | null>(null);
+
+  async function handleSendToHackerRank(c: Candidate) {
+    const testId = window.prompt(
+      `HackerRank Test ID to send ${c.name} (from your HackerRank dashboard):`,
+      ""
+    );
+    if (!testId) return;
+    setSendingHackerRankFor(c.id);
+    try {
+      await withAuth((token) => sendCandidateToHackerRank(token, c.id, testId.trim()));
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't send the HackerRank test. Please try again.");
+    } finally {
+      setSendingHackerRankFor(null);
+    }
+  }
+
+  async function handleRefreshHackerRankScore(c: Candidate) {
+    setSendingHackerRankFor(c.id);
+    try {
+      const updated = await withAuth((token) => refreshHackerRankScore(token, c.id));
+      alert(`${c.name}: ${updated.hackerrank_status}${updated.hackerrank_score ? ` — score ${updated.hackerrank_score}` : ""}`);
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't refresh the score. Please try again.");
+    } finally {
+      setSendingHackerRankFor(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -312,6 +346,28 @@ function CandidatesPage() {
                         className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
                       >
                         <Video className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {!c.hackerrank_status && (
+                      <button
+                        onClick={() => handleSendToHackerRank(c)}
+                        disabled={sendingHackerRankFor === c.id}
+                        aria-label={`Send a HackerRank test to ${c.name}`}
+                        title="Send a real HackerRank technical test"
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+                      >
+                        <Code2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {c.hackerrank_status && (
+                      <button
+                        onClick={() => handleRefreshHackerRankScore(c)}
+                        disabled={sendingHackerRankFor === c.id}
+                        aria-label={`Refresh ${c.name}'s HackerRank score`}
+                        title={`HackerRank: ${c.hackerrank_status}${c.hackerrank_score ? ` (${c.hackerrank_score})` : ""} — click to refresh`}
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${sendingHackerRankFor === c.id ? "animate-spin" : ""}`} />
                       </button>
                     )}
                     <button

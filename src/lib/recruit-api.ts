@@ -70,6 +70,10 @@ export interface Candidate {
   ai_score_notes: string;
   ai_score_strengths: string[];
   ai_score_gaps: string[];
+  hackerrank_test_id: string;
+  hackerrank_status: string;
+  hackerrank_score: string | null;
+  hackerrank_report_url: string;
   portal_token: string;
   created_at: string;
   updated_at: string;
@@ -162,6 +166,18 @@ export interface ZoomMeeting {
 
 export function createZoomMeeting(token: string, candidateId: number) {
   return apiFetch<ZoomMeeting>(`/recruit/candidates/${candidateId}/create-zoom-meeting/`, { method: "POST" }, token);
+}
+
+export function sendCandidateToHackerRank(token: string, candidateId: number, testId: string) {
+  return apiFetch<Candidate>(
+    `/recruit/candidates/${candidateId}/send-to-hackerrank/`,
+    { method: "POST", body: JSON.stringify({ test_id: testId }) },
+    token
+  );
+}
+
+export function refreshHackerRankScore(token: string, candidateId: number) {
+  return apiFetch<Candidate>(`/recruit/candidates/${candidateId}/refresh-hackerrank-score/`, { method: "POST" }, token);
 }
 
 export function uploadResume(token: string, id: number, file: File) {
