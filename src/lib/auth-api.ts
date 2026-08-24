@@ -41,15 +41,23 @@ export interface AuthSession {
 export class ApiError extends Error {
   status: number;
   fieldErrors?: Record<string, string[]>;
+  // A handful of endpoints pair {"detail": "..."} with a stable machine-
+  // readable {"code": "..."} — e.g. "ai_not_configured", "zoom_not_configured",
+  // "smtp_not_configured" — so the UI can react specifically (show a
+  // "Connect it" link) instead of just displaying the message text.
+  code?: string;
 
-  constructor(message: string, status: number, fieldErrors?: Record<string, string[]>) {
+  constructor(message: string, status: number, fieldErrors?: Record<string, string[]>, code?: string) {
     super(message);
     this.status = status;
     this.fieldErrors = fieldErrors;
+    this.code = code;
   }
 }
 
-async function parseErrorBody(res: Response): Promise<{ message: string; fieldErrors?: Record<string, string[]> }> {
+async function parseErrorBody(
+  res: Response
+): Promise<{ message: string; fieldErrors?: Record<string, string[]>; code?: string }> {
   let body: unknown;
   try {
     body = await res.json();
@@ -59,7 +67,8 @@ async function parseErrorBody(res: Response): Promise<{ message: string; fieldEr
 
   if (body && typeof body === "object") {
     const obj = body as Record<string, unknown>;
-    if (typeof obj.detail === "string") return { message: obj.detail };
+    const code = typeof obj.code === "string" ? obj.code : undefined;
+    if (typeof obj.detail === "string") return { message: obj.detail, code };
 
     // DRF validation errors look like { field: ["message", ...], ... } —
     // surface the first one as the headline message but keep them all so
@@ -72,7 +81,7 @@ async function parseErrorBody(res: Response): Promise<{ message: string; fieldEr
         if (!firstMessage) firstMessage = String(value[0]);
       }
     }
-    if (firstMessage) return { message: firstMessage, fieldErrors };
+    if (firstMessage) return { message: firstMessage, fieldErrors, code };
   }
   return { message: "Something went wrong. Please try again." };
 }
@@ -100,8 +109,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, acces
   });
 
   if (!res.ok) {
-    const { message, fieldErrors } = await parseErrorBody(res);
-    throw new ApiError(message, res.status, fieldErrors);
+    const { message, fieldErrors, code } = await parseErrorBody(res);
+    throw new ApiError(message, res.status, fieldErrors, code);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

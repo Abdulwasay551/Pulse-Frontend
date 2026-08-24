@@ -185,6 +185,7 @@ function EmployeeDatabasePage() {
   });
   const [loginSaving, setLoginSaving] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginErrorCode, setLoginErrorCode] = useState<string | undefined>(undefined);
   const [loginResult, setLoginResult] = useState<string | null>(null);
 
   async function load() {
@@ -386,6 +387,7 @@ function EmployeeDatabasePage() {
     setLoginMode("invite");
     setLoginForm({ email: e.email, username: "", password: "", role: "Employee", department: "" });
     setLoginError(null);
+    setLoginErrorCode(undefined);
     setLoginResult(null);
   }
 
@@ -406,12 +408,14 @@ function EmployeeDatabasePage() {
     ev.preventDefault();
     if (!loginTarget) return;
     setLoginError(null);
+    setLoginErrorCode(undefined);
     setLoginSaving(true);
     try {
       await withAuth((token) => sendEmployeeInvite(token, { employee: loginTarget.id, email: loginForm.email }));
       setLoginResult(`Invite sent to ${loginForm.email}.`);
     } catch (err) {
       setLoginError(err instanceof ApiError ? err.message : "Couldn't send the invite. Please try again.");
+      setLoginErrorCode(err instanceof ApiError ? err.code : undefined);
     } finally {
       setLoginSaving(false);
     }
@@ -421,6 +425,7 @@ function EmployeeDatabasePage() {
     ev.preventDefault();
     if (!loginTarget) return;
     setLoginError(null);
+    setLoginErrorCode(undefined);
     setLoginSaving(true);
     try {
       await withAuth((token) =>
@@ -1172,7 +1177,17 @@ function EmployeeDatabasePage() {
               </div>
 
               {loginError && (
-                <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">{loginError}</div>
+                <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+                  <p>{loginError}</p>
+                  {(loginErrorCode === "smtp_not_configured" || loginErrorCode === "smtp_send_failed") && (
+                    <Link
+                      href="/dashboard/settings/integrations"
+                      className="mt-1.5 inline-block font-semibold underline hover:text-maroon/80"
+                    >
+                      Connect an email provider →
+                    </Link>
+                  )}
+                </div>
               )}
 
               {loginMode === "invite" ? (
