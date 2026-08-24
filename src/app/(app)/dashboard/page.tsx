@@ -23,12 +23,19 @@ import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import {
   attendanceRecordsApi,
   employeesApi,
+  getPeopleDashboardSummary,
   shiftsApi,
   type AttendanceRecord,
   type Employee,
+  type PeopleDashboardSummary,
   type Shift,
 } from "@/lib/people-api";
-import { getDashboardSummary, type ActivityItem } from "@/lib/recruit-api";
+import { getDashboardSummary, type ActivityItem, type DashboardSummary } from "@/lib/recruit-api";
+import { getTalentDashboardSummary, type TalentDashboardSummary } from "@/lib/talent-api";
+import { getPayrollBenefitsDashboardSummary, type PayrollBenefitsDashboardSummary } from "@/lib/payroll-benefits-api";
+import { getItAssetsDashboardSummary, type ItAssetsDashboardSummary } from "@/lib/it-assets-api";
+import PlacementsChart from "@/components/dashboard/PlacementsChart";
+import { PipelineWidget } from "@/components/site/widgets";
 import { announcementsApi, type Announcement } from "@/lib/announcements-api";
 import {
   clockIn,
@@ -581,24 +588,287 @@ function HrHome({ firstName }: { firstName: string }) {
   );
 }
 
+type OverviewStat = { label: string; value: string; change: string; href: string };
+
+function StatRow({ stats, loading }: { stats: OverviewStat[]; loading: boolean }) {
+  const items = loading ? Array.from({ length: 4 }) : stats;
+  return (
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {items.map((s, i) => {
+        const stat = s as OverviewStat | undefined;
+        return (
+          <Link
+            key={stat?.label ?? i}
+            href={stat?.href ?? "#"}
+            className="rounded-2xl border border-line bg-card p-5 transition-colors hover:border-primary/40"
+          >
+            <div className="text-2xl font-bold text-ink">{loading || !stat ? "—" : stat.value}</div>
+            <div className="mt-1 truncate text-xs text-ink-soft">{loading || !stat ? "Loading…" : stat.label}</div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecruiterKpis() {
+  const { withAuth } = useAuth();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    withAuth((token) => getDashboardSummary(token))
+      .then(setSummary)
+      .catch(() => setSummary(null))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <StatRow stats={summary?.overview_stats ?? []} loading={loading} />
+      <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Placements trend</h2>
+          {loading || !summary ? (
+            <p className="text-sm text-ink-soft">Loading…</p>
+          ) : (
+            <PlacementsChart data={summary.placements_trend} />
+          )}
+        </div>
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Pipeline</h2>
+          {loading || !summary ? (
+            <p className="text-sm text-ink-soft">Loading…</p>
+          ) : (
+            <PipelineWidget stages={summary.pipeline_stages} />
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function FinanceAdminKpis() {
+  const { withAuth } = useAuth();
+  const [summary, setSummary] = useState<PayrollBenefitsDashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    withAuth((token) => getPayrollBenefitsDashboardSummary(token))
+      .then(setSummary)
+      .catch(() => setSummary(null))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const trend = summary?.payroll_trend.map((p) => ({ month: p.label, value: p.value })) ?? [];
+
+  return (
+    <>
+      <StatRow stats={summary?.overview_stats ?? []} loading={loading} />
+      <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Payroll trend</h2>
+          {loading || !summary || trend.length === 0 ? (
+            <p className="text-sm text-ink-soft">{loading ? "Loading…" : "No payroll runs yet."}</p>
+          ) : (
+            <PlacementsChart data={trend} />
+          )}
+        </div>
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Benefit cost by type</h2>
+          {loading || !summary || summary.benefit_cost_by_type.length === 0 ? (
+            <p className="text-sm text-ink-soft">{loading ? "Loading…" : "No enrollments yet."}</p>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {summary.benefit_cost_by_type.slice(0, 5).map((b) => {
+                const max = Math.max(...summary.benefit_cost_by_type.map((x) => x.value), 1);
+                return (
+                  <div key={b.label}>
+                    <div className="mb-1 flex justify-between text-xs">
+                      <span className="text-ink">{b.label}</span>
+                      <span className="text-ink-soft">${b.value.toLocaleString()}</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-cream-dim">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${(b.value / max) * 100}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ItManagerKpis() {
+  const { withAuth } = useAuth();
+  const [summary, setSummary] = useState<ItAssetsDashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    withAuth((token) => getItAssetsDashboardSummary(token))
+      .then(setSummary)
+      .catch(() => setSummary(null))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <StatRow stats={summary?.overview_stats ?? []} loading={loading} />
+      <div className="mb-10 rounded-2xl border border-line bg-card p-6">
+        <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Fleet health</h2>
+        {loading || !summary ? (
+          <p className="text-sm text-ink-soft">Loading…</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+            {summary.kpis.map((k) => (
+              <Link key={k.label} href={k.href} className="rounded-xl border border-line bg-cream px-3.5 py-3 transition-colors hover:border-primary/40">
+                <div className="text-lg font-bold text-ink">{k.value}</div>
+                <div className="mt-0.5 text-[11px] text-ink-soft">{k.label}</div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function DepartmentHeadKpis() {
+  const { withAuth } = useAuth();
+  const [people, setPeople] = useState<PeopleDashboardSummary | null>(null);
+  const [talent, setTalent] = useState<TalentDashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    withAuth((token) => Promise.all([getPeopleDashboardSummary(token), getTalentDashboardSummary(token)]))
+      .then(([p, t]) => {
+        setPeople(p);
+        setTalent(t);
+      })
+      .catch(() => {
+        setPeople(null);
+        setTalent(null);
+      })
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <div className="mb-6 rounded-2xl border border-line bg-card p-5 text-sm text-ink-soft">
+        Your most central daily tool is the{" "}
+        <Link href="/dashboard/employee-database" className="font-semibold text-primary hover:text-primary-dark">
+          Employee Database
+        </Link>
+        , scoped to your own department.
+      </div>
+      <StatRow stats={people?.kpis.map((k) => ({ ...k, change: "" })) ?? []} loading={loading} />
+      <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Status breakdown</h2>
+          {loading || !people || people.status_breakdown.length === 0 ? (
+            <p className="text-sm text-ink-soft">{loading ? "Loading…" : "No employees on file yet."}</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {people.status_breakdown.map((s) => (
+                <div key={s.label} className="flex items-center justify-between text-sm">
+                  <span className="text-ink">{s.label}</span>
+                  <span className="font-semibold text-ink-soft">{s.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Talent overview</h2>
+          {loading || !talent ? (
+            <p className="text-sm text-ink-soft">Loading…</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {talent.overview_stats.slice(0, 4).map((s) => (
+                <div key={s.label}>
+                  <div className="text-lg font-bold text-ink">{s.value}</div>
+                  <div className="text-[11px] text-ink-soft">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AuditorKpis() {
+  const { withAuth } = useAuth();
+  const [health, setHealth] = useState<HealthScore | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    withAuth((token) => getOrgHealth(token))
+      .then(setHealth)
+      .catch(() => setHealth(null))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <HealthGauge title="Org health" health={health} loading={loading} />
+      <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
+        <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Flags across every module</h2>
+        {loading ? (
+          <p className="text-sm text-ink-soft">Loading…</p>
+        ) : !health || health.flags.length === 0 ? (
+          <p className="text-sm text-ink-soft">Nothing flagged — every module reads clean right now.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {health.flags.map((f) => (
+              <div key={f.key} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-cream px-3.5 py-2.5">
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-ink">{f.label}</div>
+                  <div className="text-[11px] text-ink-soft">{f.module}</div>
+                </div>
+                <span className="shrink-0 rounded-full bg-maroon-soft px-2.5 py-1 text-[11px] font-semibold text-maroon">{f.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const narrowRoleDescriptions: Partial<Record<UserRole, string>> = {
+  Recruiter: "Your pipeline, at a glance.",
+  "Finance Admin": "Payroll and benefits, at a glance.",
+  "IT Manager": "Your device fleet, at a glance.",
+  "Department Head": "Your department, at a glance.",
+  Auditor: "Read-everywhere across every module — here's what's flagged.",
+};
+
 function NarrowRoleHome({ firstName, role }: { firstName: string; role: UserRole }) {
   const visibleKeys = visibleModuleKeysFor(role);
   const visibleModules = modules.filter((m) => !visibleKeys || visibleKeys.includes(m.key));
 
   return (
     <div className="-m-4 bg-white sm:-m-6">
-      <WelcomeBanner name={firstName} role={role} description="Pick up where you left off." />
+      <WelcomeBanner name={firstName} role={role} description={narrowRoleDescriptions[role] ?? "Pick up where you left off."} />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {role === "Department Head" && (
-          <div className="mb-6 rounded-2xl border border-line bg-card p-5 text-sm text-ink-soft">
-            Your most central daily tool is the{" "}
-            <Link href="/dashboard/employee-database" className="font-semibold text-primary hover:text-primary-dark">
-              Employee Database
-            </Link>
-            , scoped to your own department.
-          </div>
-        )}
+        {role === "Recruiter" && <RecruiterKpis />}
+        {role === "Finance Admin" && <FinanceAdminKpis />}
+        {role === "IT Manager" && <ItManagerKpis />}
+        {role === "Department Head" && <DepartmentHeadKpis />}
+        {role === "Auditor" && <AuditorKpis />}
+
+        <h2 className="mb-4 font-display text-lg font-bold text-ink">All modules</h2>
         <ModuleCardsGrid items={visibleModules} />
       </div>
     </div>
