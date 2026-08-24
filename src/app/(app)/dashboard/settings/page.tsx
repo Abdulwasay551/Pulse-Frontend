@@ -250,8 +250,7 @@ export default function SettingsPage() {
       </Link>
 
       <Link
-        href="/integrations"
-        target="_blank"
+        href="/dashboard/settings/integrations"
         className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -259,7 +258,7 @@ export default function SettingsPage() {
         </span>
         <div>
           <h3 className="font-display text-sm font-bold text-ink">Integrations</h3>
-          <p className="text-xs text-ink-soft">See what third-party apps each module can connect to.</p>
+          <p className="text-xs text-ink-soft">Connect Slack, Microsoft Teams, a custom webhook, or SMS alerts.</p>
         </div>
       </Link>
     </div>
