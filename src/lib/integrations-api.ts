@@ -1,7 +1,7 @@
 import { apiFetch } from "./auth-api";
 import { resourceApi } from "./api-resource";
 
-export type IntegrationKey = "slack" | "teams" | "webhook" | "twilio";
+export type IntegrationKey = "slack" | "teams" | "webhook" | "twilio" | "zoom" | "checkr" | "dropbox_sign";
 
 export interface IntegrationField {
   name: string;
@@ -29,6 +29,10 @@ export interface IntegrationConnection {
   label: string;
   masked_config: Record<string, string>;
   is_enabled: boolean;
+  // Only set for integrations that report status back asynchronously
+  // (Checkr, Dropbox Sign) — paste this into that third party's own
+  // webhook/callback URL setting.
+  webhook_receiver_url: string | null;
   created_at: string;
   updated_at: string;
 }

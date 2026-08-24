@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -15,6 +15,7 @@ import {
   backgroundChecksApi,
   backgroundChecksCsv,
   candidatesApi,
+  sendBackgroundCheckToCheckr,
   type BackgroundCheck,
   type BackgroundCheckStatus,
   type BackgroundCheckType,
@@ -139,6 +140,20 @@ function BackgroundChecksPage() {
     await load();
   }
 
+  const [sendingToCheckr, setSendingToCheckr] = useState<number | null>(null);
+
+  async function handleSendToCheckr(b: BackgroundCheck) {
+    setSendingToCheckr(b.id);
+    try {
+      await withAuth((token) => sendBackgroundCheckToCheckr(token, b.id));
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't send this to Checkr. Please try again.");
+    } finally {
+      setSendingToCheckr(null);
+    }
+  }
+
   const searched = useTableSearch(checks, (b) =>
     [b.candidate_detail.name, typeLabels[b.check_type], b.status, b.notes].filter(Boolean).join(" ")
   );
@@ -238,6 +253,17 @@ function BackgroundChecksPage() {
                 </td>
                 <td className="px-5 py-3.5">
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {b.status === "Pending" && (
+                      <button
+                        onClick={() => handleSendToCheckr(b)}
+                        disabled={sendingToCheckr === b.id}
+                        aria-label={`Send ${b.candidate_detail.name}'s check to Checkr`}
+                        title="Send to Checkr for a real background check"
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => openEdit(b)}
                       aria-label={`Edit check for ${b.candidate_detail.name}`}

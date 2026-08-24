@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2, Video } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -15,6 +15,7 @@ import { usePagination } from "@/lib/use-pagination";
 import Link from "next/link";
 import {
   candidatesApi,
+  createZoomMeeting,
   candidatesCsv,
   clientsApi,
   requisitionsApi,
@@ -196,6 +197,20 @@ function CandidatesPage() {
     await load();
   }
 
+  const [creatingZoomFor, setCreatingZoomFor] = useState<number | null>(null);
+
+  async function handleCreateZoomMeeting(c: Candidate) {
+    setCreatingZoomFor(c.id);
+    try {
+      const meeting = await withAuth((token) => createZoomMeeting(token, c.id));
+      window.prompt(`Zoom meeting created for ${c.name} — copy the join link:`, meeting.join_url);
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't create the Zoom meeting. Please try again.");
+    } finally {
+      setCreatingZoomFor(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -288,6 +303,17 @@ function CandidatesPage() {
                 <td className="px-5 py-3.5 text-xs text-ink-soft" data-label="Applied">{c.applied_at}</td>
                 <td className="px-5 py-3.5">
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {c.stage === "Interview" && (
+                      <button
+                        onClick={() => handleCreateZoomMeeting(c)}
+                        disabled={creatingZoomFor === c.id}
+                        aria-label={`Create a Zoom meeting for ${c.name}`}
+                        title="Create a real Zoom meeting link"
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+                      >
+                        <Video className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => openEdit(c)}
                       aria-label={`Edit ${c.name}`}

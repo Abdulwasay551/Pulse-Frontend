@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { FileStack, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileSignature, FileStack, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -16,6 +16,7 @@ import {
   clientsApi,
   offerLetterTemplatesApi,
   offerLettersApi,
+  sendOfferForSignature,
   offerLettersCsv,
   type Candidate,
   type Client,
@@ -192,6 +193,20 @@ function OfferLettersPage() {
     await load();
   }
 
+  const [sendingForSignature, setSendingForSignature] = useState<number | null>(null);
+
+  async function handleSendForSignature(o: OfferLetter) {
+    setSendingForSignature(o.id);
+    try {
+      await withAuth((token) => sendOfferForSignature(token, o.id));
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't send this for signature. Please try again.");
+    } finally {
+      setSendingForSignature(null);
+    }
+  }
+
   const searched = useTableSearch(offers, (o) =>
     [o.candidate_detail.name, o.job_title, o.salary, o.start_date, o.status].filter(Boolean).join(" ")
   );
@@ -219,8 +234,8 @@ function OfferLettersPage() {
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">Digital Offer Letters</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Draft, send, and track offers through to signature. Signing is confirmed manually today — a real
-            e-signature vendor can slot in here later.
+            Draft, send, and track offers through to signature — connect Dropbox Sign under Settings to send real,
+            legally-binding e-signature requests.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -275,6 +290,17 @@ function OfferLettersPage() {
                 </td>
                 <td className="px-5 py-3.5">
                   <div className="eh-row-actions flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {(o.status === "Draft" || o.status === "Sent") && (
+                      <button
+                        onClick={() => handleSendForSignature(o)}
+                        disabled={sendingForSignature === o.id}
+                        aria-label={`Send ${o.candidate_detail.name}'s offer for e-signature`}
+                        title="Send for real e-signature via Dropbox Sign"
+                        className="rounded-lg p-1.5 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+                      >
+                        <FileSignature className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => openEdit(o)}
                       aria-label={`Edit offer for ${o.candidate_detail.name}`}

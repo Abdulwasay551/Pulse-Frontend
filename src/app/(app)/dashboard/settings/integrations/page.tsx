@@ -2,7 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Hash, MessageSquare, Plug, Smartphone, Trash2, Webhook as WebhookIcon, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  FileSignature,
+  Hash,
+  MessageSquare,
+  Plug,
+  ShieldCheck,
+  Smartphone,
+  Trash2,
+  Video,
+  Webhook as WebhookIcon,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import {
@@ -24,6 +38,9 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   teams: MessageSquare,
   webhook: WebhookIcon,
   twilio: Smartphone,
+  zoom: Video,
+  checkr: ShieldCheck,
+  dropbox_sign: FileSignature,
 };
 
 export default function IntegrationsSettingsPage() {
@@ -130,6 +147,25 @@ export default function IntegrationsSettingsPage() {
                               <span className="truncate">{value}</span>
                             </div>
                           ))}
+                        </div>
+                      )}
+
+                      {conn?.webhook_receiver_url && (
+                        <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+                          <div className="mb-1 text-[11px] font-semibold text-ink">
+                            Paste this into {meta.label}&apos;s webhook setting
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <code className="flex-1 truncate text-[10.5px] text-ink-soft">{conn.webhook_receiver_url}</code>
+                            <button
+                              type="button"
+                              onClick={() => navigator.clipboard.writeText(conn.webhook_receiver_url!)}
+                              aria-label="Copy webhook URL"
+                              className="shrink-0 rounded p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
                       )}
 

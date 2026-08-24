@@ -154,6 +154,16 @@ export function screenCandidate(token: string, id: number) {
   return apiFetch<Candidate>(`/recruit/candidates/${id}/screen/`, { method: "POST" }, token);
 }
 
+export interface ZoomMeeting {
+  join_url: string;
+  start_url: string | null;
+  meeting_id: number;
+}
+
+export function createZoomMeeting(token: string, candidateId: number) {
+  return apiFetch<ZoomMeeting>(`/recruit/candidates/${candidateId}/create-zoom-meeting/`, { method: "POST" }, token);
+}
+
 export function uploadResume(token: string, id: number, file: File) {
   const formData = new FormData();
   formData.append("resume_file", file);
@@ -211,6 +221,10 @@ export interface OfferLetterWrite {
 }
 
 export const offerLettersApi = resourceApi<OfferLetter, OfferLetterWrite>("/recruit/offer-letters/");
+
+export function sendOfferForSignature(token: string, id: number) {
+  return apiFetch<OfferLetter>(`/recruit/offer-letters/${id}/send-for-signature/`, { method: "POST" }, token);
+}
 export const offerLettersCsv = csvApi("/recruit/offer-letters/", "offer-letters.csv");
 
 // --- Background checks ---
@@ -239,6 +253,10 @@ export interface BackgroundCheckWrite {
 }
 
 export const backgroundChecksApi = resourceApi<BackgroundCheck, BackgroundCheckWrite>("/recruit/background-checks/");
+
+export function sendBackgroundCheckToCheckr(token: string, id: number) {
+  return apiFetch<BackgroundCheck>(`/recruit/background-checks/${id}/send-to-checkr/`, { method: "POST" }, token);
+}
 export const backgroundChecksCsv = csvApi("/recruit/background-checks/", "background-checks.csv");
 
 // --- Onboarding ---
