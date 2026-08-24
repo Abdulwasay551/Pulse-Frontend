@@ -30,6 +30,41 @@ export function createEmployeeAccount(
   );
 }
 
+// --- Super Admin: full-power account provisioning (any role) ---
+
+// Every role a Super Admin can hand out from the dashboard. An `employee`
+// link is required only for Employee/Contractor (their own backend
+// validation enforces this) — every other role may optionally attach one.
+export const ADMIN_CREATABLE_ROLES: UserRole[] = [
+  "HR",
+  "Employee",
+  "Contractor",
+  "Department Head",
+  "Recruiter",
+  "IT Manager",
+  "Finance Admin",
+  "Auditor",
+];
+export const ADMIN_ROLES_REQUIRING_EMPLOYEE: UserRole[] = ["Employee", "Contractor"];
+
+export function createAdminAccount(
+  token: string,
+  data: {
+    username: string;
+    password: string;
+    role: UserRole;
+    email?: string;
+    employee?: number;
+    department?: string;
+  }
+) {
+  return apiFetch<{ detail: string; username: string; role: UserRole }>(
+    "/admin-accounts/",
+    { method: "POST", body: JSON.stringify(data) },
+    token
+  );
+}
+
 // --- Employee self-service ---
 
 export interface HealthFlag {

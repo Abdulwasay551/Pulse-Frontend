@@ -14,9 +14,11 @@ import {
   Megaphone,
   Send,
   Settings,
+  Shield,
   TrendingUp,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
@@ -38,8 +40,11 @@ import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import { PipelineWidget } from "@/components/site/widgets";
 import { announcementsApi, type Announcement } from "@/lib/announcements-api";
 import {
+  ADMIN_CREATABLE_ROLES,
+  ADMIN_ROLES_REQUIRING_EMPLOYEE,
   clockIn,
   clockOut,
+  createAdminAccount,
   getMyDashboard,
   getOrgHealth,
   type HealthScore,
@@ -473,7 +478,160 @@ function TimeSheetCard({ records, loading }: { records: AttendanceRecord[]; load
   );
 }
 
-function HrHome({ firstName }: { firstName: string }) {
+const modalInputClass =
+  "w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none";
+const modalLabelClass = "mb-1.5 block text-xs uppercase tracking-wide text-ink-soft";
+
+/** Super Admin's "create a login for any role" panel — HR's own employee-
+ * database flow only ever hands out Employee/Department Head/Recruiter
+ * (see employee-database/page.tsx), always tied to an existing Employee
+ * record. This is the elevated version: every storable role, including
+ * IT Manager/Finance Admin/Auditor accounts that previously had no
+ * in-app path at all (Django-admin-only). An Employee link is only
+ * required for Employee/Contractor. */
+function CreateUserModal({
+  employees,
+  onClose,
+  onCreated,
+}: {
+  employees: Employee[];
+  onClose: () => void;
+  onCreated: (message: string) => void;
+}) {
+  const { withAuth } = useAuth();
+  const [role, setRole] = useState<UserRole>("Employee");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [employeeId, setEmployeeId] = useState<number | "">("");
+  const [department, setDepartment] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const requiresEmployee = ADMIN_ROLES_REQUIRING_EMPLOYEE.includes(role);
+
+  async function handleSubmit(ev: React.FormEvent) {
+    ev.preventDefault();
+    setError(null);
+    if (requiresEmployee && !employeeId) {
+      setError(`Select an employee for a ${role} account.`);
+      return;
+    }
+    if (role === "Department Head" && !department.trim()) {
+      setError("Department is required for a Department Head account.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await withAuth((token) =>
+        createAdminAccount(token, {
+          username: username.trim(),
+          password,
+          role,
+          email: email.trim() || undefined,
+          employee: employeeId ? Number(employeeId) : undefined,
+          department: role === "Department Head" ? department.trim() : undefined,
+        })
+      );
+      onCreated(`Account created — username "${result.username}" (${result.role}). Share the password with them directly.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't create the account. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={onClose}>
+      <div
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-card p-6 shadow-xl"
+        onClick={(ev) => ev.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-ink">Create user</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1.5 text-ink-soft transition-colors hover:bg-cream-dim hover:text-ink"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {error && (
+          <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">{error}</div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className={modalLabelClass}>Role</label>
+            <select value={role} onChange={(ev) => setRole(ev.target.value as UserRole)} className={modalInputClass}>
+              {ADMIN_CREATABLE_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+          {requiresEmployee && (
+            <div className="mb-4">
+              <label className={modalLabelClass}>Employee</label>
+              <select
+                value={employeeId}
+                onChange={(ev) => setEmployeeId(ev.target.value ? Number(ev.target.value) : "")}
+                className={modalInputClass}
+              >
+                <option value="">Select an employee…</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {role === "Department Head" && (
+            <div className="mb-4">
+              <label className={modalLabelClass}>Department</label>
+              <input
+                required
+                value={department}
+                onChange={(ev) => setDepartment(ev.target.value)}
+                placeholder="e.g. Engineering"
+                className={modalInputClass}
+              />
+            </div>
+          )}
+          <div className="mb-4">
+            <label className={modalLabelClass}>Username</label>
+            <input required value={username} onChange={(ev) => setUsername(ev.target.value)} className={modalInputClass} />
+          </div>
+          <div className="mb-4">
+            <label className={modalLabelClass}>Password</label>
+            <input
+              required
+              type="password"
+              value={password}
+              onChange={(ev) => setPassword(ev.target.value)}
+              className={modalInputClass}
+            />
+          </div>
+          <div className="mb-6">
+            <label className={modalLabelClass}>Email (optional)</label>
+            <input type="email" value={email} onChange={(ev) => setEmail(ev.target.value)} className={modalInputClass} />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+          >
+            {saving ? "Creating…" : "Create account"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function HrHome({ firstName, isSuperAdmin = false }: { firstName: string; isSuperAdmin?: boolean }) {
   const { withAuth, user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -482,6 +640,8 @@ function HrHome({ firstName }: { firstName: string }) {
   const [health, setHealth] = useState<HealthScore | null>(null);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [createUserResult, setCreateUserResult] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -534,15 +694,30 @@ function HrHome({ firstName }: { firstName: string }) {
       <WelcomeBanner
         name={firstName}
         role={user?.role}
-        description="Pick a module to get to work — every part of your business, in one place."
+        roleLabel={isSuperAdmin ? "Super Admin" : undefined}
+        description={
+          isSuperAdmin
+            ? "Full platform control — every module, every role, org-wide."
+            : "Pick a module to get to work — every part of your business, in one place."
+        }
         notificationCount={health?.flags.length}
       />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {isSuperAdmin && createUserResult && (
+          <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-ink">{createUserResult}</div>
+        )}
         <div className="mb-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <HealthGauge title="Org health" health={health} loading={loading} />
-          <div className="rounded-2xl border border-line bg-card p-6 lg:col-span-2">
-            <h2 className="mb-4 font-display text-sm font-bold text-ink uppercase tracking-wide">Admin</h2>
+          <div
+            className={`rounded-2xl border p-6 lg:col-span-2 ${
+              isSuperAdmin ? "border-primary/30 bg-primary/5" : "border-line bg-card"
+            }`}
+          >
+            <h2 className="mb-4 flex items-center gap-1.5 font-display text-sm font-bold text-ink uppercase tracking-wide">
+              {isSuperAdmin && <Shield className="h-3.5 w-3.5 text-primary" />}
+              {isSuperAdmin ? "Platform Admin" : "Admin"}
+            </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Link
                 href="/dashboard/employee-database"
@@ -556,6 +731,23 @@ function HrHome({ firstName }: { firstName: string }) {
                   <div className="truncate text-xs text-ink-soft">Provision accounts, assign roles</div>
                 </div>
               </Link>
+              {isSuperAdmin && (
+                <button
+                  onClick={() => {
+                    setCreateUserResult(null);
+                    setShowCreateUser(true);
+                  }}
+                  className="group flex items-center gap-3 rounded-xl border border-line bg-cream px-4 py-3.5 text-left transition-colors hover:border-primary/40"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Shield className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-ink">Create user (any role)</div>
+                    <div className="truncate text-xs text-ink-soft">Including IT Manager, Finance Admin, Auditor</div>
+                  </div>
+                </button>
+              )}
               <Link
                 href="/dashboard/settings"
                 className="group flex items-center gap-3 rounded-xl border border-line bg-cream px-4 py-3.5 transition-colors hover:border-primary/40"
@@ -571,6 +763,17 @@ function HrHome({ firstName }: { firstName: string }) {
             </div>
           </div>
         </div>
+
+        {showCreateUser && (
+          <CreateUserModal
+            employees={employees}
+            onClose={() => setShowCreateUser(false)}
+            onCreated={(message) => {
+              setCreateUserResult(message);
+              setShowCreateUser(false);
+            }}
+          />
+        )}
 
         <h2 className="mb-4 font-display text-lg font-bold text-ink">All modules</h2>
         <ModuleCardsGrid items={modules} />
@@ -1034,5 +1237,5 @@ export default function DashboardHubPage() {
   // instead of a different landing page.
   if (user?.role === "Employee" || user?.role === "Contractor") return <EmployeeHome firstName={firstName} />;
   if (user?.role && NARROW_ROLES.includes(user.role)) return <NarrowRoleHome firstName={firstName} role={user.role} />;
-  return <HrHome firstName={firstName} />;
+  return <HrHome firstName={firstName} isSuperAdmin={user?.is_superuser} />;
 }

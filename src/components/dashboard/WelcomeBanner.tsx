@@ -38,12 +38,18 @@ function Chip({
 export default function WelcomeBanner({
   name,
   role,
+  roleLabel,
   description,
   notificationCount,
   notificationLabel,
 }: {
   name: string;
   role: UserRole | undefined;
+  /** Overrides the role chip's text without changing the underlying
+   * UserRole value — for personas that aren't a stored role themselves
+   * (e.g. Super Admin, a Django-superuser tier layered on top of
+   * role="HR", not a UserRole value of its own). */
+  roleLabel?: string;
   description: string;
   notificationCount?: number;
   notificationLabel?: string;
@@ -102,7 +108,7 @@ export default function WelcomeBanner({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {role && <Chip icon={UserRound}>{role}</Chip>}
+          {(roleLabel || role) && <Chip icon={UserRound}>{roleLabel || role}</Chip>}
 
           {editing ? (
             <span className="flex items-center gap-1 rounded-full border border-cream/25 bg-cream py-1 pr-1.5 pl-3">

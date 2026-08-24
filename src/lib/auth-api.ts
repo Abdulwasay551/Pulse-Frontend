@@ -26,6 +26,10 @@ export interface AuthUser {
   role: UserRole;
   organization: string | null;
   employee: { id: number; name: string } | null;
+  // True platform/org superuser — a distinct tier from role="HR" (see
+  // backend core/access_matrix.py's role_code, which maps superusers to
+  // 'SA' rather than 'HRA'). Drives the Super Admin vs. HR dashboard split.
+  is_superuser: boolean;
 }
 
 export interface AuthSession {
