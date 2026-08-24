@@ -97,6 +97,14 @@ export function convertCurrency(token: string, amount: string, from: string, to:
   return apiFetch<CurrencyConversion>(`/payroll-benefits/exchange-rates/convert/?${params}`, { method: "GET" }, token);
 }
 
+export function syncLiveExchangeRates(token: string) {
+  return apiFetch<{ updated: string[] }>(
+    "/payroll-benefits/exchange-rates/sync-live-rates/",
+    { method: "POST" },
+    token
+  );
+}
+
 export type ComplianceCategory = "Tax Filing" | "Currency Update" | "Regulatory";
 export type CalendarStatus = "Upcoming" | "Due soon" | "Overdue" | "Completed";
 

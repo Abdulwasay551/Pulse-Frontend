@@ -1,7 +1,7 @@
 import { apiFetch } from "./auth-api";
 import { resourceApi } from "./api-resource";
 
-export type IntegrationKey = "slack" | "teams" | "webhook" | "twilio" | "zoom" | "checkr" | "dropbox_sign";
+export type IntegrationKey = "slack" | "teams" | "webhook" | "twilio" | "smtp" | "zoom" | "checkr" | "dropbox_sign";
 
 export interface IntegrationField {
   name: string;

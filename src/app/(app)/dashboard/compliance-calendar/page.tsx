@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { ArrowLeftRight, Check, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Check, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -15,6 +15,7 @@ import {
   complianceEventsCsv,
   payrollApi,
   exchangeRatesApi,
+  syncLiveExchangeRates,
   convertCurrency,
   type ComplianceEvent,
   type ComplianceCategory,
@@ -154,6 +155,20 @@ function ComplianceCalendarPage() {
     if (!confirm(`Remove the ${r.currency} rate?`)) return;
     await withAuth((token) => exchangeRatesApi.remove(token, r.id));
     await load();
+  }
+
+  const [syncingRates, setSyncingRates] = useState(false);
+
+  async function handleSyncRates() {
+    setSyncingRates(true);
+    try {
+      await withAuth((token) => syncLiveExchangeRates(token));
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't sync live rates. Please try again.");
+    } finally {
+      setSyncingRates(false);
+    }
   }
 
   async function handleConvert(e: React.FormEvent) {
@@ -343,14 +358,25 @@ function ComplianceCalendarPage() {
         </div>
 
         <div className="rounded-2xl border border-line bg-card p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <h2 className="font-display text-lg font-bold text-ink">Exchange rates</h2>
-            <button
-              onClick={openAddRate}
-              className="flex items-center gap-1.5 rounded-lg bg-cream-dim px-3 py-1.5 text-xs font-semibold text-ink hover:bg-cream"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add rate
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSyncRates}
+                disabled={syncingRates || rates.length === 0}
+                title="Refresh from live ECB reference rates"
+                className="flex items-center gap-1.5 rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:bg-cream-dim disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncingRates ? "animate-spin" : ""}`} />
+                {syncingRates ? "Syncing…" : "Sync live rates"}
+              </button>
+              <button
+                onClick={openAddRate}
+                className="flex items-center gap-1.5 rounded-lg bg-cream-dim px-3 py-1.5 text-xs font-semibold text-ink hover:bg-cream"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add rate
+              </button>
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between rounded-lg border border-line bg-cream/60 px-3.5 py-2.5 text-sm">
