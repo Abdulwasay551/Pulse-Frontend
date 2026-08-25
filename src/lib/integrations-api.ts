@@ -15,7 +15,9 @@ export type IntegrationKey =
   | "hackerrank"
   | "wise"
   | "deel"
-  | "remote";
+  | "remote"
+  | "zapier"
+  | "surveymonkey";
 
 export interface IntegrationField {
   name: string;

@@ -228,6 +228,18 @@ export interface SurveyWrite {
 export const surveysApi = resourceApi<Survey, SurveyWrite>("/people/surveys/");
 export const surveysCsv = csvApi("/people/surveys/", "surveys.csv");
 
+export interface SurveyMonkeySurvey {
+  id: string;
+  title: string;
+  response_count: number | null;
+  date_modified: string | null;
+  href: string | null;
+}
+
+export function getSurveyMonkeySurveys(token: string) {
+  return apiFetch<SurveyMonkeySurvey[]>("/people/surveys/surveymonkey/", { method: "GET" }, token);
+}
+
 export const RECOGNITION_TYPES = [
   "Employee of the Month",
   "Work Anniversary",

@@ -27,6 +27,8 @@ import {
   Video,
   Webhook as WebhookIcon,
   X,
+  Zap,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -60,6 +62,8 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   wise: Landmark,
   deel: Briefcase,
   remote: Globe2,
+  zapier: Zap,
+  surveymonkey: BarChart3,
 };
 
 // A little visual personality per category, beyond just a plain heading —
@@ -68,11 +72,14 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
 const CATEGORY_ACCENT: Record<string, string> = {
   Notifications: "bg-primary",
   Automation: "bg-amber",
-  Email: "bg-accent",
+  // bg-accent isn't a real token in this theme (only cream/ink/primary/
+  // maroon/amber/line/card exist) — was rendering with no color at all.
+  Email: "bg-primary-dark",
   // Maroon is reserved for error/critical states elsewhere in the app —
-  // these two get distinct decorative tones instead, not that one.
+  // these get distinct decorative tones instead, not that one.
   Recruiting: "bg-primary-light",
   Payroll: "bg-ink-soft",
+  People: "bg-ink",
 };
 
 export default function IntegrationsSettingsPageWrapper() {

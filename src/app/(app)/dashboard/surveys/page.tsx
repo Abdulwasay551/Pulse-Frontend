@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, BarChart3, ChevronDown, Plus, RefreshCw, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CsvToolbar from "@/components/dashboard/CsvToolbar";
@@ -11,6 +12,7 @@ import { useTableSearch } from "@/lib/use-table-search";
 import { usePagination } from "@/lib/use-pagination";
 import {
   employeesApi,
+  getSurveyMonkeySurveys,
   surveyResponsesApi,
   surveysApi,
   surveysCsv,
@@ -18,6 +20,7 @@ import {
   type Survey,
   type SurveyFrequency,
   type SurveyKind,
+  type SurveyMonkeySurvey,
 } from "@/lib/people-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -62,6 +65,31 @@ function SurveysPage() {
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [responseForm, setResponseForm] = useState({ employee: "", rating: "5", response_text: "" });
   const [savingResponse, setSavingResponse] = useState(false);
+
+  const [smOpen, setSmOpen] = useState(false);
+  const [smSurveys, setSmSurveys] = useState<SurveyMonkeySurvey[] | null>(null);
+  const [smLoading, setSmLoading] = useState(false);
+  const [smError, setSmError] = useState<string | null>(null);
+  const [smNotConnected, setSmNotConnected] = useState(false);
+
+  async function handleSyncSurveyMonkey() {
+    setSmOpen(true);
+    setSmLoading(true);
+    setSmError(null);
+    setSmNotConnected(false);
+    try {
+      const data = await withAuth((token) => getSurveyMonkeySurveys(token));
+      setSmSurveys(data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setSmNotConnected(true);
+      } else {
+        setSmError(err instanceof ApiError ? err.message : "Couldn't reach SurveyMonkey. Please try again.");
+      }
+    } finally {
+      setSmLoading(false);
+    }
+  }
 
   async function load() {
     try {
@@ -310,6 +338,60 @@ function SurveysPage() {
           </button>
         </div>
       </div>
+
+      {!activeKind && (
+        <div className="mb-4 overflow-hidden rounded-2xl border border-line bg-card">
+          <button
+            type="button"
+            onClick={() => (smOpen ? setSmOpen(false) : handleSyncSurveyMonkey())}
+            className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-cream/60"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BarChart3 className="h-4 w-4" />
+              </span>
+              <span className="text-sm font-semibold text-ink">SurveyMonkey surveys</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-ink-soft transition-transform ${smOpen ? "rotate-180" : ""}`} />
+          </button>
+          {smOpen && (
+            <div className="border-t border-line p-5">
+              {smLoading ? (
+                <div className="text-center text-sm text-ink-soft">Loading from SurveyMonkey…</div>
+              ) : smNotConnected ? (
+                <div className="text-sm text-ink-soft">
+                  SurveyMonkey isn&apos;t connected yet.{" "}
+                  <Link href="/dashboard/settings/integrations" className="font-semibold text-primary hover:underline">
+                    Connect it in Settings →
+                  </Link>
+                </div>
+              ) : smError ? (
+                <div className="text-sm text-maroon">{smError}</div>
+              ) : smSurveys && smSurveys.length === 0 ? (
+                <div className="text-sm text-ink-soft">No surveys found in this SurveyMonkey account.</div>
+              ) : smSurveys ? (
+                <div className="flex flex-col gap-2">
+                  {smSurveys.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-cream/40 px-3.5 py-2.5">
+                      <span className="min-w-0 truncate text-sm text-ink">{s.title}</span>
+                      <span className="shrink-0 text-xs text-ink-soft">
+                        {s.response_count ?? "—"} response{s.response_count === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleSyncSurveyMonkey}
+                    className="mt-1 flex items-center gap-1.5 self-start text-xs font-semibold text-ink-soft hover:text-ink"
+                  >
+                    <RefreshCw className="h-3 w-3" /> Refresh
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
