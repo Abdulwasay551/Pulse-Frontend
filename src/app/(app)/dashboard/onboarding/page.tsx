@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, CalendarPlus, FileText, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, CalendarPlus, FileText, Plus, Trash2, Upload, Video } from "lucide-react";
+import { sendGoogleCalendarInvite } from "@/lib/google-integration-api";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
 import CandidateLink from "@/components/dashboard/CandidateLink";
@@ -138,11 +139,29 @@ function TaskExtraFields({
 }
 
 /** Small actions row shared by both task-list renderings — a document link
- * when one's on file, and an "add to calendar" download for Orientation
- * tasks (generates a .ics file rather than a real Google Calendar invite,
- * since no OAuth integration is provisioned). */
+ * when one's on file, an "add to calendar" .ics download that always
+ * works, and (once Google Calendar is connected under Settings) a real
+ * Google Calendar + Meet invite for Orientation tasks. */
 function TaskExtraActions({ task, category }: { task: OnboardingTask; category: OnboardingCategory }) {
   const { withAuth } = useAuth();
+  const [sendingGoogleInvite, setSendingGoogleInvite] = useState(false);
+
+  async function handleGoogleInvite() {
+    setSendingGoogleInvite(true);
+    try {
+      const result = await withAuth((token) => sendGoogleCalendarInvite(token, task.id));
+      window.prompt(`Google Calendar invite sent — event link:`, result.event_link);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "google_not_configured") {
+        alert("Google Calendar isn't connected yet — connect it under Settings > Integrations, or use the .ics download instead.");
+      } else {
+        alert(err instanceof ApiError ? err.message : "Couldn't send the Google Calendar invite. Please try again.");
+      }
+    } finally {
+      setSendingGoogleInvite(false);
+    }
+  }
+
   return (
     <>
       {task.document && (
@@ -157,13 +176,25 @@ function TaskExtraActions({ task, category }: { task: OnboardingTask; category: 
         </a>
       )}
       {category === "Orientation" && (
-        <button
-          onClick={() => withAuth((token) => downloadOnboardingTaskIcs(token, task.id, task.title))}
-          aria-label={`Add ${task.title} to calendar`}
-          className="rounded-lg p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
-        >
-          <CalendarPlus className="h-3.5 w-3.5" />
-        </button>
+        <>
+          <button
+            onClick={handleGoogleInvite}
+            disabled={sendingGoogleInvite}
+            title="Send a real Google Calendar + Meet invite"
+            aria-label={`Send a Google Calendar invite for ${task.title}`}
+            className="rounded-lg p-1 text-ink-soft hover:bg-primary/10 hover:text-primary disabled:opacity-60"
+          >
+            <Video className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => withAuth((token) => downloadOnboardingTaskIcs(token, task.id, task.title))}
+            title="Download a .ics calendar file instead"
+            aria-label={`Add ${task.title} to calendar`}
+            className="rounded-lg p-1 text-ink-soft hover:bg-cream-dim hover:text-ink"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+          </button>
+        </>
       )}
     </>
   );

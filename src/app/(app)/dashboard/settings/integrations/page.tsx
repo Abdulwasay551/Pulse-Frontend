@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
+  Calendar,
   Check,
   ChevronDown,
   Code2,
@@ -36,6 +38,7 @@ import {
   type IntegrationConnection,
   type IntegrationKey,
 } from "@/lib/integrations-api";
+import { disconnectGoogle, getGoogleConnectUrl, getGoogleStatus, type GoogleStatus } from "@/lib/google-integration-api";
 import { ApiError } from "@/lib/auth-api";
 
 const inputClass =
@@ -72,7 +75,16 @@ const CATEGORY_ACCENT: Record<string, string> = {
   Payroll: "bg-ink-soft",
 };
 
-export default function IntegrationsSettingsPage() {
+export default function IntegrationsSettingsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-sm text-ink-soft">Loading…</div>}>
+      <IntegrationsSettingsPage />
+    </Suspense>
+  );
+}
+
+function IntegrationsSettingsPage() {
+  const searchParams = useSearchParams();
   const { withAuth } = useAuth();
   const [catalog, setCatalog] = useState<IntegrationCatalog | null>(null);
   const [connections, setConnections] = useState<IntegrationConnection[]>([]);
@@ -81,14 +93,18 @@ export default function IntegrationsSettingsPage() {
   const [testStatus, setTestStatus] = useState<Record<number, { ok: boolean; detail: string } | "testing">>({});
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [googleStatus, setGoogleStatus] = useState<GoogleStatus | null>(null);
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+  const [googleCallbackNotice, setGoogleCallbackNotice] = useState<{ ok: boolean; message: string } | null>(null);
 
   async function load() {
     try {
-      const [cat, conns] = await withAuth((token) =>
-        Promise.all([getIntegrationCatalog(token), integrationConnectionsApi.list(token)])
+      const [cat, conns, google] = await withAuth((token) =>
+        Promise.all([getIntegrationCatalog(token), integrationConnectionsApi.list(token), getGoogleStatus(token)])
       );
       setCatalog(cat);
       setConnections(conns);
+      setGoogleStatus(google);
     } finally {
       setLoading(false);
     }
@@ -98,6 +114,36 @@ export default function IntegrationsSettingsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const google = searchParams.get("google");
+    if (google === "connected") {
+      setGoogleCallbackNotice({ ok: true, message: "Google Calendar connected." });
+      load();
+    } else if (google === "error") {
+      const detail = searchParams.get("detail");
+      setGoogleCallbackNotice({ ok: false, message: detail ? `Couldn't connect Google Calendar: ${detail}` : "Couldn't connect Google Calendar." });
+    }
+    // Only ever fires from the URL Google's OAuth redirect lands on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleConnectGoogle() {
+    setConnectingGoogle(true);
+    try {
+      const { auth_url } = await withAuth((token) => getGoogleConnectUrl(token));
+      window.location.href = auth_url;
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Couldn't start the Google connection. Please try again.");
+      setConnectingGoogle(false);
+    }
+  }
+
+  async function handleDisconnectGoogle() {
+    if (!confirm("Disconnect Google Calendar? Orientation tasks will go back to downloadable .ics invites.")) return;
+    await withAuth((token) => disconnectGoogle(token));
+    await load();
+  }
 
   async function handleTest(id: number) {
     setTestStatus((s) => ({ ...s, [id]: "testing" }));
@@ -132,7 +178,8 @@ export default function IntegrationsSettingsPage() {
     setCollapsed((c) => ({ ...c, [category]: !c[category] }));
   }
 
-  const totalConnected = connections.length;
+  const totalConnected = connections.length + (googleStatus?.connected ? 1 : 0);
+  const showGoogleCard = !isSearching || ["google", "calendar", "meet", "scheduling", "orientation"].some((kw) => kw.includes(q) || q.includes(kw));
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -158,6 +205,23 @@ export default function IntegrationsSettingsPage() {
         )}
       </div>
 
+      {googleCallbackNotice && (
+        <div
+          className={`mb-4 flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-sm ${
+            googleCallbackNotice.ok ? "border-primary/30 bg-primary/5 text-ink" : "border-maroon/30 bg-maroon-soft text-maroon"
+          }`}
+        >
+          <span>{googleCallbackNotice.message}</span>
+          <button
+            onClick={() => setGoogleCallbackNotice(null)}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-full p-0.5 hover:bg-black/5"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="mb-6 flex items-center gap-2 rounded-xl border border-line bg-card px-3.5 py-2.5">
         <Search className="h-4 w-4 shrink-0 text-ink-soft" />
         <input
@@ -177,6 +241,59 @@ export default function IntegrationsSettingsPage() {
           </button>
         )}
       </div>
+
+      {!loading && showGoogleCard && (
+        <div className="mb-4 overflow-hidden rounded-2xl border border-line bg-card">
+          <div className="flex items-center gap-2.5 px-5 py-4">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+            <h2 className="font-display text-sm font-bold text-ink">Scheduling</h2>
+            <span className="rounded-full bg-cream-dim px-2 py-0.5 text-[10.5px] font-semibold text-ink-soft">
+              {googleStatus?.connected ? "1/1 connected" : 1}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 border-t border-line p-5 sm:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-cream/40 p-5">
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Calendar className="h-4.5 w-4.5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-ink">Google Calendar &amp; Meet</div>
+                  {googleStatus?.connected && (
+                    <div className="truncate text-xs text-primary">Connected — {googleStatus.email}</div>
+                  )}
+                </div>
+              </div>
+              <p className="mb-3 text-xs text-ink-soft">
+                Sends real calendar invites with a live Meet link for Orientation onboarding tasks — replaces the
+                downloadable .ics file with an actual event on your calendar.
+              </p>
+              <p className="mb-3 text-xs text-ink-soft/80">
+                Unlike every other integration here, this connects through a real Google sign-in screen — there&apos;s
+                no key or URL to paste.
+              </p>
+              <div className="flex items-center gap-2">
+                {googleStatus?.connected ? (
+                  <button
+                    onClick={handleDisconnectGoogle}
+                    className="rounded-lg border border-line bg-cream px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-cream-dim"
+                  >
+                    Disconnect
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnectGoogle}
+                    disabled={connectingGoogle}
+                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+                  >
+                    <Plug className="h-3.5 w-3.5" /> {connectingGoogle ? "Redirecting…" : "Connect with Google"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading || !catalog ? (
         <div className="rounded-2xl border border-line bg-card p-10 text-center text-sm text-ink-soft">Loading…</div>
