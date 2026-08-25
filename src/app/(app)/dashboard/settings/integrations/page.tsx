@@ -29,6 +29,9 @@ import {
   X,
   Zap,
   BarChart3,
+  GraduationCap,
+  Building2,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import Modal from "@/components/dashboard/Modal";
@@ -64,6 +67,9 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   remote: Globe2,
   zapier: Zap,
   surveymonkey: BarChart3,
+  linkedin_learning: GraduationCap,
+  indeed: Building2,
+  gusto: DollarSign,
 };
 
 // A little visual personality per category, beyond just a plain heading —
@@ -80,6 +86,10 @@ const CATEGORY_ACCENT: Record<string, string> = {
   Recruiting: "bg-primary-light",
   Payroll: "bg-ink-soft",
   People: "bg-ink",
+  // This theme only defines 8 named colors total — Talent reuses
+  // Recruiting's tone rather than inventing a new one bg-amber-soft
+  // would've been too pale to read as a dot against the card background.
+  Talent: "bg-primary-light",
 };
 
 export default function IntegrationsSettingsPageWrapper() {

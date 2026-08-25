@@ -17,7 +17,10 @@ export type IntegrationKey =
   | "deel"
   | "remote"
   | "zapier"
-  | "surveymonkey";
+  | "surveymonkey"
+  | "linkedin_learning"
+  | "indeed"
+  | "gusto";
 
 export interface IntegrationField {
   name: string;
