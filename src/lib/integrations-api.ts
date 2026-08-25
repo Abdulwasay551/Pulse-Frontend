@@ -12,7 +12,10 @@ export type IntegrationKey =
   | "zoom"
   | "checkr"
   | "dropbox_sign"
-  | "hackerrank";
+  | "hackerrank"
+  | "wise"
+  | "deel"
+  | "remote";
 
 export interface IntegrationField {
   name: string;

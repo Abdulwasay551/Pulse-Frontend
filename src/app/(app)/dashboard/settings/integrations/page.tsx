@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Briefcase,
   Check,
   ChevronDown,
   Code2,
   Copy,
   FileSignature,
   Gamepad2,
+  Globe2,
   Hash,
+  Landmark,
   Mail,
   MessageSquare,
   Plug,
@@ -51,6 +54,9 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   checkr: ShieldCheck,
   dropbox_sign: FileSignature,
   hackerrank: Code2,
+  wise: Landmark,
+  deel: Briefcase,
+  remote: Globe2,
 };
 
 // A little visual personality per category, beyond just a plain heading —
@@ -60,7 +66,10 @@ const CATEGORY_ACCENT: Record<string, string> = {
   Notifications: "bg-primary",
   Automation: "bg-amber",
   Email: "bg-accent",
-  Recruiting: "bg-maroon",
+  // Maroon is reserved for error/critical states elsewhere in the app —
+  // these two get distinct decorative tones instead, not that one.
+  Recruiting: "bg-primary-light",
+  Payroll: "bg-ink-soft",
 };
 
 export default function IntegrationsSettingsPage() {

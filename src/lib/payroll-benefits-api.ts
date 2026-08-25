@@ -105,6 +105,18 @@ export function syncLiveExchangeRates(token: string) {
   );
 }
 
+export interface WiseQuote {
+  source_amount: number;
+  target_amount: number | null;
+  rate: number | null;
+  fee: number | null;
+}
+
+export function getWiseQuote(token: string, amount: string, from: string, to: string) {
+  const params = new URLSearchParams({ amount, from, to });
+  return apiFetch<WiseQuote>(`/payroll-benefits/exchange-rates/wise-quote/?${params}`, { method: "GET" }, token);
+}
+
 export type ComplianceCategory = "Tax Filing" | "Currency Update" | "Regulatory";
 export type CalendarStatus = "Upcoming" | "Due soon" | "Overdue" | "Completed";
 

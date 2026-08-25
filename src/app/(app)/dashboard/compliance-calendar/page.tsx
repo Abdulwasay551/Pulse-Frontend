@@ -15,7 +15,9 @@ import {
   complianceEventsCsv,
   payrollApi,
   exchangeRatesApi,
+  getWiseQuote,
   syncLiveExchangeRates,
+  type WiseQuote,
   convertCurrency,
   type ComplianceEvent,
   type ComplianceCategory,
@@ -186,6 +188,24 @@ function ComplianceCalendarPage() {
     }
   }
 
+  const [wiseQuote, setWiseQuote] = useState<WiseQuote | null>(null);
+  const [wiseQuoteError, setWiseQuoteError] = useState<string | null>(null);
+  const [fetchingWiseQuote, setFetchingWiseQuote] = useState(false);
+
+  async function handleWiseQuote() {
+    setWiseQuoteError(null);
+    setFetchingWiseQuote(true);
+    try {
+      const result = await withAuth((token) => getWiseQuote(token, convertAmount, convertFrom, convertTo));
+      setWiseQuote(result);
+    } catch (err) {
+      setWiseQuote(null);
+      setWiseQuoteError(err instanceof ApiError ? err.message : "Couldn't get a Wise quote. Please try again.");
+    } finally {
+      setFetchingWiseQuote(false);
+    }
+  }
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -312,7 +332,10 @@ function ComplianceCalendarPage() {
           <h2 className="mb-1 flex items-center gap-1.5 font-display text-lg font-bold text-ink">
             <ArrowLeftRight className="h-4 w-4" /> Currency converter
           </h2>
-          <p className="mb-4 text-xs text-ink-soft">Rates are HR/Finance Admin-maintained, not a live feed — check &quot;last updated&quot; below.</p>
+          <p className="mb-4 text-xs text-ink-soft">
+            Uses the rates on file below (hand-entered or synced) — for a live, real quote from Wise instead, connect
+            it under Settings and use &quot;Get Wise quote&quot; after converting.
+          </p>
           <form onSubmit={handleConvert} className="flex flex-wrap items-end gap-3">
             <div className="w-28">
               <label className={labelClass}>Amount</label>
@@ -348,12 +371,34 @@ function ComplianceCalendarPage() {
             >
               {converting ? "Converting…" : "Convert"}
             </button>
+            <button
+              type="button"
+              onClick={handleWiseQuote}
+              disabled={fetchingWiseQuote}
+              title="Get a real, live quote from your connected Wise account"
+              className="rounded-lg border border-line bg-cream px-4 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:bg-cream-dim disabled:opacity-60"
+            >
+              {fetchingWiseQuote ? "Asking Wise…" : "Get Wise quote"}
+            </button>
           </form>
           {convertError && <p className="mt-3 text-sm text-maroon">{convertError}</p>}
           {conversion && (
             <p className="mt-4 text-lg font-semibold text-ink">
               {conversion.amount} {conversion.from} = <span className="text-primary">{conversion.result} {conversion.to}</span>
             </p>
+          )}
+          {wiseQuoteError && <p className="mt-3 text-sm text-maroon">{wiseQuoteError}</p>}
+          {wiseQuote && (
+            <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 px-3.5 py-3 text-sm">
+              <p className="font-semibold text-ink">
+                {wiseQuote.source_amount} {convertFrom} ={" "}
+                <span className="text-primary">{wiseQuote.target_amount ?? "—"} {convertTo}</span> via Wise
+              </p>
+              <p className="mt-1 text-xs text-ink-soft">
+                Rate {wiseQuote.rate ?? "—"}
+                {wiseQuote.fee ? ` · Fee ${wiseQuote.fee} ${convertFrom}` : ""} — live quote, nothing was transferred.
+              </p>
+            </div>
           )}
         </div>
 
