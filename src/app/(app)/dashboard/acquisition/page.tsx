@@ -10,7 +10,7 @@ import { filterSectionsForRole } from "@/lib/role-access";
 import { getDashboardSummary, type DashboardSummary } from "@/lib/recruit-api";
 
 const moduleDef = dashboardModules.find((m) => m.key === "recruit")!;
-const section = moduleDef.sections.find((s) => s.label === "Acquisition")!;
+const section = moduleDef.sections.find((s) => s.label === "Talent Acquisition Management (TAM)")!;
 
 export default function AcquisitionHubPage() {
   const { withAuth, user } = useAuth();
