@@ -117,6 +117,19 @@ export function getWiseQuote(token: string, amount: string, from: string, to: st
   return apiFetch<WiseQuote>(`/payroll-benefits/exchange-rates/wise-quote/?${params}`, { method: "GET" }, token);
 }
 
+export type ExternalWorkforceProvider = "deel" | "remote" | "gusto";
+
+export interface ExternalWorker {
+  id: string | number;
+  name: string | null;
+  email?: string | null;
+  [key: string]: unknown;
+}
+
+export function getExternalWorkforce(token: string, provider: ExternalWorkforceProvider) {
+  return apiFetch<ExternalWorker[]>(`/payroll-benefits/external-workforce/${provider}/`, { method: "GET" }, token);
+}
+
 export type ComplianceCategory = "Tax Filing" | "Currency Update" | "Regulatory";
 export type CalendarStatus = "Upcoming" | "Due soon" | "Overdue" | "Completed";
 

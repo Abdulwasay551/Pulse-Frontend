@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plug, Sparkles } from "lucide-react";
+import { Plug, Sparkles, KeyRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, updateMe, changePassword } from "@/lib/auth-api";
 
@@ -258,7 +258,20 @@ export default function SettingsPage() {
         </span>
         <div>
           <h3 className="font-display text-sm font-bold text-ink">Integrations</h3>
-          <p className="text-xs text-ink-soft">Connect Slack, Microsoft Teams, a custom webhook, or SMS alerts.</p>
+          <p className="text-xs text-ink-soft">Connect Slack, Zapier, a custom webhook, SMS alerts, and more.</p>
+        </div>
+      </Link>
+
+      <Link
+        href="/dashboard/settings/api-tokens"
+        className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <KeyRound className="h-5 w-5" />
+        </span>
+        <div>
+          <h3 className="font-display text-sm font-bold text-ink">API Access</h3>
+          <p className="text-xs text-ink-soft">Generate a personal API token to call Pulse's API directly, scoped to your own access.</p>
         </div>
       </Link>
     </div>

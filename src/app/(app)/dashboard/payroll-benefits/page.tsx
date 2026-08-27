@@ -6,6 +6,8 @@ import ModuleHeader from "@/components/dashboard/ModuleHeader";
 import ModuleFeatureSections from "@/components/dashboard/ModuleFeatureSections";
 import PlacementsChart from "@/components/dashboard/PlacementsChart";
 import DonutChart from "@/components/dashboard/DonutChart";
+import ModuleIntegrationsCard from "@/components/dashboard/ModuleIntegrationsCard";
+import PayrollExternalWorkforcePanel from "@/components/dashboard/PayrollExternalWorkforcePanel";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardModules } from "@/lib/dashboard-modules";
 import { getPayrollBenefitsDashboardSummary, type PayrollBenefitsDashboardSummary } from "@/lib/payroll-benefits-api";
@@ -78,6 +80,12 @@ export default function PayrollBenefitsPage() {
           </div>
         </>
       )}
+
+      <ModuleIntegrationsCard
+        title="Payroll integrations"
+        integrationKeys={["wise", "deel", "remote", "gusto"]}
+      />
+      <PayrollExternalWorkforcePanel />
 
       <ModuleFeatureSections moduleDef={moduleDef} />
     </div>
