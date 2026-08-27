@@ -4,6 +4,8 @@ export interface ApiEndpoint {
   path: string;
   name: string | null;
   methods: string[];
+  auth_required: boolean;
+  description: string;
 }
 
 export interface ApiDirectorySection {

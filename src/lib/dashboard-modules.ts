@@ -411,6 +411,13 @@ export function getBreadcrumbTrail(pathname: string, searchParams: URLSearchPara
 
   if (!moduleDef) {
     if (pathname === "/dashboard/settings") return [{ label: "Settings" }];
+    const settingsSubPages: Record<string, string> = {
+      "/dashboard/settings/integrations": "Integrations",
+      "/dashboard/settings/ai": "AI Integrations",
+      "/dashboard/settings/api-tokens": "API Access",
+    };
+    const subLabel = settingsSubPages[pathname];
+    if (subLabel) return [{ label: "Settings", href: "/dashboard/settings" }, { label: subLabel }];
     return [];
   }
 

@@ -1,21 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Plug, Sparkles, KeyRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import SettingsShell from "@/components/dashboard/SettingsShell";
 import { ApiError, updateMe, changePassword } from "@/lib/auth-api";
+import {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  type NotificationPreferences,
+} from "@/lib/notification-preferences-api";
 
-function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
-  const [on, setOn] = useState(defaultOn);
+const NOTIFICATION_ROWS: { key: keyof NotificationPreferences; label: string }[] = [
+  { key: "new_candidate_applications", label: "New candidate applications" },
+  { key: "requisition_status_changes", label: "Requisition status changes" },
+  { key: "payroll_run_reminders", label: "Payroll run reminders" },
+  { key: "weekly_desk_summary_email", label: "Weekly desk summary email" },
+];
+
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
   return (
     <button
-      onClick={() => setOn((v) => !v)}
-      className={`relative h-6 w-11 rounded-full transition-colors ${on ? "bg-primary" : "bg-line"}`}
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      role="switch"
+      aria-checked={checked}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${checked ? "bg-primary" : "bg-line"}`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-cream transition-transform ${on ? "translate-x-5" : "translate-x-0"}`}
+        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-cream transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`}
       />
     </button>
   );
@@ -37,6 +51,14 @@ export default function SettingsPage() {
   const [newPassword2, setNewPassword2] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    withAuth((token) => getNotificationPreferences(token)).then(setPrefs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initials = (user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username : "")
     .split(" ")
@@ -85,195 +107,177 @@ export default function SettingsPage() {
     }
   }
 
+  async function toggleNotification(key: keyof NotificationPreferences) {
+    if (!prefs) return;
+    const next = !prefs[key];
+    setPrefs({ ...prefs, [key]: next });
+    setSavingKey(key);
+    try {
+      const saved = await withAuth((token) => updateNotificationPreferences(token, { [key]: next }));
+      setPrefs(saved);
+    } catch {
+      // Roll back on failure — the toggle shouldn't lie about saved state.
+      setPrefs((p) => (p ? { ...p, [key]: !next } : p));
+    } finally {
+      setSavingKey(null);
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Settings</h1>
-        <p className="mt-1 text-sm text-ink-soft">Manage your profile and notification preferences.</p>
-      </div>
-
-      <form onSubmit={handleProfileSave} className="rounded-2xl border border-line bg-card p-6">
-        <h2 className="mb-5 font-display text-base font-bold text-ink">Profile</h2>
-        <div className="mb-5 flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-lg font-bold text-primary">
-            {initials}
-          </span>
-          <div className="text-xs text-ink-soft">
-            Username: <span className="text-ink">{user?.username}</span>
-          </div>
+    <SettingsShell>
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-6">
+          <h1 className="font-display text-2xl font-bold text-ink">General</h1>
+          <p className="mt-1 text-sm text-ink-soft">Manage your profile and notification preferences.</p>
         </div>
 
-        {profileError && (
-          <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
-            {profileError}
-          </div>
-        )}
-        {profileSaved && (
-          <div className="mb-4 rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">
-            Profile updated.
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              First name
-            </label>
-            <input
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              Last name
-            </label>
-            <input
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            type="submit"
-            disabled={profileLoading}
-            className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-          >
-            {profileLoading ? "Saving…" : "Save changes"}
-          </button>
-        </div>
-      </form>
-
-      <form onSubmit={handlePasswordChange} className="mt-4 rounded-2xl border border-line bg-card p-6">
-        <h2 className="mb-1 font-display text-base font-bold text-ink">Change password</h2>
-        <p className="mb-5 text-sm text-ink-soft">You&apos;ll be logged out everywhere else after this.</p>
-
-        {passwordError && (
-          <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
-            {passwordError}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              Current password
-            </label>
-            <input
-              type="password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              autoComplete="current-password"
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              New password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              autoComplete="new-password"
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
-              Confirm new password
-            </label>
-            <input
-              type="password"
-              value={newPassword2}
-              onChange={(e) => setNewPassword2(e.target.value)}
-              autoComplete="new-password"
-              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            type="submit"
-            disabled={passwordLoading}
-            className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
-          >
-            {passwordLoading ? "Changing…" : "Change password"}
-          </button>
-        </div>
-      </form>
-
-      <div className="mt-4 rounded-2xl border border-line bg-card p-6">
-        <h2 className="mb-4 font-display text-base font-bold text-ink">Notifications</h2>
-        <div className="flex flex-col divide-y divide-line">
-          {[
-            { label: "New candidate applications", defaultOn: true },
-            { label: "Requisition status changes", defaultOn: true },
-            { label: "Payroll run reminders", defaultOn: true },
-            { label: "Weekly desk summary email", defaultOn: false },
-          ].map((row) => (
-            <div key={row.label} className="flex items-center justify-between py-3.5">
-              <span className="text-sm text-ink">{row.label}</span>
-              <Toggle defaultOn={row.defaultOn} />
+        <form onSubmit={handleProfileSave} className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-5 font-display text-base font-bold text-ink">Profile</h2>
+          <div className="mb-5 flex items-center gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-lg font-bold text-primary">
+              {initials}
+            </span>
+            <div className="text-xs text-ink-soft">
+              Username: <span className="text-ink">{user?.username}</span>
             </div>
-          ))}
+          </div>
+
+          {profileError && (
+            <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+              {profileError}
+            </div>
+          )}
+          {profileSaved && (
+            <div className="mb-4 rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">
+              Profile updated.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                First name
+              </label>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                Last name
+              </label>
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              type="submit"
+              disabled={profileLoading}
+              className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              {profileLoading ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        </form>
+
+        <form onSubmit={handlePasswordChange} className="mt-4 rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-1 font-display text-base font-bold text-ink">Change password</h2>
+          <p className="mb-5 text-sm text-ink-soft">You&apos;ll be logged out everywhere else after this.</p>
+
+          {passwordError && (
+            <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">
+              {passwordError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                Current password
+              </label>
+              <input
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                New password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+                Confirm new password
+              </label>
+              <input
+                type="password"
+                value={newPassword2}
+                onChange={(e) => setNewPassword2(e.target.value)}
+                autoComplete="new-password"
+                className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              type="submit"
+              disabled={passwordLoading}
+              className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+            >
+              {passwordLoading ? "Changing…" : "Change password"}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-4 rounded-2xl border border-line bg-card p-6">
+          <h2 className="mb-4 font-display text-base font-bold text-ink">Notifications</h2>
+          {!prefs ? (
+            <div className="py-4 text-center text-sm text-ink-soft">Loading…</div>
+          ) : (
+            <div className="flex flex-col divide-y divide-line">
+              {NOTIFICATION_ROWS.map((row) => (
+                <div key={row.key} className="flex items-center justify-between py-3.5">
+                  <span className="text-sm text-ink">{row.label}</span>
+                  <Toggle
+                    checked={prefs[row.key]}
+                    onChange={() => toggleNotification(row.key)}
+                    disabled={savingKey === row.key}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      <Link
-        href="/dashboard/settings/ai"
-        className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Sparkles className="h-5 w-5" />
-        </span>
-        <div>
-          <h3 className="font-display text-sm font-bold text-ink">AI Integrations</h3>
-          <p className="text-xs text-ink-soft">Connect OpenAI, Claude, Gemini, or another provider to unlock AI features.</p>
-        </div>
-      </Link>
-
-      <Link
-        href="/dashboard/settings/integrations"
-        className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Plug className="h-5 w-5" />
-        </span>
-        <div>
-          <h3 className="font-display text-sm font-bold text-ink">Integrations</h3>
-          <p className="text-xs text-ink-soft">Connect Slack, Zapier, a custom webhook, SMS alerts, and more.</p>
-        </div>
-      </Link>
-
-      <Link
-        href="/dashboard/settings/api-tokens"
-        className="group mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <KeyRound className="h-5 w-5" />
-        </span>
-        <div>
-          <h3 className="font-display text-sm font-bold text-ink">API Access</h3>
-          <p className="text-xs text-ink-soft">Generate a personal API token to call Pulse's API directly, scoped to your own access.</p>
-        </div>
-      </Link>
-    </div>
+    </SettingsShell>
   );
 }

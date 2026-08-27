@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Check, Copy, KeyRound, Trash2 } from "lucide-react";
+import { Check, Copy, KeyRound, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import SettingsShell from "@/components/dashboard/SettingsShell";
 import { createApiToken, listApiTokens, revokeApiToken, type ApiToken } from "@/lib/api-tokens-api";
 import { ApiError } from "@/lib/auth-api";
 
@@ -63,14 +63,8 @@ export default function ApiTokensPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Link
-        href="/dashboard/settings"
-        className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Settings
-      </Link>
-
+    <SettingsShell>
+      <div className="mx-auto max-w-3xl">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-ink">API Access</h1>
         <p className="mt-1 text-sm text-ink-soft">
@@ -152,6 +146,7 @@ export default function ApiTokensPage() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </SettingsShell>
   );
 }

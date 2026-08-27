@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Bot, Check, Plus, Star, Trash2, X } from "lucide-react";
+import { Bot, Check, Plus, Star, Trash2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useAiStatus } from "@/lib/ai-status-context";
 import Modal from "@/components/dashboard/Modal";
+import SettingsShell from "@/components/dashboard/SettingsShell";
 import {
   aiCredentialsApi,
   getAiFeatureSettings,
@@ -122,14 +122,8 @@ export default function AiIntegrationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <Link
-        href="/dashboard/settings"
-        className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Settings
-      </Link>
-
+    <SettingsShell>
+      <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">AI Integrations</h1>
@@ -338,6 +332,7 @@ export default function AiIntegrationsPage() {
           </form>
         </Modal>
       )}
-    </div>
+      </div>
+    </SettingsShell>
   );
 }

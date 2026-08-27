@@ -1,10 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   Briefcase,
   Calendar,
   Check,
@@ -34,6 +32,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import SettingsShell from "@/components/dashboard/SettingsShell";
 import IntegrationFormModal from "@/components/dashboard/IntegrationFormModal";
 import {
   getIntegrationCatalog,
@@ -109,6 +108,13 @@ function IntegrationsSettingsPage() {
   const [googleStatus, setGoogleStatus] = useState<GoogleStatus | null>(null);
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [googleCallbackNotice, setGoogleCallbackNotice] = useState<{ ok: boolean; message: string } | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  function jumpTo(category: string) {
+    setCollapsed((c) => ({ ...c, [category]: false }));
+    setQuery("");
+    requestAnimationFrame(() => sectionRefs.current[category]?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 
   async function load() {
     try {
@@ -195,14 +201,8 @@ function IntegrationsSettingsPage() {
   const showGoogleCard = !isSearching || ["google", "calendar", "meet", "scheduling", "orientation"].some((kw) => kw.includes(q) || q.includes(kw));
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <Link
-        href="/dashboard/settings"
-        className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Settings
-      </Link>
-
+    <SettingsShell>
+    <div className="mx-auto max-w-5xl">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">Integrations</h1>
@@ -211,12 +211,24 @@ function IntegrationsSettingsPage() {
             find the key or URL it needs — nothing here requires touching code.
           </p>
         </div>
-        {!loading && (
-          <span className="shrink-0 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-ink-soft">
-            {totalConnected} connected
-          </span>
-        )}
       </div>
+
+      {!loading && catalog && (
+        <div className="mb-6 grid grid-cols-3 gap-3 sm:max-w-md">
+          <div className="rounded-xl border border-line bg-card px-4 py-3 text-center">
+            <div className="font-display text-xl font-bold text-ink">{totalConnected}</div>
+            <div className="text-[10.5px] text-ink-soft">Connected</div>
+          </div>
+          <div className="rounded-xl border border-line bg-card px-4 py-3 text-center">
+            <div className="font-display text-xl font-bold text-ink">{entries.length + 1}</div>
+            <div className="text-[10.5px] text-ink-soft">Available</div>
+          </div>
+          <div className="rounded-xl border border-line bg-card px-4 py-3 text-center">
+            <div className="font-display text-xl font-bold text-ink">{categories.length + 1}</div>
+            <div className="text-[10.5px] text-ink-soft">Categories</div>
+          </div>
+        </div>
+      )}
 
       {googleCallbackNotice && (
         <div
@@ -235,6 +247,44 @@ function IntegrationsSettingsPage() {
         </div>
       )}
 
+      <div className="flex flex-col gap-6 lg:flex-row">
+        {!loading && catalog && (
+          <nav className="hidden shrink-0 lg:block lg:w-48">
+            <div className="sticky top-6 flex flex-col gap-0.5">
+              <span className="mb-1 px-2 text-[10.5px] font-semibold tracking-wide text-ink-soft uppercase">Jump to</span>
+              <button
+                type="button"
+                onClick={() => jumpTo("Scheduling")}
+                className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-ink-soft transition-colors hover:bg-card hover:text-ink"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-dark" /> Scheduling
+                </span>
+                <span className="text-[10px] text-ink-soft/70">{googleStatus?.connected ? "1/1" : "0/1"}</span>
+              </button>
+              {categories.map((category) => {
+                const categoryEntries = entries.filter(([, meta]) => meta.category === category);
+                const connectedCount = categoryEntries.filter(([key]) => connectionByKey.has(key)).length;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => jumpTo(category)}
+                    className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-ink-soft transition-colors hover:bg-card hover:text-ink"
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_ACCENT[category] ?? "bg-ink-soft"}`} />
+                      <span className="truncate">{category}</span>
+                    </span>
+                    <span className="shrink-0 text-[10px] text-ink-soft/70">{connectedCount}/{categoryEntries.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
+
+        <div className="min-w-0 flex-1">
       <div className="mb-6 flex items-center gap-2 rounded-xl border border-line bg-card px-3.5 py-2.5">
         <Search className="h-4 w-4 shrink-0 text-ink-soft" />
         <input
@@ -256,9 +306,12 @@ function IntegrationsSettingsPage() {
       </div>
 
       {!loading && showGoogleCard && (
-        <div className="mb-4 overflow-hidden rounded-2xl border border-line bg-card">
+        <div
+          ref={(el) => { sectionRefs.current["Scheduling"] = el; }}
+          className="mb-4 scroll-mt-6 overflow-hidden rounded-2xl border border-line bg-card"
+        >
           <div className="flex items-center gap-2.5 px-5 py-4">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary-dark" />
             <h2 className="font-display text-sm font-bold text-ink">Scheduling</h2>
             <span className="rounded-full bg-cream-dim px-2 py-0.5 text-[10.5px] font-semibold text-ink-soft">
               {googleStatus?.connected ? "1/1 connected" : 1}
@@ -319,7 +372,11 @@ function IntegrationsSettingsPage() {
           const isOpen = isSearching || !collapsed[category];
 
           return (
-            <div key={category} className="mb-4 overflow-hidden rounded-2xl border border-line bg-card">
+            <div
+              key={category}
+              ref={(el) => { sectionRefs.current[category] = el; }}
+              className="mb-4 scroll-mt-6 overflow-hidden rounded-2xl border border-line bg-card"
+            >
               <button
                 type="button"
                 onClick={() => toggleCategory(category)}
@@ -458,6 +515,8 @@ function IntegrationsSettingsPage() {
           No integrations match &quot;{query}&quot;.
         </div>
       )}
+        </div>
+      </div>
 
       {editingKey && catalog && (
         <IntegrationFormModal
@@ -472,5 +531,6 @@ function IntegrationsSettingsPage() {
         />
       )}
     </div>
+    </SettingsShell>
   );
 }
