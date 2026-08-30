@@ -30,6 +30,11 @@ import {
   GraduationCap,
   Building2,
   DollarSign,
+  PenTool,
+  Coins,
+  Receipt,
+  Calculator,
+  Laptop,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import SettingsShell from "@/components/dashboard/SettingsShell";
@@ -65,6 +70,11 @@ const INTEGRATION_ICONS: Record<IntegrationKey, typeof Hash> = {
   linkedin_learning: GraduationCap,
   indeed: Building2,
   gusto: DollarSign,
+  docusign: PenTool,
+  xero: Coins,
+  quickbooks: Receipt,
+  sage: Calculator,
+  google_workspace_devices: Laptop,
 };
 
 // A little visual personality per category, beyond just a plain heading —
@@ -85,6 +95,10 @@ const CATEGORY_ACCENT: Record<string, string> = {
   // Recruiting's tone rather than inventing a new one bg-amber-soft
   // would've been too pale to read as a dot against the card background.
   Talent: "bg-primary-light",
+  // Semantic reuse rather than a new token: payroll-adjacent and
+  // tech-adjacent respectively.
+  "Direct Payroll": "bg-ink-soft",
+  "IT & Assets": "bg-primary",
 };
 
 export default function IntegrationsSettingsPageWrapper() {

@@ -20,7 +20,12 @@ export type IntegrationKey =
   | "surveymonkey"
   | "linkedin_learning"
   | "indeed"
-  | "gusto";
+  | "gusto"
+  | "docusign"
+  | "xero"
+  | "quickbooks"
+  | "sage"
+  | "google_workspace_devices";
 
 export interface IntegrationField {
   name: string;

@@ -77,8 +77,27 @@ export default function ApiDocsPage() {
   }
 
   return (
-    <div className="min-h-full bg-cream px-4 py-8 text-ink sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-6xl">
+    <div className="flex h-screen overflow-hidden bg-cream text-ink">
+      <nav className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-cream/10 bg-primary-dark py-5 lg:flex">
+        <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-cream/40 uppercase">API Directory</div>
+        <div className="px-4 pb-3 text-[10.5px] text-cream/40">{totalEndpointCalls} endpoints</div>
+        <div className="flex flex-col gap-0.5 px-3">
+          {(sections ?? []).map((s) => (
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => jumpTo(s.label)}
+              className="flex items-center justify-between gap-2 rounded-lg px-3.5 py-2.5 text-left text-sm font-semibold text-cream/60 transition-colors hover:bg-cream/5 hover:text-cream"
+            >
+              <span className="truncate">{s.label}</span>
+              <span className="shrink-0 text-[10.5px] text-cream/40">{s.endpoints.length}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <div className="min-w-0 flex-1 overflow-y-auto px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-4xl">
         <h1 className="font-display text-2xl font-bold text-ink">Pulse API directory</h1>
         <p className="mt-1 text-sm text-ink-soft">
           Every REST endpoint Pulse exposes, generated directly from the live URL configuration and each view&apos;s
@@ -90,29 +109,20 @@ export default function ApiDocsPage() {
           personal token under Settings → API Access. A token only ever does what its owner can already do signed in.
         </p>
 
-        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
-          {sections && (
-            <nav className="hidden shrink-0 lg:block lg:w-56">
-              <div className="sticky top-6 flex flex-col gap-0.5 rounded-2xl border border-line bg-card p-3">
-                <span className="mb-1 px-2 text-[10.5px] font-semibold tracking-wide text-ink-soft uppercase">
-                  {totalEndpointCalls} endpoints
-                </span>
-                {sections.map((s) => (
-                  <button
-                    key={s.label}
-                    type="button"
-                    onClick={() => jumpTo(s.label)}
-                    className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-ink-soft transition-colors hover:bg-cream hover:text-ink"
-                  >
-                    <span className="truncate">{s.label}</span>
-                    <span className="shrink-0 text-[10px] text-ink-soft/70">{s.endpoints.length}</span>
-                  </button>
-                ))}
-              </div>
-            </nav>
-          )}
+        <div className="mt-6 flex gap-1.5 overflow-x-auto pb-1 lg:hidden">
+          {(sections ?? []).map((s) => (
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => jumpTo(s.label)}
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-ink-soft hover:bg-cream-dim hover:text-ink"
+            >
+              {s.label} <span className="text-ink-soft/70">{s.endpoints.length}</span>
+            </button>
+          ))}
+        </div>
 
-          <div className="min-w-0 flex-1">
+        <div className="mt-4">
             <div className="mb-3 flex items-center gap-2 rounded-xl border border-line bg-card px-3.5 py-2.5">
               <KeyRound className="h-4 w-4 shrink-0 text-ink-soft" />
               <input

@@ -24,6 +24,11 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   // it needs the same ?module= fallback lookup the sidebar uses — otherwise
   // the sidebar (and the mobile menu button) would disappear on that route.
   const hasSidebar = findActiveModuleForRoute(pathname, searchParams) !== null;
+  // Settings pages render their own edge-pinned sidebar (SettingsShell)
+  // rather than the module Sidebar above — <main> needs to give up its
+  // padding for that column to actually reach the left edge, the same way
+  // it reaches the left edge when the module Sidebar is absent.
+  const hasOwnFullBleedLayout = pathname.startsWith("/dashboard/settings");
 
   return (
     <div className="flex h-screen overflow-hidden bg-cream-dim">
@@ -32,7 +37,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         <ImpersonationBanner />
         <Topbar onOpenSidebar={() => setMobileOpen(true)} showMenuButton={hasSidebar} />
         <Breadcrumbs />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        <main className={hasOwnFullBleedLayout ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto p-4 sm:p-6"}>
+          {children}
+        </main>
       </div>
     </div>
   );
