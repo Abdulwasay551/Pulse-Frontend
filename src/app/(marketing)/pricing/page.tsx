@@ -4,7 +4,7 @@ import { getPage, getSiteSettings, type PricingPageData } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Pricing — Pulse",
-  description: "Simple, per-recruiter pricing for Pulse's recruitment CRM and ATS.",
+  description: "Simple, per-seat pricing for Pulse's HR & workforce management platform.",
 };
 
 export const dynamic = "force-dynamic";

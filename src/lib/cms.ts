@@ -221,9 +221,16 @@ export interface SiteSettingsData {
   cta_default_subtitle: string;
 }
 
-async function cmsFetch<T>(path: string): Promise<T> {
+// The Django backend is itself a serverless function — on a cold start
+// (its own or this frontend function's), an unbounded fetch here can hang
+// until the platform's own request timeout kills it, which the browser
+// sees as a bare connection failure rather than a normal error page. An
+// explicit, much shorter timeout means a slow backend fails fast instead,
+// letting callers (see getSiteSettings below) fall back gracefully.
+async function cmsFetch<T>(path: string, timeoutMs = 6000): Promise<T> {
   const res = await fetch(`${CMS_API_BASE}${path}`, {
     next: { revalidate: REVALIDATE_SECONDS },
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
     throw new Error(`CMS fetch failed (${res.status}): ${path}`);
@@ -241,9 +248,25 @@ export async function getProducts(): Promise<Product[]> {
   return data.items;
 }
 
+// Awaited unconditionally by the marketing layout on every single page —
+// a CMS timeout or outage here must never take the whole site down with
+// it, so this is the one CMS call in this file that swallows its own
+// error and falls back to plain defaults rather than throwing.
+const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
+  footer_tagline: "The all-in-one HR & workforce management platform.",
+  copyright_holder: "Pulse",
+  footer_columns: [],
+  cta_default_title: "Ready to get started?",
+  cta_default_subtitle: "See Pulse in action.",
+};
+
 export async function getSiteSettings(): Promise<SiteSettingsData> {
-  const data = await cmsFetch<{ items: SiteSettingsData[] }>("/site-settings/?fields=*");
-  return data.items[0];
+  try {
+    const data = await cmsFetch<{ items: SiteSettingsData[] }>("/site-settings/?fields=*");
+    return data.items[0] ?? DEFAULT_SITE_SETTINGS;
+  } catch {
+    return DEFAULT_SITE_SETTINGS;
+  }
 }
 
 // Used by the /preview route: fetches a *draft* page by the token Wagtail's

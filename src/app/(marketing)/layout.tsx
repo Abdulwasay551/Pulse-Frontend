@@ -6,9 +6,9 @@ import { fontVariables } from "@/lib/fonts";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Pulse — The recruitment CRM & ATS for agency recruiters",
+  title: "Pulse — The all-in-one HR & workforce management platform",
   description:
-    "Pulse is the all-in-one CRM and applicant tracking system for staffing agencies and recruiters — candidates, clients, and placements in one place.",
+    "Pulse brings recruiting, people management, talent development, payroll & benefits, and IT asset tracking into one platform — everything HR needs in one place.",
 };
 
 // All content comes from the headless CMS, which isn't reachable at build
