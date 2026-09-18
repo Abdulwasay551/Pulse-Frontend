@@ -1,5 +1,10 @@
 const CMS_API_BASE = process.env.CMS_API_URL ?? "http://localhost:8000/api/cms/v2";
 
+// The backend's own origin (no /api/cms/v2 suffix) — used to resolve
+// relative asset paths the API returns (uploaded media, static files) into
+// fetchable URLs, since those aren't served from the frontend's own domain.
+export const CMS_ORIGIN = CMS_API_BASE.replace(/\/api\/cms\/v2\/?$/, "");
+
 // Revalidate fetched CMS content periodically rather than on every request.
 const REVALIDATE_SECONDS = 60;
 
@@ -69,6 +74,11 @@ export interface HomePageData {
   dashboard_attendance_percent: number;
   dashboard_attendance_subtext: string;
   trust_logos: StreamItem<TrustLogo>[];
+  video_eyebrow: string;
+  video_heading: string;
+  video_subtitle: string;
+  video_file_url: string;
+  video_url: string;
   suite_eyebrow: string;
   suite_title: string;
   suite_subtitle: string;

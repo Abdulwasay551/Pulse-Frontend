@@ -311,6 +311,32 @@ body {
   }
 }
 
+/* Play-button ripple on the homepage video section: two rings expand and
+   fade from the button's edge, staggered via animation-delay on the second
+   ring. Purely decorative (not informational like the ticker/notif-cycle
+   above), so it follows the rest of the hero-style motion and freezes under
+   reduced-motion rather than needing to keep looping. */
+@keyframes play-ring-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-play-ring {
+  animation: play-ring-pulse 2.2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-play-ring {
+    animation: none;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
