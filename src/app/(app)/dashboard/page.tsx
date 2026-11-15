@@ -44,15 +44,19 @@ import {
   ADMIN_ROLES_REQUIRING_EMPLOYEE,
   clockIn,
   clockOut,
+  completeMyTask,
   createAdminAccount,
   getMyDashboard,
+  getMyTasks,
   getOrgHealth,
   type HealthScore,
   type MyDashboard,
+  type MyTask,
   type PendingTask,
 } from "@/lib/role-api";
 import { ApiError, type UserRole } from "@/lib/auth-api";
 import { NARROW_ROLES, visibleModuleKeysFor } from "@/lib/role-access";
+import Modal from "@/components/dashboard/Modal";
 
 // Same five-color rotation the marketing solutions cards use (see
 // ProductCards.tsx CARD_VARIANTS) — proven to read as distinct, energetic,
@@ -1081,14 +1085,23 @@ function NarrowRoleHome({ firstName, role }: { firstName: string; role: UserRole
 function EmployeeHome({ firstName }: { firstName: string }) {
   const { withAuth, user } = useAuth();
   const [data, setData] = useState<MyDashboard | null>(null);
+  const [tasks, setTasks] = useState<MyTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [clocking, setClocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Clock-out prompt — "what did you get done today?" — checks off any
+  // assigned tasks the employee finished plus a free-text note, both
+  // submitted together when they confirm clocking out.
+  const [showClockOutPrompt, setShowClockOutPrompt] = useState(false);
+  const [doneTaskIds, setDoneTaskIds] = useState<Set<number>>(new Set());
+  const [clockOutNotes, setClockOutNotes] = useState("");
+
   async function load() {
     try {
-      const dashboard = await withAuth((token) => getMyDashboard(token));
+      const [dashboard, myTasks] = await withAuth((token) => Promise.all([getMyDashboard(token), getMyTasks(token)]));
       setData(dashboard);
+      setTasks(myTasks);
     } finally {
       setLoading(false);
     }
@@ -1112,11 +1125,33 @@ function EmployeeHome({ firstName }: { firstName: string }) {
     }
   }
 
+  function openClockOutPrompt() {
+    setDoneTaskIds(new Set());
+    setClockOutNotes("");
+    setError(null);
+    setShowClockOutPrompt(true);
+  }
+
+  function toggleDoneTask(id: number) {
+    setDoneTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   async function handleClockOut() {
     setClocking(true);
     setError(null);
     try {
-      await withAuth((token) => clockOut(token));
+      await withAuth(async (token) => {
+        await Promise.all(
+          Array.from(doneTaskIds).map((id) => completeMyTask(token, id, { status: "Completed" }))
+        );
+        await clockOut(token, clockOutNotes);
+      });
+      setShowClockOutPrompt(false);
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't clock out. Please try again.");
@@ -1208,7 +1243,7 @@ function EmployeeHome({ firstName }: { firstName: string }) {
                     <LogIn className="h-4 w-4" /> Clock in
                   </button>
                   <button
-                    onClick={handleClockOut}
+                    onClick={openClockOutPrompt}
                     disabled={clocking || !attendance?.clock_in || !!attendance?.clock_out}
                     className="flex items-center gap-2 rounded-lg border border-line bg-cream px-4 py-2.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-cream-dim disabled:opacity-50"
                   >
@@ -1222,6 +1257,61 @@ function EmployeeHome({ firstName }: { firstName: string }) {
           <RecentActivityCard items={data?.recent_activity ?? []} loading={loading} />
         </div>
       </div>
+
+      {showClockOutPrompt && (
+        <Modal title="What did you get done today?" onClose={() => setShowClockOutPrompt(false)}>
+          {error && (
+            <div className="mb-4 rounded-lg border border-maroon/30 bg-maroon-soft px-3.5 py-2.5 text-sm text-maroon">{error}</div>
+          )}
+          {tasks.filter((t) => t.status !== "Completed").length > 0 && (
+            <div className="mb-4">
+              <div className="mb-1.5 text-xs uppercase tracking-wide text-ink-soft">Check off what you finished</div>
+              <div className="flex flex-col gap-2">
+                {tasks
+                  .filter((t) => t.status !== "Completed")
+                  .map((t) => (
+                    <label
+                      key={t.id}
+                      className="flex items-start gap-2.5 rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={doneTaskIds.has(t.id)}
+                        onChange={() => toggleDoneTask(t.id)}
+                        className="mt-0.5 h-4 w-4 accent-primary"
+                      />
+                      <span>
+                        {t.title}
+                        {t.assigned_by_detail && (
+                          <span className="ml-1.5 text-xs text-ink-soft">— assigned by {t.assigned_by_detail.name}</span>
+                        )}
+                      </span>
+                    </label>
+                  ))}
+              </div>
+            </div>
+          )}
+          <div className="mb-6">
+            <label className="mb-1.5 block text-xs uppercase tracking-wide text-ink-soft">
+              Anything else worth noting?
+            </label>
+            <textarea
+              rows={3}
+              value={clockOutNotes}
+              onChange={(e) => setClockOutNotes(e.target.value)}
+              placeholder="What you worked on today…"
+              className="w-full rounded-lg border border-line bg-cream px-3.5 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+            />
+          </div>
+          <button
+            onClick={handleClockOut}
+            disabled={clocking}
+            className="w-full rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-cream transition-colors hover:bg-primary-dark disabled:opacity-60"
+          >
+            {clocking ? "Clocking out…" : "Confirm clock out"}
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }

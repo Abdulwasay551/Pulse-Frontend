@@ -191,6 +191,7 @@ export const dashboardModules: ModuleDef[] = [
           { label: "Overtime Tracking", description: "Flag and approve overtime hours.", icon: Timer, href: "/dashboard/attendance?view=overtime" },
           { label: "Shift Scheduling per Department", sidebarLabel: "Shift Scheduling", description: "Per-department shift planning.", icon: CalendarClock, href: "/dashboard/shift-scheduling" },
           { label: "Time Off", description: "Requests, approvals, and balances.", icon: CalendarCheck, href: "/dashboard/leave-requests" },
+          { label: "Task Assignment", description: "Assign daily tasks and review what got done.", icon: ClipboardCheck, href: "/dashboard/tasks" },
         ],
       },
       {

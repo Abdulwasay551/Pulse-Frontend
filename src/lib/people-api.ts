@@ -128,6 +128,36 @@ export interface AttendanceRecordWrite {
 export const attendanceRecordsApi = resourceApi<AttendanceRecord, AttendanceRecordWrite>("/people/attendance-records/");
 export const attendanceRecordsCsv = csvApi("/people/attendance-records/", "attendance-records.csv");
 
+// --- Task Assignment ---
+
+export type TaskStatus = "Pending" | "In Progress" | "Completed";
+
+export interface Task {
+  id: number;
+  employee: number;
+  employee_detail: EmployeeLite;
+  assigned_by: number | null;
+  assigned_by_detail: EmployeeLite | null;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  due_date: string | null;
+  completion_notes: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface TaskWrite {
+  employee: number;
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  due_date?: string | null;
+  completion_notes?: string;
+}
+
+export const tasksApi = resourceApi<Task, TaskWrite>("/people/tasks/");
+
 export interface Shift {
   id: number;
   employee: number;

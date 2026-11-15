@@ -136,14 +136,39 @@ export function updateBannerRegion(token: string, region: string) {
 export interface ClockStatus {
   clock_in: string | null;
   clock_out: string | null;
+  notes?: string;
 }
 
 export function clockIn(token: string) {
   return apiFetch<ClockStatus>("/my/clock-in/", { method: "POST" }, token);
 }
 
-export function clockOut(token: string) {
-  return apiFetch<ClockStatus>("/my/clock-out/", { method: "POST" }, token);
+// `notes` is what the clock-out prompt ("what did you get done today?")
+// collects — appended to the day's AttendanceRecord.notes server-side.
+export function clockOut(token: string, notes?: string) {
+  return apiFetch<ClockStatus>("/my/clock-out/", { method: "POST", body: JSON.stringify({ notes: notes ?? "" }) }, token);
+}
+
+// --- My Tasks: tasks a manager/HR assigned the caller (read) + marking
+// one done (the narrow self-service write) — assignment itself is
+// manager/HR-only, through people-api's tasksApi. ---
+
+export interface MyTask {
+  id: number;
+  title: string;
+  description: string;
+  status: "Pending" | "In Progress" | "Completed";
+  due_date: string | null;
+  completion_notes: string;
+  assigned_by_detail: { id: number; name: string } | null;
+}
+
+export function getMyTasks(token: string) {
+  return apiFetch<MyTask[]>("/my/tasks/", { method: "GET" }, token);
+}
+
+export function completeMyTask(token: string, id: number, data: { status?: string; completion_notes?: string }) {
+  return apiFetch<MyTask>(`/my/tasks/${id}/complete/`, { method: "POST", body: JSON.stringify(data) }, token);
 }
 
 export interface MyOnboardingChecklist {
